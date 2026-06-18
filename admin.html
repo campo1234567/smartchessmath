@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Chess Math — Admin</title>
+<style>
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#e0f2fe,#fef9c3);color:#17324d}.wrap{max-width:1100px;margin:auto;padding:24px}.card{background:#fff;border:3px solid #93c5fd;border-radius:22px;box-shadow:0 12px 32px rgba(0,0,0,.12);padding:20px;margin:16px 0}h1{margin:0 0 8px;color:#075985}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}input{border:2px solid #93c5fd;border-radius:12px;padding:11px;font-size:16px;font-weight:900}button,.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:1000;cursor:pointer;text-decoration:none;display:inline-block}.blue{background:#2563eb;color:white}.green{background:#16a34a;color:white}.orange{background:#d97706;color:white}.muted{background:#e5e7eb;color:#111827}.pill{display:inline-block;background:#e0f2fe;color:#075985;border-radius:999px;padding:5px 10px;font-weight:1000}table{width:100%;border-collapse:collapse;margin-top:14px;background:white;border-radius:14px;overflow:hidden}th,td{border:1px solid #c7ddff;padding:10px;text-align:left}th{background:#075985;color:#fff}.status{font-weight:1000}.small{font-size:13px;color:#52606d;font-weight:800}.error{color:#b91c1c;font-weight:1000}.ok{color:#166534;font-weight:1000}@media(max-width:700px){table{font-size:13px}th,td{padding:7px}.wrap{padding:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Smart Chess Math — Admin</h1>
+    <div class="small">Enter your authorized PIN to access the championship control panel.</div>
+    <div class="row" style="margin-top:12px">
+      <input id="pin" type="password" placeholder="PIN" inputmode="numeric">
+      <button class="blue" onclick="login()">Login</button>
+      <button class="green" onclick="openKnownRoom()">Open Existing Room</button>
+      <a class="btn muted" href="../index.html">← Home</a>
+    </div>
+    <div id="msg" style="margin-top:10px"></div>
+  </div>
+  <div class="card" id="supervisorBox" style="display:none">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">🏆 Active Championships</h2>
+      <button class="orange" onclick="loadChampionships()">Refresh</button>
+    </div>
+    <div id="rooms"></div>
+  </div>
+</div>
+<script>
+const API='https://smartchessmath-api.campo1234567.workers.dev';
+function v(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+async function api(path){const r=await fetch(API+path);const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t}}}
+function setMsg(t,cls){v('msg').innerHTML='<span class="'+(cls||'')+'">'+esc(t)+'</span>'}
+function pin(){return String(v('pin').value||'').trim()}
+function login(){const p=pin(); if(p==='2115'){localStorage.setItem('scm_admin_role','supervisor');localStorage.setItem('scm_admin_pin',p);setMsg('Supervisor access granted.','ok');v('supervisorBox').style.display='block';loadChampionships();return} if(p==='2026'){localStorage.setItem('scm_admin_role','teacher');localStorage.setItem('scm_admin_pin',p);setMsg('Teacher access granted. Use Open Existing Room.','ok');v('supervisorBox').style.display='none';return} setMsg('Wrong PIN.','error')}
+async function loadChampionships(){const p=pin()||localStorage.getItem('scm_admin_pin')||''; const data=await api('/api/active-championships?pin='+encodeURIComponent(p)); if(!data.ok){v('rooms').innerHTML='<div class="error">'+esc(data.error||'Unable to load')+'</div>';return} const rows=(data.championships||[]).map(c=>`<tr><td><b>${esc(c.championship_name||'Championship')}</b><div class="small">${esc(c.program_name||'Knight Number Quest')}</div></td><td><span class="pill">${esc(c.room_code)}</span></td><td class="status">${esc(c.status||'-')}</td><td>${esc(c.current_round||0)}</td><td>${esc(c.players_count||0)}</td><td>${esc(c.organizer_name||'-')}</td><td><a class="btn blue" href="../knight.html?open=${encodeURIComponent(c.room_code)}">Open</a></td></tr>`).join(''); v('rooms').innerHTML=`<table><thead><tr><th>Championship</th><th>Room</th><th>Status</th><th>Round</th><th>Players</th><th>Organizer</th><th>Action</th></tr></thead><tbody>${rows||'<tr><td colspan="7">No championships found.</td></tr>'}</tbody></table>`}
+async function openKnownRoom(){const p=pin()||localStorage.getItem('scm_admin_pin')||''; if(p!=='2026'&&p!=='2115'){setMsg('Enter authorized PIN first.','error');return} const code=prompt('Enter Room Code'); if(!code)return; localStorage.setItem('scm_admin_pin',p);location.href='../knight.html?open='+encodeURIComponent(code.trim().toUpperCase())}
+(function(){const p=localStorage.getItem('scm_admin_pin')||''; if(p){v('pin').value=p;if(p==='2115')login();}})();
+</script>
+</body>
+</html>
