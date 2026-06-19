@@ -4793,3 +4793,110 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   };
 })();
 </script>
+
+
+<!-- v91 Critical Online Round State Fix: no auto-start before teacher Start; clean resume between rounds -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const POLL_MS=2000;
+  function by(id){return document.getElementById(id)}
+  function n(v,d){const x=Number(v);return Number.isFinite(x)?x:(d||0)}
+  function role(){return String(window.liveRole||liveRole||'')}
+  function code(){return String(window.liveRoomCode||liveRoomCode||'').trim().toUpperCase()}
+  function rkey(rn){return 'R'+(Number(rn)||1)}
+  function rlabel(rn){rn=Number(rn)||1;return rn===1?'Round 1 — Standard 3 min':rn===2?'Round 2 — Fast 2 min':rn===3?'Round 3 — Blitz 1 min':'Round '+rn}
+  function rdur(rn){rn=Number(rn)||1;return rn===1?180:(rn===2?120:60)}
+  async function api(path,opt){const res=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opt||{}));const t=await res.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Invalid API response'}}}
+  function seedHash(s){let h=2166136261>>>0;String(s||'SCM').split('').forEach(ch=>{h^=ch.charCodeAt(0);h=Math.imul(h,16777619)>>>0});return h>>>0}
+  function seededRandom(seed){let a=seed>>>0;return function(){a+=0x6D2B79F5;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296}}
+  function makeQs(roomCode,rn,level){const oldRand=Math.random,oldLevel=(typeof currentLevel!=='undefined')?currentLevel:1,qs=[];try{Math.random=seededRandom(seedHash(roomCode+'|R'+rn+'|L'+(level||1)));if(typeof currentLevel!=='undefined')currentLevel=Number(level)||1;for(let i=0;i<10;i++){if(typeof makeQuestion==='function')qs.push(makeQuestion())}}finally{Math.random=oldRand;if(typeof currentLevel!=='undefined')currentLevel=oldLevel}return qs}
+  function okKey(c,rn){return 'scm_v91_server_start_ok_'+c+'_R'+rn}
+  function markStartOK(c,rn){try{sessionStorage.setItem(okKey(c,rn),String(Date.now()))}catch(e){}}
+  function freshStartOK(c,rn){try{const t=Number(sessionStorage.getItem(okKey(c,rn))||0);return t && Date.now()-t<6500}catch(e){return false}}
+  function clearRoundPlayFlags(){
+    try{window.liveModeActive=false;liveModeActive=false}catch(e){}
+    try{window.liveSubmitted=false;liveSubmitted=false}catch(e){}
+    try{window.livePreparedRoundId=null;livePreparedRoundId=null}catch(e){}
+    try{window.liveFixedQuestions=null;liveFixedQuestions=null}catch(e){}
+    try{if(by('studentCountdown'))by('studentCountdown').style.display='none'}catch(e){}
+  }
+  function getRoom(c){try{return (typeof liveGetRoom==='function')?liveGetRoom(c):null}catch(e){return null}}
+  function saveRoom(room){try{if(typeof liveSaveRoom==='function')liveSaveRoom(room);else localStorage.setItem('knq_live_room_'+room.code,JSON.stringify(room))}catch(e){}}
+  function ensurePlayer(room){
+    const sid=window.scmOnlineStudentId || (String(window.livePlayerId||livePlayerId||'').startsWith('D1-')?Number(String(window.livePlayerId||livePlayerId).replace('D1-','')):null);
+    const pid=window.livePlayerId||livePlayerId||('D1-'+sid);
+    if(pid){window.livePlayerId=pid;try{livePlayerId=pid}catch(e){}}
+    room.players=room.players||{};
+    if(pid&&!room.players[pid]) room.players[pid]={id:pid,d1_student_id:sid,studentCode:sid?('SCM-'+String(sid).padStart(4,'0')):pid,name:window.livePlayerName||livePlayerName||'Student',status:'waiting',stars:0,solved:0,time:null,results:{}};
+    return {sid,pid};
+  }
+  function putWaiting(room,ch){
+    const rn=n(ch&&ch.current_round,0);
+    if(rn){room.roundId=rn;room.currentRoundKey=rkey(rn);room.currentRoundLabel=rlabel(rn);room.duration=rdur(rn)}
+    room.status=(String((ch&&ch.status)||'').toLowerCase().includes('saved'))?'round_saved':'waiting';
+    ensurePlayer(room);
+    const p=room.players[window.livePlayerId||livePlayerId];
+    if(p && !String(p.status||'').match(/Finished|Time Over/i)){p.status='waiting';p.stars=0;p.solved=0;p.time=null}
+    clearRoundPlayFlags(); saveRoom(room);
+    try{if(typeof liveShow==='function')liveShow('liveStudentRoom'); if(typeof v16UpdateStudentWaitingText==='function')v16UpdateStudentWaitingText(room); if(typeof liveRenderRoom==='function')liveRenderRoom()}catch(e){}
+  }
+  const oldBegin=window.liveBeginStudent;
+  window.liveBeginStudent=function(room){
+    try{
+      if(role()==='student' && room && room.online){
+        const c=code()||room.code, rn=n(room.roundId||String(room.currentRoundKey||'R1').replace(/\D/g,''),1);
+        if(!freshStartOK(c,rn)){ putWaiting(room,{current_round:rn,status:'Waiting'}); return; }
+      }
+    }catch(e){}
+    return oldBegin.apply(this,arguments);
+  };
+  const oldRender=window.liveRenderRoom;
+  window.liveRenderRoom=function(){
+    try{
+      const c=code(), room=c&&getRoom(c);
+      if(role()==='student' && room && room.online){
+        const rn=n(room.roundId||String(room.currentRoundKey||'R1').replace(/\D/g,''),1);
+        if((room.status==='started'||room.status==='starting') && !freshStartOK(c,rn)){room.status='waiting';saveRoom(room)}
+      }
+    }catch(e){}
+    return oldRender.apply(this,arguments);
+  };
+  async function checkStatus(){
+    const c=code(); if(!c || role()!=='student')return;
+    let room=getRoom(c)||{code:c,players:{},rounds:{},online:true}; room.online=true;
+    const st=await api('/api/room-status?room_code='+encodeURIComponent(c));
+    if(!st.ok||!st.championship)return;
+    const ch=st.championship, rn=n(ch.current_round,0), started=n(ch.challenge_started,0)===1, finished=n(ch.challenge_finished,0)===1;
+    const ids=ensurePlayer(room); room.championship_id=window.scmOnlineChampionshipId||ch.id||room.championship_id;
+    if(!started || finished || !rn){ putWaiting(room,ch); return; }
+    if(ids.sid && room.championship_id){
+      const done=await api('/api/player-round-status?student_id='+ids.sid+'&championship_id='+room.championship_id+'&round_number='+rn);
+      if(done.ok&&done.completed){
+        room.roundId=rn;room.currentRoundKey=rkey(rn);room.currentRoundLabel=rlabel(rn);room.duration=rdur(rn);room.status='round_saved';
+        if(room.players[ids.pid])room.players[ids.pid].status='Finished';
+        clearRoundPlayFlags(); saveRoom(room); try{if(typeof liveShow==='function')liveShow('liveStudentRoom'); if(typeof liveRenderRoom==='function')liveRenderRoom()}catch(e){}; return;
+      }
+    }
+    const p=room.players[ids.pid];
+    const changed=Number(room.roundId||0)!==rn || room.status==='waiting' || room.status==='round_saved' || !(room.questions||[]).length;
+    if(changed){
+      clearRoundPlayFlags();
+      room.roundId=rn;room.currentRoundKey=rkey(rn);room.currentRoundLabel=rlabel(rn);room.duration=rdur(rn);room.level=Number(room.level||1);
+      room.questions=makeQs(c,rn,room.level); room.status='starting'; room.startAt=Date.now()+900;
+      if(p){p.status='ready';p.stars=0;p.solved=0;p.time=null;p.results=p.results||{}}
+      markStartOK(c,rn); saveRoom(room);
+      try{if(typeof liveShow==='function')liveShow('liveStudentRoom'); if(typeof liveRenderRoom==='function')liveRenderRoom(); if(typeof livePrepareStart==='function')livePrepareStart(room)}catch(e){}
+    }else{ markStartOK(c,rn); }
+  }
+  const oldJoin=window.liveJoinRoom;
+  window.liveJoinRoom=async function(){
+    const out=await oldJoin.apply(this,arguments);
+    try{const c=code(); if(role()==='student'&&c){const room=getRoom(c); if(room&&room.online){putWaiting(room,{status:'Waiting',current_round:room.roundId||0}); setTimeout(checkStatus,300)}}}catch(e){}
+    return out;
+  };
+  const oldResume=window.resumePlayerV38;
+  if(typeof oldResume==='function') window.resumePlayerV38=async function(){const out=await oldResume.apply(this,arguments);try{const c=code();const room=c&&getRoom(c);if(room&&room.online){putWaiting(room,{status:'Waiting',current_round:room.roundId||0});setTimeout(checkStatus,300)}}catch(e){}return out};
+  document.addEventListener('DOMContentLoaded',function(){setInterval(function(){checkStatus().catch(()=>{})},POLL_MS);setTimeout(function(){checkStatus().catch(()=>{})},700)});
+})();
+</script>
