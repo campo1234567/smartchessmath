@@ -1,0 +1,3 @@
+Upload ALL files in this folder to Cloudflare, not only knight-online-test.html.
+This restores index.html and adds knight-online-test.html.
+Test URL after deploy: https://smartchessmath.com/ and https://smartchessmath.com/knight-online-test.html

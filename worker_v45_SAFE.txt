@@ -1,0 +1,1290 @@
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers });
+    }
+
+
+    function normalizeRoomCode(value) {
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function generateFriendlyRoomCode() {
+      const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+      const number = String(Math.floor(Math.random() * 999) + 1).padStart(3, "0");
+      return letter + number;
+    }
+
+    async function generateUniqueRoomCode() {
+      for (let i = 0; i < 20; i++) {
+        const code = generateFriendlyRoomCode();
+        const existing = await env.DB.prepare(
+          "SELECT id FROM Championships WHERE room_code = ? LIMIT 1"
+        ).bind(code).first();
+        if (!existing) return code;
+      }
+      return generateFriendlyRoomCode();
+    }
+
+    if (url.pathname === "/" || url.pathname === "/api/health") {
+      return new Response(JSON.stringify({
+        ok: true,
+        service: "SmartChessMath API",
+        database: "connected"
+      }), { headers });
+    }
+
+    if (url.pathname === "/api/tables") {
+      const result = await env.DB.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+      ).all();
+
+      return new Response(JSON.stringify({
+        ok: true,
+        tables: result.results
+      }), { headers });
+    }
+if (url.pathname === "/api/students") {
+  const result = await env.DB.prepare(
+    "SELECT * FROM Students"
+  ).all();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    students: result.results
+  }), { headers });
+}
+if (url.pathname === "/api/schools") {
+  const result = await env.DB.prepare(
+    "SELECT * FROM Schools"
+  ).all();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    schools: result.results
+  }), { headers });
+}
+
+if (url.pathname === "/api/championships") {
+  const result = await env.DB.prepare(
+    "SELECT * FROM Championships"
+  ).all();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    championships: result.results
+  }), { headers });
+}
+if (url.pathname === "/api/results") {
+  const result = await env.DB.prepare(
+    "SELECT * FROM Results"
+  ).all();
+
+return new Response(JSON.stringify({
+    ok: true,
+    results: result.results
+}), { headers });
+}
+
+if (url.pathname === "/api/certificates") {
+  const result = await env.DB.prepare(
+    "SELECT * FROM Certificates"
+  ).all();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    certificates: result.results
+  }), { headers });
+  }
+if (url.pathname === "/api/create-championship" && request.method === "POST") {
+    let data = {};
+  try {
+    const bodyText = await request.text();
+    data = bodyText ? JSON.parse(bodyText) : {};
+  } catch (e) {
+    data = {};
+  }
+
+  const championshipName = data.championship_name || "Smart Chess Math Championship";
+  const requestedRoomCode = normalizeRoomCode(data.room_code);
+  const roomCode = requestedRoomCode || await generateUniqueRoomCode();
+  const programName = data.program_name || "Knight Number Quest";
+  const rounds = data.rounds || 3;
+  const rankingRule = data.ranking_rule || "STARS_SOLVED_TIME";
+  const status = data.status || "Active";
+
+  const organizerName = data.organizer_name || data.organizer || "";
+
+  let result;
+  try {
+    result = await env.DB.prepare(
+      `INSERT INTO Championships 
+      (championship_name, room_code, program_name, rounds, ranking_rule, status, start_date, organizer_name)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?)`
+    ).bind(
+      championshipName,
+      roomCode,
+      programName,
+      rounds,
+      rankingRule,
+      status,
+      organizerName
+    ).run();
+  } catch (e) {
+    result = await env.DB.prepare(
+      `INSERT INTO Championships 
+      (championship_name, room_code, program_name, rounds, ranking_rule, status, start_date)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+    ).bind(
+      championshipName,
+      roomCode,
+      programName,
+      rounds,
+      rankingRule,
+      status
+    ).run();
+  }
+
+  return new Response(JSON.stringify({
+    ok: true,
+    message: "Championship created",
+    room_code: roomCode,
+    championship_id: result.meta.last_row_id
+  }), { headers });
+  }
+  if (url.pathname === "/api/join-room" && request.method === "POST") {
+
+  const data = await request.json();
+
+  const studentName = String(data.student_name || "").trim();
+  const age = data.age;
+  const grade = data.grade;
+  const schoolName = String(data.school_name || data.school || "").trim();
+  const roomCode = normalizeRoomCode(data.room_code);
+  const resumeStudentId = data.resume_student_id ? Number(data.resume_student_id) : null;
+
+  if (!studentName) {
+    return new Response(JSON.stringify({ ok: false, error: "student_name is required" }), { headers });
+  }
+
+  const championship = await env.DB.prepare(
+    "SELECT * FROM Championships WHERE room_code = ?"
+  ).bind(roomCode).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Room not found"
+    }), { headers });
+  }
+
+  // Prevent duplicate names inside one room. If the same student is returning,
+  // they must provide the existing student_id; otherwise ask for full name/family name.
+  const existingSameName = await env.DB.prepare(`
+    SELECT id, student_name, age, grade, school_name, room_code, championship_id
+    FROM Students
+    WHERE room_code = ? AND lower(trim(student_name)) = lower(trim(?))
+    ORDER BY id ASC
+  `).bind(roomCode, studentName).all();
+
+  if (existingSameName.results && existingSameName.results.length) {
+    const existing = existingSameName.results.find(s => Number(s.id) === Number(resumeStudentId)) || existingSameName.results[0];
+    if (resumeStudentId && existing && Number(existing.id) === Number(resumeStudentId)) {
+      return new Response(JSON.stringify({
+        ok: true,
+        resumed: true,
+        student_id: existing.id,
+        championship_id: championship.id,
+        championship_name: championship.championship_name,
+        school_name: existing.school_name || schoolName || "",
+        student_name: existing.student_name,
+        message: "Student resumed"
+      }), { headers });
+    }
+    return new Response(JSON.stringify({
+      ok: false,
+      duplicate_name: true,
+      error: "This name already exists in this room. Please enter your full name with family name or ask the teacher for your Student ID.",
+      existing_student_id: existing.id,
+      existing_student_code: "SCM-" + String(existing.id).padStart(4, "0")
+    }), { headers });
+  }
+
+  let result;
+  try {
+    result = await env.DB.prepare(`
+      INSERT INTO Students
+      (student_name, age, grade, school_name, room_code, championship_id)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `)
+    .bind(
+      studentName,
+      age,
+      grade,
+      schoolName,
+      roomCode,
+      championship.id
+    )
+    .run();
+  } catch (e) {
+    result = await env.DB.prepare(`
+      INSERT INTO Students
+      (student_name, age, grade, room_code, championship_id)
+      VALUES (?, ?, ?, ?, ?)
+    `)
+    .bind(
+      studentName,
+      age,
+      grade,
+      roomCode,
+      championship.id
+    )
+    .run();
+  }
+
+  return new Response(JSON.stringify({
+    ok: true,
+    student_id: result.meta.last_row_id,
+    championship_id: championship.id,
+    championship_name: championship.championship_name,
+    school_name: schoolName
+  }), { headers });
+}
+
+if ((url.pathname === "/api/resume-player" && request.method === "POST") || url.pathname === "/api/resume-player") {
+  let data = {};
+  try {
+    if (request.method === "POST") {
+      const bodyText = await request.text();
+      data = bodyText ? JSON.parse(bodyText) : {};
+    }
+  } catch (e) { data = {}; }
+
+  const rawPlayerId = String(data.player_id || url.searchParams.get("player_id") || "").trim().toUpperCase();
+  const numericId = Number(rawPlayerId.replace(/^SCM[-_ ]?/i, "").replace(/^0+/, "") || rawPlayerId);
+
+  if (!rawPlayerId || !numericId) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Player ID is required"
+    }), { status: 400, headers });
+  }
+
+  const student = await env.DB.prepare(`
+    SELECT id, student_name, age, grade, school_name, room_code, championship_id
+    FROM Students
+    WHERE id = ?
+    LIMIT 1
+  `).bind(numericId).first();
+
+  if (!student) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Player ID not found"
+    }), { status: 404, headers });
+  }
+
+  const championship = await env.DB.prepare(`
+    SELECT id, championship_name, room_code, program_name, rounds, status,
+           challenge_started, current_round, challenge_finished
+    FROM Championships
+    WHERE id = ?
+    LIMIT 1
+  `).bind(student.championship_id).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Championship not found for this player"
+    }), { status: 404, headers });
+  }
+
+  return new Response(JSON.stringify({
+    ok: true,
+    resumed: true,
+    player_id: "SCM-" + String(student.id).padStart(4, "0"),
+    student_id: student.id,
+    student_name: student.student_name,
+    age: student.age,
+    grade: student.grade,
+    school_name: student.school_name || "",
+    room_code: student.room_code || championship.room_code,
+    championship_id: student.championship_id,
+    championship_name: championship.championship_name,
+    program_name: championship.program_name,
+    status: championship.status,
+    current_round: championship.current_round || 0,
+    challenge_started: championship.challenge_started || 0,
+    challenge_finished: championship.challenge_finished || 0
+  }), { headers });
+}
+
+if (url.pathname === "/api/room-students") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "room_code is required"
+    }), { headers });
+  }
+
+  let result;
+  try {
+    result = await env.DB.prepare(
+      "SELECT id, student_name, age, grade, school_name, room_code, championship_id, created_at FROM Students WHERE room_code = ? ORDER BY id ASC"
+    ).bind(roomCode).all();
+  } catch (e) {
+    result = await env.DB.prepare(
+      "SELECT id, student_name, age, grade, room_code, championship_id, created_at FROM Students WHERE room_code = ? ORDER BY id ASC"
+    ).bind(roomCode).all();
+  }
+
+  return new Response(JSON.stringify({
+    ok: true,
+    room_code: roomCode,
+    students: result.results
+  }), { headers });
+  }
+  if (url.pathname === "/api/championship-info") {
+
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "room_code is required"
+    }), { headers });
+  }
+
+  const championship = await env.DB.prepare(
+    "SELECT * FROM Championships WHERE room_code = ?"
+  ).bind(roomCode).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Championship not found"
+    }), { headers });
+  }
+
+  const players = await env.DB.prepare(
+    "SELECT COUNT(*) as total FROM Students WHERE room_code = ?"
+  ).bind(roomCode).first();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    championship_name: championship.championship_name,
+    room_code: championship.room_code,
+    program_name: championship.program_name,
+    rounds: championship.rounds,
+    status: championship.status,
+    players_count: players.total
+  }), { headers });
+}
+
+if (url.pathname === "/api/player-round-status") {
+  const studentId = Number(url.searchParams.get("student_id"));
+  const championshipId = Number(url.searchParams.get("championship_id"));
+  const roundNumber = Number(url.searchParams.get("round_number") || 1);
+
+  if (!studentId || !championshipId || !roundNumber) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "student_id, championship_id and round_number are required"
+    }), { status: 400, headers });
+  }
+
+  const row = await env.DB.prepare(`
+    SELECT id, stars, solved_questions, total_time, metrics_json
+    FROM Results
+    WHERE student_id = ? AND championship_id = ? AND round_number = ?
+    ORDER BY id DESC
+    LIMIT 1
+  `).bind(studentId, championshipId, roundNumber).first();
+
+  const metricsText = row && row.metrics_json ? String(row.metrics_json) : "";
+  const completed = !!(row && (
+    metricsText.indexOf('"official":true') >= 0 ||
+    metricsText.indexOf('"status":"Finished"') >= 0 ||
+    metricsText.indexOf('"status":"Time Over"') >= 0 ||
+    metricsText.indexOf('Finished') >= 0 ||
+    metricsText.indexOf('Time Over') >= 0
+  ));
+
+  return new Response(JSON.stringify({
+    ok: true,
+    completed,
+    result: row || null
+  }), { headers });
+}
+
+if (url.pathname === "/api/save-result" && request.method === "POST") {
+  const data = await request.json();
+  const roundNumber = Number(data.round_number || 1);
+
+  // One official row per student / championship / round.
+  // This prevents duplicate results and lets the final submission replace progress data.
+  await env.DB.prepare(`
+    DELETE FROM Results
+    WHERE student_id = ? AND championship_id = ? AND round_number = ?
+  `).bind(data.student_id, data.championship_id, roundNumber).run();
+
+  const result = await env.DB.prepare(`
+    INSERT INTO Results
+    (student_id, championship_id, score, points, stars, solved_questions, total_time, max_streak, round_number, mode, level, metrics_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    data.student_id,
+    data.championship_id,
+    data.score || 0,
+    data.points || 0,
+    data.stars ?? 0,
+    data.solved_questions || 0,
+    data.total_time || 0,
+    data.max_streak || 0,
+    roundNumber,
+    data.mode || "Knight Number Quest",
+    data.level || "Round",
+    JSON.stringify(Object.assign({}, data.metrics || {}, {
+      status: (data.metrics && data.metrics.status) || data.status || "Finished",
+      official: true,
+      saved_at: new Date().toISOString()
+    }))
+  ).run();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    message: "Result saved",
+    result_id: result.meta.last_row_id
+  }), { headers });
+  }
+
+if (url.pathname === "/api/save-progress" && request.method === "POST") {
+  const data = await request.json();
+  const roundNumber = Number(data.round_number || 1);
+
+  if (!data.student_id || !data.championship_id) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "student_id and championship_id are required"
+    }), { headers });
+  }
+
+  // Latest live progress row only. If internet drops, the teacher still sees the latest submitted progress.
+  await env.DB.prepare(`
+    DELETE FROM Results
+    WHERE student_id = ? AND championship_id = ? AND round_number = ?
+  `).bind(data.student_id, data.championship_id, roundNumber).run();
+
+  const metrics = Object.assign({}, data.metrics || {}, {
+    status: data.status || (data.metrics && data.metrics.status) || "playing",
+    progress: true,
+    saved_at: new Date().toISOString()
+  });
+
+  const result = await env.DB.prepare(`
+    INSERT INTO Results
+    (student_id, championship_id, score, points, stars, solved_questions, total_time, max_streak, round_number, mode, level, metrics_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    data.student_id,
+    data.championship_id,
+    data.score || data.stars || 0,
+    data.points || data.stars || 0,
+    data.stars ?? 0,
+    data.solved_questions || 0,
+    data.total_time || 0,
+    data.max_streak || 0,
+    roundNumber,
+    data.mode || "Knight Number Quest",
+    data.level || "Round",
+    JSON.stringify(metrics)
+  ).run();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    message: "Progress saved",
+    result_id: result.meta.last_row_id
+  }), { headers });
+}
+
+if (url.pathname === "/api/leaderboard") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+  const roundNumber = url.searchParams.get("round_number");
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "room_code is required"
+    }), { headers });
+  }
+
+  let sql = `
+    SELECT 
+      Students.id as student_id,
+      Students.student_name,
+      Students.age,
+      Students.grade,
+      Students.school_name,
+      Results.id as result_id,
+      Results.round_number,
+      Results.stars,
+      Results.solved_questions,
+      Results.total_time,
+      Results.points,
+      Results.max_streak,
+      COALESCE(Results.official_saved, 0) as official_saved,
+      Results.metrics_json
+    FROM Results
+    JOIN Students ON Results.student_id = Students.id
+    WHERE Students.room_code = ?
+  `;
+
+  const params = [roomCode];
+
+  if (roundNumber) {
+    sql += " AND Results.round_number = ?";
+    params.push(Number(roundNumber));
+  }
+
+  sql += `
+    ORDER BY 
+      Results.stars DESC,
+      Results.solved_questions DESC,
+      Results.total_time ASC
+  `;
+
+  let result;
+  try {
+    result = await env.DB.prepare(sql).bind(...params).all();
+  } catch (e) {
+    sql = `
+      SELECT 
+        Students.id as student_id,
+        Students.student_name,
+        Students.age,
+        Students.grade,
+        Results.id as result_id,
+        Results.round_number,
+        Results.stars,
+        Results.solved_questions,
+        Results.total_time,
+        Results.points,
+        Results.max_streak,
+        COALESCE(Results.official_saved, 0) as official_saved,
+        Results.metrics_json
+      FROM Results
+      JOIN Students ON Results.student_id = Students.id
+      WHERE Students.room_code = ?
+    `;
+    if (roundNumber) sql += " AND Results.round_number = ?";
+    sql += `
+      ORDER BY 
+        Results.stars DESC,
+        Results.solved_questions DESC,
+        Results.total_time ASC,
+        Results.id DESC
+    `;
+    result = await env.DB.prepare(sql).bind(...params).all();
+  }
+
+  // Deduplicate repeated result submissions for the same student and round.
+  // Prefer officially saved rows, then better score, then faster time, then latest result_id.
+  const bestByStudent = new Map();
+  for (const row of result.results) {
+    const key = `${row.student_id}-${row.round_number}`;
+    const old = bestByStudent.get(key);
+    if (!old) { bestByStudent.set(key, row); continue; }
+    const better =
+      (Number(row.official_saved || 0) - Number(old.official_saved || 0)) ||
+      (Number(row.stars || 0) - Number(old.stars || 0)) ||
+      (Number(row.solved_questions || 0) - Number(old.solved_questions || 0)) ||
+      (Number(old.total_time || 999999) - Number(row.total_time || 999999)) ||
+      (Number(row.result_id || 0) - Number(old.result_id || 0));
+    if (better > 0) bestByStudent.set(key, row);
+  }
+
+  const rows = Array.from(bestByStudent.values()).sort((a, b) =>
+    Number(b.stars || 0) - Number(a.stars || 0) ||
+    Number(b.solved_questions || 0) - Number(a.solved_questions || 0) ||
+    Number(a.total_time || 999999) - Number(b.total_time || 999999)
+  );
+
+  let currentRank = 0;
+  let previous = null;
+  const ranked = rows.map((row, index) => {
+    const same = previous &&
+      Number(row.stars || 0) === Number(previous.stars || 0) &&
+      Number(row.solved_questions || 0) === Number(previous.solved_questions || 0) &&
+      Number(row.total_time || 0) === Number(previous.total_time || 0);
+    if (!same) currentRank = index + 1;
+    previous = row;
+    return { rank: currentRank, ...row };
+  });
+
+  return new Response(JSON.stringify({
+    ok: true,
+    room_code: roomCode,
+    round_number: roundNumber ? Number(roundNumber) : "all",
+    leaderboard: ranked
+  }), { headers });
+}
+if (url.pathname === "/api/final-results") {
+
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+
+  const result = await env.DB.prepare(`
+    SELECT
+      s.id as student_id,
+      s.student_name,
+
+      SUM(r.stars) as total_stars,
+      SUM(r.solved_questions) as total_solved,
+      SUM(r.total_time) as total_time
+
+    FROM Results r
+    JOIN Students s ON s.id = r.student_id
+
+    WHERE s.room_code = ?
+
+    GROUP BY s.id
+
+    ORDER BY
+      total_stars DESC,
+      total_solved DESC,
+      total_time ASC
+  `)
+  .bind(roomCode)
+  .all();
+
+  let currentRank = 0;
+  let previous = null;
+  const ranked = result.results.map((row, index) => {
+    const same = previous &&
+      Number(row.total_stars || 0) === Number(previous.total_stars || 0) &&
+      Number(row.total_solved || 0) === Number(previous.total_solved || 0) &&
+      Number(row.total_time || 0) === Number(previous.total_time || 0);
+
+    if (!same) currentRank = index + 1;
+    previous = row;
+
+    let medal = null;
+    if (currentRank === 1) medal = "Gold";
+    else if (currentRank === 2) medal = "Silver";
+    else if (currentRank === 3) medal = "Bronze";
+
+    return {
+      rank: currentRank,
+      medal,
+      ...row
+    };
+  });
+
+  return new Response(JSON.stringify({
+    ok: true,
+    room_code: roomCode,
+    final_results: ranked
+  }), { headers });
+
+
+}
+
+if (url.pathname === "/api/start-challenge" && request.method === "POST") {
+  let data = {};
+  try {
+    const bodyText = await request.text();
+    data = bodyText ? JSON.parse(bodyText) : {};
+  } catch (e) {
+    data = {};
+  }
+
+  const roomCode = normalizeRoomCode(data.room_code);
+  const roundNumber = Number(data.round_number || 1);
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "room_code is required"
+    }), { headers });
+  }
+
+  const championship = await env.DB.prepare(
+    "SELECT * FROM Championships WHERE room_code = ?"
+  ).bind(roomCode).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Championship not found"
+    }), { headers });
+  }
+
+  if (roundNumber > 1) {
+    const previousRound = roundNumber - 1;
+    let savedInfo;
+    try {
+      savedInfo = await env.DB.prepare(`
+        SELECT COUNT(*) as total
+        FROM Results
+        WHERE round_number = ?
+          AND COALESCE(official_saved, 0) = 1
+          AND student_id IN (SELECT id FROM Students WHERE room_code = ?)
+      `).bind(previousRound, roomCode).first();
+    } catch (e) {
+      savedInfo = await env.DB.prepare(`
+        SELECT COUNT(*) as total
+        FROM Results
+        WHERE round_number = ?
+          AND student_id IN (SELECT id FROM Students WHERE room_code = ?)
+      `).bind(previousRound, roomCode).first();
+    }
+    if (!savedInfo || Number(savedInfo.total || 0) <= 0) {
+      return new Response(JSON.stringify({
+        ok: false,
+        round_locked: true,
+        error: "Please save Round " + previousRound + " before starting Round " + roundNumber
+      }), { status: 409, headers });
+    }
+  }
+
+  await env.DB.prepare(`
+    UPDATE Championships
+    SET challenge_started = 1,
+        current_round = ?,
+        challenge_finished = 0,
+        status = 'Started'
+    WHERE room_code = ?
+  `).bind(roundNumber, roomCode).run();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    message: "Challenge started",
+    room_code: roomCode,
+    round_number: roundNumber,
+    challenge_started: 1,
+    challenge_finished: 0
+  }), { headers });
+}
+
+if (url.pathname === "/api/room-status") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "room_code is required"
+    }), { headers });
+  }
+
+  const championship = await env.DB.prepare(`
+    SELECT
+      id,
+      championship_name,
+      room_code,
+      program_name,
+      rounds,
+      status,
+      challenge_started,
+      current_round,
+      challenge_finished
+    FROM Championships
+    WHERE room_code = ?
+  `).bind(roomCode).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Championship not found"
+    }), { headers });
+  }
+
+  return new Response(JSON.stringify({
+    ok: true,
+    championship
+  }), { headers });
+}
+
+if (url.pathname === "/api/finish-challenge" && request.method === "POST") {
+  let data = {};
+  try {
+    const bodyText = await request.text();
+    data = bodyText ? JSON.parse(bodyText) : {};
+  } catch (e) {
+    data = {};
+  }
+
+  const roomCode = normalizeRoomCode(data.room_code);
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "room_code is required"
+    }), { headers });
+  }
+
+  await env.DB.prepare(`
+    UPDATE Championships
+    SET challenge_finished = 1,
+        status = 'Finished'
+    WHERE room_code = ?
+  `).bind(roomCode).run();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    message: "Challenge finished",
+    room_code: roomCode,
+    challenge_finished: 1
+  }), { headers });
+}
+
+
+
+if (url.pathname === "/api/delete-student" && request.method === "POST") {
+  let data = {};
+  try { data = await request.json(); } catch (e) { data = {}; }
+  const roomCode = normalizeRoomCode(data.room_code || url.searchParams.get("room_code"));
+  const studentId = Number(data.student_id || url.searchParams.get("student_id"));
+  const adminPin = String(data.admin_pin || url.searchParams.get("admin_pin") || "").trim();
+  if (adminPin !== "2115") {
+    return new Response(JSON.stringify({ ok:false, error:"Supervisor PIN is required to delete a student" }), { status:403, headers });
+  }
+  if (!roomCode || !studentId) {
+    return new Response(JSON.stringify({ ok:false, error:"room_code and student_id are required" }), { status:400, headers });
+  }
+  const student = await env.DB.prepare("SELECT id FROM Students WHERE id = ? AND room_code = ?").bind(studentId, roomCode).first();
+  if (!student) {
+    return new Response(JSON.stringify({ ok:false, error:"Student not found in this room" }), { status:404, headers });
+  }
+  await env.DB.prepare("DELETE FROM Results WHERE student_id = ?").bind(studentId).run();
+  try { await env.DB.prepare("DELETE FROM Certificates WHERE student_id = ?").bind(studentId).run(); } catch(e) {}
+  await env.DB.prepare("DELETE FROM Students WHERE id = ? AND room_code = ?").bind(studentId, roomCode).run();
+  return new Response(JSON.stringify({ ok:true, message:"Student deleted", room_code:roomCode, student_id:studentId }), { headers });
+}
+
+if (url.pathname === "/api/save-round" && request.method === "POST") {
+  let data = {};
+  try {
+    const bodyText = await request.text();
+    data = bodyText ? JSON.parse(bodyText) : {};
+  } catch (e) {
+    data = {};
+  }
+
+  const roomCode = normalizeRoomCode(data.room_code || url.searchParams.get("room_code"));
+  const roundNumber = Number(data.round_number || url.searchParams.get("round_number") || 1);
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "room_code is required"
+    }), { headers });
+  }
+
+  const updateResult = await env.DB.prepare(`
+    UPDATE Results
+    SET official_saved = 1
+    WHERE round_number = ?
+      AND student_id IN (
+        SELECT id FROM Students WHERE room_code = ?
+      )
+  `).bind(roundNumber, roomCode).run();
+
+  return new Response(JSON.stringify({
+    ok: true,
+    message: "Round results officially saved",
+    room_code: roomCode,
+    round_number: roundNumber,
+    official_saved: 1,
+    changed: updateResult.meta && typeof updateResult.meta.changes !== "undefined" ? updateResult.meta.changes : null
+  }), { headers });
+}
+
+
+if (url.pathname === "/api/send-message" && request.method === "POST") {
+  let data = {};
+  try {
+    const bodyText = await request.text();
+    data = bodyText ? JSON.parse(bodyText) : {};
+  } catch (e) { data = {}; }
+
+  const roomCode = normalizeRoomCode(data.room_code || url.searchParams.get("room_code"));
+  const message = String(data.message || "").trim().slice(0, 240);
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({ ok:false, error:"room_code is required" }), { status:400, headers });
+  }
+  if (!message) {
+    return new Response(JSON.stringify({ ok:false, error:"message is required" }), { status:400, headers });
+  }
+
+  const championship = await env.DB.prepare(
+    "SELECT id FROM Championships WHERE room_code = ? LIMIT 1"
+  ).bind(roomCode).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({ ok:false, error:"Championship not found" }), { status:404, headers });
+  }
+
+  // Add message columns automatically if this database does not have them yet.
+  try { await env.DB.prepare("ALTER TABLE Championships ADD COLUMN teacher_message TEXT").run(); } catch(e) {}
+  try { await env.DB.prepare("ALTER TABLE Championships ADD COLUMN teacher_message_at TEXT").run(); } catch(e) {}
+
+  const sentAt = new Date().toISOString();
+  await env.DB.prepare(`
+    UPDATE Championships
+    SET teacher_message = ?, teacher_message_at = ?
+    WHERE room_code = ?
+  `).bind(message, sentAt, roomCode).run();
+
+  return new Response(JSON.stringify({
+    ok:true,
+    message:"Class message sent",
+    room_code:roomCode,
+    class_message:message,
+    sent_at:sentAt
+  }), { headers });
+}
+
+if (url.pathname === "/api/class-message") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+  if (!roomCode) {
+    return new Response(JSON.stringify({ ok:false, error:"room_code is required" }), { status:400, headers });
+  }
+
+  try {
+    const row = await env.DB.prepare(`
+      SELECT teacher_message, teacher_message_at
+      FROM Championships
+      WHERE room_code = ?
+      LIMIT 1
+    `).bind(roomCode).first();
+
+    return new Response(JSON.stringify({
+      ok:true,
+      room_code:roomCode,
+      message: row && row.teacher_message ? row.teacher_message : "",
+      sent_at: row && row.teacher_message_at ? row.teacher_message_at : ""
+    }), { headers });
+  } catch (e) {
+    return new Response(JSON.stringify({
+      ok:true,
+      room_code:roomCode,
+      message:"",
+      sent_at:""
+    }), { headers });
+  }
+}
+
+
+if (url.pathname === "/api/participants-archive") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+  if (!roomCode) {
+    return new Response(JSON.stringify({ ok:false, error:"room_code is required" }), { status:400, headers });
+  }
+
+  const championship = await env.DB.prepare(`
+    SELECT * FROM Championships
+    WHERE room_code = ?
+    LIMIT 1
+  `).bind(roomCode).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({ ok:false, error:"Championship not found" }), { status:404, headers });
+  }
+
+  let students;
+  try {
+    students = await env.DB.prepare(`
+      SELECT id, student_name, age, grade, school_name, room_code, championship_id, created_at
+      FROM Students
+      WHERE room_code = ?
+      ORDER BY id ASC
+    `).bind(roomCode).all();
+  } catch(e) {
+    students = await env.DB.prepare(`
+      SELECT id, student_name, age, grade, room_code, championship_id, created_at
+      FROM Students
+      WHERE room_code = ?
+      ORDER BY id ASC
+    `).bind(roomCode).all();
+  }
+
+  return new Response(JSON.stringify({
+    ok:true,
+    room_code:roomCode,
+    championship,
+    students: students.results || []
+  }), { headers });
+}
+
+if (url.pathname === "/api/top-players") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+  const rawLimit = String(url.searchParams.get("limit") || "10").toLowerCase();
+  const limit = rawLimit === "all" ? 0 : Math.max(0, Math.min(500, Number(rawLimit) || 10));
+
+  if (!roomCode) {
+    return new Response(JSON.stringify({ ok:false, error:"room_code is required" }), { status:400, headers });
+  }
+
+  const championship = await env.DB.prepare(`
+    SELECT * FROM Championships
+    WHERE room_code = ?
+    LIMIT 1
+  `).bind(roomCode).first();
+
+  if (!championship) {
+    return new Response(JSON.stringify({ ok:false, error:"Championship not found" }), { status:404, headers });
+  }
+
+  const totalStudents = await env.DB.prepare(`
+    SELECT COUNT(*) AS total
+    FROM Students
+    WHERE room_code = ?
+  `).bind(roomCode).first();
+
+  let result;
+  try {
+    result = await env.DB.prepare(`
+      SELECT
+        s.id AS student_id,
+        s.student_name,
+        s.age,
+        s.grade,
+        s.school_name,
+        SUM(COALESCE(r.stars,0)) AS total_stars,
+        SUM(COALESCE(r.solved_questions,0)) AS total_solved,
+        SUM(COALESCE(r.total_time,0)) AS total_time,
+        COUNT(r.id) AS rounds_played
+      FROM Students s
+      JOIN Results r ON r.student_id = s.id
+      WHERE s.room_code = ?
+      GROUP BY s.id, s.student_name, s.age, s.grade, s.school_name
+      ORDER BY total_stars DESC, total_solved DESC, total_time ASC
+    `).bind(roomCode).all();
+  } catch(e) {
+    result = await env.DB.prepare(`
+      SELECT
+        s.id AS student_id,
+        s.student_name,
+        s.age,
+        s.grade,
+        '' AS school_name,
+        SUM(COALESCE(r.stars,0)) AS total_stars,
+        SUM(COALESCE(r.solved_questions,0)) AS total_solved,
+        SUM(COALESCE(r.total_time,0)) AS total_time,
+        COUNT(r.id) AS rounds_played
+      FROM Students s
+      JOIN Results r ON r.student_id = s.id
+      WHERE s.room_code = ?
+      GROUP BY s.id, s.student_name, s.age, s.grade
+      ORDER BY total_stars DESC, total_solved DESC, total_time ASC
+    `).bind(roomCode).all();
+  }
+
+  let currentRank = 0;
+  let previous = null;
+  const rankedAll = (result.results || []).map((row, index) => {
+    const same = previous &&
+      Number(row.total_stars || 0) === Number(previous.total_stars || 0) &&
+      Number(row.total_solved || 0) === Number(previous.total_solved || 0) &&
+      Number(row.total_time || 0) === Number(previous.total_time || 0);
+
+    if (!same) currentRank = index + 1;
+    previous = row;
+
+    let medal = "Achievement";
+    if (currentRank === 1) medal = "Gold";
+    else if (currentRank === 2) medal = "Silver";
+    else if (currentRank === 3) medal = "Bronze";
+
+    return {
+      rank: currentRank,
+      tie: same,
+      medal,
+      ...row
+    };
+  });
+
+  const players = limit ? rankedAll.slice(0, limit) : rankedAll;
+
+  return new Response(JSON.stringify({
+    ok:true,
+    room_code:roomCode,
+    limit: limit || "all",
+    total_participants: totalStudents ? totalStudents.total : rankedAll.length,
+    championship,
+    players
+  }), { headers });
+}
+
+
+if (url.pathname === "/api/admin-room") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+  const pin = String(url.searchParams.get("pin") || "").trim();
+  const role = pin === "2115" ? "supervisor" : (pin === "2026" ? "teacher" : "");
+  if (!role) {
+    return new Response(JSON.stringify({ ok:false, error:"Invalid PIN" }), { status:403, headers });
+  }
+  if (!roomCode) {
+    return new Response(JSON.stringify({ ok:false, error:"room_code is required" }), { status:400, headers });
+  }
+  const championship = await env.DB.prepare(`
+    SELECT * FROM Championships
+    WHERE room_code = ?
+    LIMIT 1
+  `).bind(roomCode).first();
+  if (!championship) {
+    return new Response(JSON.stringify({ ok:false, error:"Championship not found" }), { status:404, headers });
+  }
+  const players = await env.DB.prepare("SELECT COUNT(*) AS total FROM Students WHERE room_code = ?").bind(roomCode).first();
+  return new Response(JSON.stringify({
+    ok:true,
+    role,
+    room_code:roomCode,
+    championship,
+    players_count: players ? players.total : 0
+  }), { headers });
+}
+
+if (url.pathname === "/api/active-championships") {
+  const pin = String(url.searchParams.get("pin") || "").trim();
+  if (pin !== "2115") {
+    return new Response(JSON.stringify({ ok:false, error:"Supervisor PIN is required" }), { status:403, headers });
+  }
+  const result = await env.DB.prepare(`
+    SELECT
+      c.*,
+      (SELECT COUNT(*) FROM Students s WHERE s.room_code = c.room_code) AS players_count,
+      (SELECT COUNT(*) FROM Results r JOIN Students s2 ON s2.id = r.student_id WHERE s2.room_code = c.room_code) AS results_count
+    FROM Championships c
+    ORDER BY c.id DESC
+    LIMIT 100
+  `).all();
+  return new Response(JSON.stringify({
+    ok:true,
+    championships: result.results || []
+  }), { headers });
+}
+
+
+
+
+if (url.pathname === "/api/archive-championship" && request.method === "POST") {
+  let data = {};
+  try { const bodyText = await request.text(); data = bodyText ? JSON.parse(bodyText) : {}; } catch(e) { data = {}; }
+  const roomCode = normalizeRoomCode(data.room_code || url.searchParams.get("room_code"));
+  const pin = String(data.pin || data.admin_pin || url.searchParams.get("pin") || "").trim();
+  if (pin !== "2115") {
+    return new Response(JSON.stringify({ ok:false, error:"Supervisor PIN is required to archive a championship" }), { status:403, headers });
+  }
+  if (!roomCode) return new Response(JSON.stringify({ ok:false, error:"room_code is required" }), { status:400, headers });
+  try { await env.DB.prepare("ALTER TABLE Championships ADD COLUMN archived_at TEXT").run(); } catch(e) {}
+  try { await env.DB.prepare("ALTER TABLE Championships ADD COLUMN archived_by TEXT").run(); } catch(e) {}
+  const existing = await env.DB.prepare("SELECT id FROM Championships WHERE room_code = ? LIMIT 1").bind(roomCode).first();
+  if (!existing) return new Response(JSON.stringify({ ok:false, error:"Championship not found" }), { status:404, headers });
+  const archivedAt = new Date().toISOString();
+  await env.DB.prepare(`
+    UPDATE Championships
+    SET status = 'Archived', challenge_finished = 1, archived_at = ?, archived_by = 'Supervisor'
+    WHERE room_code = ?
+  `).bind(archivedAt, roomCode).run();
+  return new Response(JSON.stringify({ ok:true, message:"Championship archived", room_code:roomCode, archived_at:archivedAt }), { headers });
+}
+
+if (url.pathname === "/api/archived-championships") {
+  const pin = String(url.searchParams.get("pin") || "").trim();
+  if (pin !== "2115") {
+    return new Response(JSON.stringify({ ok:false, error:"Supervisor PIN is required" }), { status:403, headers });
+  }
+  let result;
+  try {
+    result = await env.DB.prepare(`
+      SELECT
+        c.*,
+        (SELECT COUNT(*) FROM Students s WHERE s.room_code = c.room_code) AS players_count,
+        (SELECT COUNT(*) FROM Results r JOIN Students s2 ON s2.id = r.student_id WHERE s2.room_code = c.room_code) AS results_count
+      FROM Championships c
+      WHERE c.status = 'Archived' OR c.archived_at IS NOT NULL
+      ORDER BY COALESCE(c.archived_at, c.start_date, c.created_at) DESC
+      LIMIT 200
+    `).all();
+  } catch(e) {
+    result = await env.DB.prepare(`
+      SELECT
+        c.*,
+        (SELECT COUNT(*) FROM Students s WHERE s.room_code = c.room_code) AS players_count,
+        (SELECT COUNT(*) FROM Results r JOIN Students s2 ON s2.id = r.student_id WHERE s2.room_code = c.room_code) AS results_count
+      FROM Championships c
+      WHERE c.status = 'Archived' OR c.status = 'Finished'
+      ORDER BY c.id DESC
+      LIMIT 200
+    `).all();
+  }
+  return new Response(JSON.stringify({ ok:true, championships: result.results || [] }), { headers });
+}
+
+if (url.pathname === "/api/final-certificate-data") {
+  const roomCode = normalizeRoomCode(url.searchParams.get("room_code"));
+  const studentId = Number(url.searchParams.get("student_id"));
+  if (!roomCode || !studentId) return new Response(JSON.stringify({ ok:false, error:"room_code and student_id are required" }), { status:400, headers });
+  const championship = await env.DB.prepare("SELECT * FROM Championships WHERE room_code = ? LIMIT 1").bind(roomCode).first();
+  if (!championship) return new Response(JSON.stringify({ ok:false, error:"Championship not found" }), { status:404, headers });
+  let rows;
+  try {
+    rows = await env.DB.prepare(`
+      SELECT s.id AS student_id, s.student_name, s.age, s.grade, s.school_name,
+             r.round_number, r.stars, r.solved_questions, r.total_time, r.metrics_json
+      FROM Students s
+      LEFT JOIN Results r ON r.student_id = s.id
+      WHERE s.room_code = ?
+      ORDER BY s.id ASC, r.round_number ASC
+    `).bind(roomCode).all();
+  } catch(e) {
+    rows = await env.DB.prepare(`
+      SELECT s.id AS student_id, s.student_name, s.age, s.grade, '' AS school_name,
+             r.round_number, r.stars, r.solved_questions, r.total_time, r.metrics_json
+      FROM Students s
+      LEFT JOIN Results r ON r.student_id = s.id
+      WHERE s.room_code = ?
+      ORDER BY s.id ASC, r.round_number ASC
+    `).bind(roomCode).all();
+  }
+  const map = new Map();
+  for (const row of rows.results || []) {
+    if (!map.has(row.student_id)) map.set(row.student_id, { student_id: row.student_id, student_name: row.student_name, age: row.age, grade: row.grade, school_name: row.school_name || '', rounds: [], total_stars:0, total_solved:0, total_time:0 });
+    const p = map.get(row.student_id);
+    if (row.round_number) {
+      p.rounds.push({ round_number: row.round_number, stars: row.stars || 0, solved: row.solved_questions || 0, time: row.total_time || 0, status: String(row.metrics_json||'').includes('Time Over') ? 'Time Over' : 'Finished' });
+      p.total_stars += Number(row.stars || 0); p.total_solved += Number(row.solved_questions || 0); p.total_time += Number(row.total_time || 0);
+    }
+  }
+  const players = Array.from(map.values()).sort((a,b)=> b.total_stars-a.total_stars || b.total_solved-a.total_solved || a.total_time-b.total_time);
+  let currentRank=0, previous=null;
+  for (let i=0;i<players.length;i++) {
+    const p=players[i];
+    const same = previous && p.total_stars===previous.total_stars && p.total_solved===previous.total_solved && p.total_time===previous.total_time;
+    if (!same) currentRank=i+1;
+    p.rank=currentRank; p.medal=currentRank===1?'Gold':currentRank===2?'Silver':currentRank===3?'Bronze':'Achievement'; p.tie=!!same;
+    previous=p;
+  }
+  const player = players.find(p=>Number(p.student_id)===studentId);
+  if (!player) return new Response(JSON.stringify({ ok:false, error:"Student not found" }), { status:404, headers });
+  return new Response(JSON.stringify({ ok:true, championship, player, total_participants: players.length, final_results: players }), { headers });
+}
+
+    return new Response(JSON.stringify({
+      ok: false,
+      error: "Endpoint not found"
+    }), { status: 404, headers });
+  }
+};

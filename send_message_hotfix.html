@@ -1,0 +1,113 @@
+
+<!-- v39 SAFE HOTFIX: Admin Send Message + student class-message banner -->
+<style>
+.v39MessageBtn{background:linear-gradient(180deg,#38bdf8,#0284c7)!important;color:#fff!important;border:0!important;border-radius:12px!important;font-weight:1000!important;box-shadow:0 3px 0 #075985!important;padding:8px 12px!important;margin-left:6px!important}
+#v39ClassMessageBanner{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:999999;background:#fff7c2;border:3px solid #facc15;color:#17324d;border-radius:18px;padding:14px 22px;box-shadow:0 10px 25px rgba(0,0,0,.22);font-size:20px;font-weight:1000;max-width:min(860px,92vw);text-align:center;display:none;line-height:1.35}
+#v39MessageModal{position:fixed;inset:0;z-index:999998;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:18px}
+#v39MessageCard{background:#fff;border-radius:22px;box-shadow:0 18px 45px rgba(0,0,0,.35);width:min(620px,94vw);padding:20px;border:4px solid #38bdf8;color:#17324d}
+#v39MessageCard h3{margin:0 0 10px;font-size:24px;font-weight:1000;color:#075985}
+#v39MessageInput{width:100%;box-sizing:border-box;border:2px solid #93c5fd;border-radius:14px;padding:12px;font-size:17px;font-weight:800;min-height:84px;resize:vertical;color:#17324d}
+.v39PresetWrap{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.v39Preset{border:0;border-radius:12px;background:#e0f2fe;color:#075985;font-weight:1000;padding:8px 10px;cursor:pointer}
+.v39ModalActions{display:flex;justify-content:flex-end;gap:10px;margin-top:12px;flex-wrap:wrap}
+.v39ModalActions button{border:0;border-radius:12px;font-weight:1000;padding:10px 16px;cursor:pointer}
+.v39Cancel{background:#e5e7eb;color:#111827}.v39Send{background:#0284c7;color:#fff}.v39Clear{background:#f97316;color:#fff}
+</style>
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const PRESETS=[
+    'The challenge will start in 1 minute.',
+    'Round 2 will start in 1 minute.',
+    'Round 3 will start in 2 minutes.',
+    'Please wait for the teacher.',
+    'Results are being prepared.',
+    'Congratulations to all participants.'
+  ];
+  let lastSeenMessageKey='';
+  function by(id){return document.getElementById(id)}
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const t=await r.text();
+    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
+  }
+  function roomCode(){try{return String(window.liveRoomCode||'').trim().toUpperCase()}catch(e){return ''}}
+  function ensureBanner(){
+    let b=by('v39ClassMessageBanner');
+    if(!b){b=document.createElement('div');b.id='v39ClassMessageBanner';document.body.appendChild(b)}
+    return b;
+  }
+  function showBanner(msg){
+    if(!msg) return;
+    const b=ensureBanner();
+    b.textContent='📢 '+msg;
+    b.style.display='block';
+    clearTimeout(window.__v39MsgTimer);
+    window.__v39MsgTimer=setTimeout(()=>{b.style.display='none'},12000);
+  }
+  function ensureModal(){
+    let m=by('v39MessageModal');
+    if(m) return m;
+    m=document.createElement('div');
+    m.id='v39MessageModal';
+    m.innerHTML=`<div id="v39MessageCard"><h3>📢 Send Message</h3><div style="font-weight:900;margin-bottom:8px">Send a short message to all students in this room.</div><textarea id="v39MessageInput" maxlength="240" placeholder="The challenge will start in 1 minute."></textarea><div class="v39PresetWrap">${PRESETS.map(p=>`<button type="button" class="v39Preset" data-msg="${p.replace(/"/g,'&quot;')}">${p}</button>`).join('')}</div><div class="v39ModalActions"><button type="button" class="v39Clear" id="v39ClearMsg">Clear</button><button type="button" class="v39Cancel" id="v39CancelMsg">Cancel</button><button type="button" class="v39Send" id="v39SendMsg">Send</button></div></div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click',e=>{if(e.target===m) closeMessageModal()});
+    m.querySelectorAll('.v39Preset').forEach(btn=>btn.addEventListener('click',()=>{by('v39MessageInput').value=btn.getAttribute('data-msg')||btn.textContent||'';}));
+    by('v39CancelMsg').addEventListener('click',closeMessageModal);
+    by('v39ClearMsg').addEventListener('click',()=>{by('v39MessageInput').value=''});
+    by('v39SendMsg').addEventListener('click',sendClassMessage);
+    return m;
+  }
+  function openMessageModal(){
+    if(!roomCode()){alert('Please create or open a room first.');return;}
+    const m=ensureModal();
+    const input=by('v39MessageInput');
+    if(input && !input.value) input.value='The challenge will start in 1 minute.';
+    m.style.display='flex';
+    setTimeout(()=>{try{input.focus();input.select()}catch(e){}},50);
+  }
+  function closeMessageModal(){const m=by('v39MessageModal');if(m)m.style.display='none'}
+  async function sendClassMessage(){
+    const input=by('v39MessageInput');
+    const msg=String((input&&input.value)||'').trim();
+    if(!msg){alert('Please write a message.');return;}
+    const code=roomCode();
+    if(!code){alert('No active room code.');return;}
+    const btn=by('v39SendMsg'); if(btn){btn.disabled=true;btn.textContent='Sending...'}
+    try{
+      const res=await api('/api/send-message',{method:'POST',body:JSON.stringify({room_code:code,message:msg})});
+      if(!res.ok){alert(res.error||'Message failed.');return;}
+      closeMessageModal();
+      showBanner(msg);
+    }catch(e){alert('Message connection error: '+e.message)}
+    finally{if(btn){btn.disabled=false;btn.textContent='Send'}}
+  }
+  function installMessageButton(){
+    const panel=by('liveTeacherRoom');
+    if(!panel || by('v39OpenMessageBtn')) return;
+    let target=null;
+    const buttons=[...panel.querySelectorAll('button')];
+    target=buttons.find(b=>String(b.textContent||'').trim()==='Close Panel') || buttons.find(b=>String(b.textContent||'').trim()==='Close');
+    const btn=document.createElement('button');
+    btn.type='button';btn.id='v39OpenMessageBtn';btn.className='v39MessageBtn';btn.textContent='📢 Send Message';btn.onclick=openMessageModal;
+    if(target && target.parentNode){target.parentNode.insertBefore(btn,target.nextSibling)}
+    else{panel.insertBefore(btn,panel.firstChild)}
+  }
+  async function pollClassMessage(){
+    const code=roomCode();
+    if(!code) return;
+    try{
+      const data=await api('/api/class-message?room_code='+encodeURIComponent(code));
+      if(!data.ok || !data.message) return;
+      const key=String(data.sent_at||'')+'|'+String(data.message||'');
+      if(key && key!==lastSeenMessageKey){lastSeenMessageKey=key; showBanner(data.message)}
+    }catch(e){}
+  }
+  const oldRender=window.liveRenderRoom;
+  if(typeof oldRender==='function') window.liveRenderRoom=function(){const out=oldRender.apply(this,arguments);setTimeout(installMessageButton,20);return out;};
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{installMessageButton();ensureBanner();ensureModal();},700));
+  setInterval(()=>{installMessageButton();pollClassMessage();},5000);
+  window.v39OpenMessageModal=openMessageModal;
+})();
+</script>
