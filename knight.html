@@ -3276,8 +3276,18 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
       updateStudentInfoBox(room,ch);
       if(started && !finished && rn>0){
         const localRound=Number(room.roundId||0);
-        const hasAlreadyStartedThisRound = studentLastStartedRound===rn && localRound===rn && (liveModeActive || room.status==='started' || room.status==='starting');
-        const completedThisRound = studentLastStartedRound===rn && (liveSubmittedRoundId===rn || (room.players&&room.players[livePlayerId]&&room.players[livePlayerId].results&&room.players[livePlayerId].results[roundKey(rn)]));
+        const playerRec = room.players && room.players[livePlayerId] ? room.players[livePlayerId] : null;
+        const resultKey = roundKey(rn);
+        const completedThisRound =
+          liveSubmittedRoundId===rn ||
+          ((typeof liveActiveRoundId!=='undefined') && liveSubmitted && liveActiveRoundId===rn) ||
+          (playerRec && playerRec.results && playerRec.results[resultKey]) ||
+          (playerRec && localRound===rn && /Finished|Time Over/.test(String(playerRec.status||'')));
+        const hasAlreadyStartedThisRound =
+          !completedThisRound &&
+          studentLastStartedRound===rn &&
+          localRound===rn &&
+          (liveModeActive || room.status==='started' || room.status==='starting');
         if(!hasAlreadyStartedThisRound && !completedThisRound){
           studentLastStartedRound=rn; localStorage.setItem('scm_last_started_round',String(rn));
           resetForNewStudentRound(room,rn,ch);
@@ -4378,6 +4388,52 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   const oldSave=window.liveSaveRound;
   if(typeof oldSave==='function'&&!oldSave.__v77ArchivePatched){window.liveSaveRound=function(){if(window.scmArchiveMode)return alert('Archived championship is read-only.');return oldSave.apply(this,arguments)};window.liveSaveRound.__v77ArchivePatched=true;}
   document.addEventListener('DOMContentLoaded',function(){setTimeout(applyArchiveReadOnly,1200)});
+})();
+</script>
+
+
+
+<!-- v98 Resume Replay Lock: prevent same round from opening again after submit -->
+<script>
+(function(){
+  const previousSubmitV98 = window.liveSubmitResult;
+  window.liveSubmitResult = function(status){
+    const beforeRoom = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+    const roundBefore = beforeRoom ? Number(beforeRoom.roundId||beforeRoom.current_round||0) : (typeof liveActiveRoundId!=='undefined' ? Number(liveActiveRoundId||0) : 0);
+    const keyBefore = beforeRoom ? (beforeRoom.currentRoundKey || ('R'+roundBefore)) : ('R'+roundBefore);
+    if(previousSubmitV98) previousSubmitV98.apply(this, arguments);
+    try{
+      const room = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+      const rn = room ? Number(room.roundId||roundBefore||0) : roundBefore;
+      const key = room ? (room.currentRoundKey || keyBefore || ('R'+rn)) : (keyBefore || ('R'+rn));
+      if(rn){
+        liveSubmittedRoundId = rn;
+        if(typeof liveActiveRoundId!=='undefined') liveActiveRoundId = rn;
+        try{ localStorage.setItem('scm_last_started_round', String(rn)); }catch(e){}
+      }
+      liveSubmitted = true;
+      liveModeActive = false;
+      if(room && room.players && livePlayerId && room.players[livePlayerId]){
+        const p = room.players[livePlayerId];
+        p.results = p.results || {};
+        if(!p.results[key]){
+          p.results[key] = {
+            roundId: rn,
+            key: key,
+            label: room.currentRoundLabel || key,
+            stars: (typeof stars!=='undefined'?stars:0),
+            solved: (typeof solved!=='undefined'?solved:0),
+            time: (typeof lastUsedSeconds!=='undefined'?lastUsedSeconds:0),
+            level: room.level,
+            duration: room.duration,
+            status: status
+          };
+        }
+        p.status = status;
+        if(typeof liveSaveRoom==='function') liveSaveRoom(room);
+      }
+    }catch(e){ console.warn('v98 replay lock submit guard failed', e); }
+  };
 })();
 </script>
 
