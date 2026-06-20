@@ -5085,3 +5085,82 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   }
 })();
 </script>
+
+<!-- v97 Restore V82 Timer Chain Exactly After Shared Join/Resume -->
+<script>
+(function(){
+  function scmStopStudentWaitingPollV97(){
+    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll){ clearInterval(liveRoomPoll); liveRoomPoll=null; } }catch(e){}
+    try{ if(window.liveRoomPoll){ clearInterval(window.liveRoomPoll); window.liveRoomPoll=null; } }catch(e){}
+  }
+
+  function scmV82StartGameCore(){
+    try{
+      if(typeof timer!=='undefined' && timer) clearInterval(timer);
+      questionIndex=0;
+      stars=0;
+      solved=0;
+      coins=0;
+      questionStates=Array(10).fill('empty');
+      running=true;
+      currentLevel=parseInt(document.getElementById('level').value,10);
+      selectedDuration=parseInt(document.getElementById('duration').value,10);
+      remaining=selectedDuration;
+      elapsedSeconds=0;
+      const overlay=document.getElementById('overlay');
+      if(overlay) overlay.style.display='none';
+      if(typeof updateTop==='function') updateTop();
+      if(typeof loadQuestion==='function') loadQuestion();
+      timer=setInterval(()=>{
+        remaining--;
+        elapsedSeconds++;
+        if(typeof updateTop==='function') updateTop();
+        if(remaining<=0){
+          if(timer) clearInterval(timer);
+          timer=null;
+          if(typeof finish==='function') finish(false);
+        }
+      },1000);
+      if(typeof updateTop==='function') updateTop();
+    }catch(e){
+      console.error('v97 V82 timer chain failed',e);
+    }
+  }
+
+  // Replace any accumulated wrapper chain with the original V82-style startGame.
+  window.startGame=scmV82StartGameCore;
+  try{ startGame=window.startGame; }catch(e){}
+
+  function scmV97BeginStudent(room){
+    try{
+      if(liveModeActive || (room && room.roundId===liveSubmittedRoundId)) return;
+      scmStopStudentWaitingPollV97();
+      liveModeActive=true;
+      liveSubmitted=false;
+      if(typeof liveActiveRoundId!=='undefined' && room) liveActiveRoundId=room.roundId;
+      liveFixedQuestions=JSON.parse(JSON.stringify((room&&room.questions)||[]));
+      const levelEl=document.getElementById('level');
+      const durEl=document.getElementById('duration');
+      if(levelEl && room && room.level!=null) levelEl.value=String(room.level);
+      if(durEl && room && room.duration!=null) durEl.value=String(room.duration);
+      const liveOverlay=document.getElementById('liveOverlay');
+      const introOverlay=document.getElementById('introOverlay');
+      if(liveOverlay) liveOverlay.style.display='none';
+      if(introOverlay) introOverlay.style.display='none';
+      try{
+        const r=liveGetRoom(liveRoomCode);
+        if(r && r.players && r.players[livePlayerId]){
+          r.players[livePlayerId].status='playing';
+          liveSaveRoom(r);
+        }
+      }catch(e){}
+      window.startGame();
+      scmStopStudentWaitingPollV97();
+    }catch(e){
+      console.error('v97 liveBeginStudent failed',e);
+    }
+  }
+  window.liveBeginStudent=scmV97BeginStudent;
+  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
+})();
+</script>
