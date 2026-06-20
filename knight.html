@@ -3261,6 +3261,9 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   }
   async function checkStudentRoundStatus(){
     try{
+      // v95 TIMER GUARD: once the game board is open, waiting/resume polling must not
+      // touch the round state or clear the game timer.
+      if((typeof running!=='undefined' && running) || (typeof liveModeActive!=='undefined' && liveModeActive)) return;
       if(liveRole!=='student' || !liveRoomCode) return;
       const data=await api('/api/room-status?room_code='+encodeURIComponent(liveRoomCode));
       if(!data.ok || !data.championship) return;
