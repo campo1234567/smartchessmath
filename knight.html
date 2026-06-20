@@ -5024,3 +5024,64 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   });
 })();
 </script>
+
+<!-- v96 Restore V82 Timer After Shared Join/Resume Start -->
+<script>
+(function(){
+  function clearStudentWaitingPollV96(){
+    try{ if(window.liveRoomPoll){ clearInterval(window.liveRoomPoll); window.liveRoomPoll=null; } }catch(e){}
+    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll){ clearInterval(liveRoomPoll); liveRoomPoll=null; } }catch(e){}
+  }
+  function restoreV82RoundTimerV96(){
+    try{
+      if(typeof liveModeActive!=='undefined' && !liveModeActive) return;
+      if(typeof current==='undefined' || !current) return;
+      if(typeof selectedDuration==='undefined') return;
+      if(typeof remaining==='undefined') return;
+      if(!Number.isFinite(Number(remaining)) || Number(remaining)<=0){ remaining=Number(selectedDuration)||180; }
+      running=true;
+      if(typeof timer!=='undefined' && timer){ clearInterval(timer); }
+      timer=setInterval(()=>{
+        remaining--;
+        if(typeof elapsedSeconds!=='undefined') elapsedSeconds++;
+        if(typeof updateTop==='function') updateTop();
+        if(remaining<=0){
+          if(timer) clearInterval(timer);
+          timer=null;
+          if(typeof finish==='function') finish(false);
+        }
+      },1000);
+      if(typeof updateTop==='function') updateTop();
+    }catch(e){ console.warn('v96 timer restore failed',e); }
+  }
+  const oldLiveBeginStudentV96=window.liveBeginStudent;
+  if(typeof oldLiveBeginStudentV96==='function' && !oldLiveBeginStudentV96.__v96TimerRestore){
+    const wrapped=function(room){
+      clearStudentWaitingPollV96();
+      const out=oldLiveBeginStudentV96.apply(this,arguments);
+      clearStudentWaitingPollV96();
+      setTimeout(restoreV82RoundTimerV96,80);
+      setTimeout(function(){
+        try{
+          if(typeof running!=='undefined' && running && typeof remaining!=='undefined' && Number(remaining)>=Number(selectedDuration)-1){
+            restoreV82RoundTimerV96();
+          }
+        }catch(e){}
+      },1350);
+      return out;
+    };
+    wrapped.__v96TimerRestore=true;
+    window.liveBeginStudent=wrapped;
+  }
+  const oldBackToWaitingV96=window.backToWaitingRoom;
+  if(typeof oldBackToWaitingV96==='function' && !oldBackToWaitingV96.__v96TimerRestore){
+    const wrappedBack=function(){
+      try{ if(typeof timer!=='undefined' && timer){ clearInterval(timer); timer=null; } }catch(e){}
+      try{ running=false; }catch(e){}
+      return oldBackToWaitingV96.apply(this,arguments);
+    };
+    wrappedBack.__v96TimerRestore=true;
+    window.backToWaitingRoom=wrappedBack;
+  }
+})();
+</script>
