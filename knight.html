@@ -4861,3 +4861,163 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 })();
 </script>
 
+
+<!-- v94 Shared Student Waiting Entry: Join and Resume use the same listening path -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const STUDENT_WAIT_POLL_MS=2000;
+  function by(id){return document.getElementById(id)}
+  function txt(v){return String(v||'').trim()}
+  function upper(v){return txt(v).toUpperCase()}
+  function fmtId(id){return 'SCM-' + String(id||'').replace(/^D1-/,'').padStart(4,'0')}
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const t=await r.text();
+    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
+  }
+  function makeOnlineRoom(code,data){
+    let room=(typeof liveGetRoom==='function')?liveGetRoom(code):null;
+    if(!room){
+      if(typeof buildLocalRoomFromOnline==='function'){
+        room=buildLocalRoomFromOnline(code,{championship_name:data.championship_name,championship_id:data.championship_id});
+      }else{
+        room={code:code,createdAt:Date.now(),status:'waiting',level:1,duration:180,questions:[],players:{},rounds:{},roundId:0,currentRoundKey:null,currentRoundLabel:'',online:true,championship_id:data.championship_id};
+      }
+    }
+    room.code=code;
+    room.online=true;
+    room.championship_id=data.championship_id || room.championship_id;
+    room.players=room.players||{};
+    return room;
+  }
+  function normalizePlayerData(data){
+    const sid=Number(data.student_id || data.d1_student_id || 0);
+    return {
+      room_code:upper(data.room_code || data.code),
+      student_id:sid,
+      championship_id:data.championship_id || window.scmOnlineChampionshipId || null,
+      championship_name:data.championship_name || '',
+      student_name:data.student_name || data.name || livePlayerName || 'Student',
+      age:data.age || '',
+      grade:data.grade || '',
+      school_name:data.school_name || data.school || '',
+      player_id:data.player_id || (sid ? fmtId(sid) : '')
+    };
+  }
+  window.scmEnterStudentWaitingRoomV94=function(raw){
+    const data=normalizePlayerData(raw||{});
+    if(!data.room_code || !data.student_id) return false;
+
+    if(typeof ensureLiveChannel==='function') ensureLiveChannel();
+    window.liveRole='student'; try{liveRole='student'}catch(e){}
+    window.liveRoomCode=data.room_code; try{liveRoomCode=data.room_code}catch(e){}
+    window.livePlayerName=data.student_name; try{livePlayerName=data.student_name}catch(e){}
+    window.livePlayerId='D1-'+data.student_id; try{livePlayerId='D1-'+data.student_id}catch(e){}
+    window.scmOnlineStudentId=data.student_id;
+    window.scmOnlineChampionshipId=data.championship_id;
+
+    let room=makeOnlineRoom(data.room_code,data);
+    const pid='D1-'+data.student_id;
+    const old=room.players[pid]||{};
+    room.players[pid]=Object.assign(old,{
+      id:pid,
+      d1_student_id:data.student_id,
+      studentCode:data.player_id || fmtId(data.student_id),
+      name:data.student_name,
+      age:data.age || old.age || '',
+      grade:data.grade || old.grade || '',
+      school:data.school_name || old.school || '',
+      status:(String(old.status||'').match(/Finished|Time Over/i) ? old.status : 'waiting'),
+      stars:old.stars||0,
+      solved:old.solved||0,
+      time:old.time==null?null:old.time,
+      joinedAt:old.joinedAt||Date.now(),
+      results:old.results||{}
+    });
+
+    try{ window.liveSubmitted=false; liveSubmitted=false; }catch(e){}
+    try{ window.liveSubmittedRoundId=null; liveSubmittedRoundId=null; }catch(e){}
+    try{ window.livePreparedRoundId=null; livePreparedRoundId=null; }catch(e){}
+    try{ window.liveModeActive=false; liveModeActive=false; }catch(e){}
+    try{ window.liveFixedQuestions=null; liveFixedQuestions=null; }catch(e){}
+
+    if(typeof liveSaveRoom==='function') liveSaveRoom(room);
+    if(typeof setOnlineSession==='function') setOnlineSession({role:'student',room_code:data.room_code,student_id:data.student_id,championship_id:data.championship_id});
+    if(by('liveRoomCodeStudent')) by('liveRoomCodeStudent').textContent=data.room_code;
+    if(typeof liveShow==='function') liveShow('liveStudentRoom');
+    if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
+    if(typeof liveRenderRoom==='function') liveRenderRoom();
+    if(typeof ensureOnlineBadge==='function') ensureOnlineBadge('Student waiting: '+(data.player_id||fmtId(data.student_id)));
+
+    if(window.liveRoomPoll) clearInterval(window.liveRoomPoll);
+    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll) clearInterval(liveRoomPoll); }catch(e){}
+    const poll=function(){
+      try{
+        if((window.liveRole||liveRole)!=='student') return;
+        if(!(window.liveRoomCode||liveRoomCode)) return;
+        if(window.liveModeActive || (typeof liveModeActive!=='undefined' && liveModeActive)) return;
+        if(typeof scmRefreshRoomStudents==='function') scmRefreshRoomStudents(window.liveRoomCode||liveRoomCode);
+        else if(typeof liveRenderRoom==='function') liveRenderRoom();
+      }catch(e){}
+    };
+    window.liveRoomPoll=setInterval(poll,STUDENT_WAIT_POLL_MS);
+    try{ liveRoomPoll=window.liveRoomPoll; }catch(e){}
+    setTimeout(poll,300);
+    return true;
+  };
+
+  const previousJoin=window.liveJoinRoom;
+  if(typeof previousJoin==='function'){
+    window.liveJoinRoom=async function(){
+      const out=await previousJoin.apply(this,arguments);
+      try{
+        if((window.liveRole||liveRole)==='student' && (window.liveRoomCode||liveRoomCode) && window.scmOnlineStudentId){
+          const room=(typeof liveGetRoom==='function')?liveGetRoom(window.liveRoomCode||liveRoomCode):null;
+          const p=room&&room.players&&(room.players[window.livePlayerId||livePlayerId]);
+          window.scmEnterStudentWaitingRoomV94({
+            room_code:window.liveRoomCode||liveRoomCode,
+            student_id:window.scmOnlineStudentId,
+            championship_id:window.scmOnlineChampionshipId || (room&&room.championship_id),
+            championship_name:room&&room.title,
+            student_name:(p&&p.name)||window.livePlayerName||livePlayerName,
+            age:p&&p.age,
+            grade:p&&p.grade,
+            school_name:p&&p.school,
+            player_id:p&&p.studentCode
+          });
+        }
+      }catch(e){}
+      return out;
+    };
+  }
+
+  window.resumePlayerV38=async function(){
+    const playerId=prompt('Enter Player ID');
+    if(!playerId) return;
+    try{
+      const data=await api('/api/resume-player',{method:'POST',body:JSON.stringify({player_id:playerId})});
+      if(!data.ok){alert(data.error||'Player ID not found.');return;}
+      window.scmEnterStudentWaitingRoomV94(data);
+      try{ if(typeof scmCheckRoomStatusNow==='function') setTimeout(()=>scmCheckRoomStatusNow(),250); }catch(e){}
+    }catch(e){alert('Resume Player error: '+e.message);}
+  };
+
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(function(){
+      try{
+        const joinBtn=[...document.querySelectorAll('#liveHome .liveBox:nth-child(2) button')].find(b=>String(b.textContent||'').trim()==='Join Room');
+        if(joinBtn && !by('v38ResumePlayerBtn')){
+          const btn=document.createElement('button');
+          btn.id='v38ResumePlayerBtn';
+          btn.type='button';
+          btn.className='v38ResumeBtn';
+          btn.textContent='Resume Player';
+          btn.onclick=window.resumePlayerV38;
+          joinBtn.insertAdjacentElement('afterend',btn);
+        }
+      }catch(e){}
+    },500);
+  });
+})();
+</script>
