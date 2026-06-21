@@ -4572,52 +4572,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
     document.body.appendChild(iframe);
     var doc=iframe.contentWindow.document;
     doc.open();
-    doc.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+html+'
-<!-- v98 Resume Replay Lock: prevent same round from opening again after submit -->
-<script>
-(function(){
-  const previousSubmitV98 = window.liveSubmitResult;
-  window.liveSubmitResult = function(status){
-    const beforeRoom = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
-    const roundBefore = beforeRoom ? Number(beforeRoom.roundId||beforeRoom.current_round||0) : (typeof liveActiveRoundId!=='undefined' ? Number(liveActiveRoundId||0) : 0);
-    const keyBefore = beforeRoom ? (beforeRoom.currentRoundKey || ('R'+roundBefore)) : ('R'+roundBefore);
-    if(previousSubmitV98) previousSubmitV98.apply(this, arguments);
-    try{
-      const room = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
-      const rn = room ? Number(room.roundId||roundBefore||0) : roundBefore;
-      const key = room ? (room.currentRoundKey || keyBefore || ('R'+rn)) : (keyBefore || ('R'+rn));
-      if(rn){
-        liveSubmittedRoundId = rn;
-        if(typeof liveActiveRoundId!=='undefined') liveActiveRoundId = rn;
-        try{ localStorage.setItem('scm_last_started_round', String(rn)); }catch(e){}
-      }
-      liveSubmitted = true;
-      liveModeActive = false;
-      if(room && room.players && livePlayerId && room.players[livePlayerId]){
-        const p = room.players[livePlayerId];
-        p.results = p.results || {};
-        if(!p.results[key]){
-          p.results[key] = {
-            roundId: rn,
-            key: key,
-            label: room.currentRoundLabel || key,
-            stars: (typeof stars!=='undefined'?stars:0),
-            solved: (typeof solved!=='undefined'?solved:0),
-            time: (typeof lastUsedSeconds!=='undefined'?lastUsedSeconds:0),
-            level: room.level,
-            duration: room.duration,
-            status: status
-          };
-        }
-        p.status = status;
-        if(typeof liveSaveRoom==='function') liveSaveRoom(room);
-      }
-    }catch(e){ console.warn('v98 replay lock submit guard failed', e); }
-  };
-})();
-</script>
-
-</body></html>');
+    doc.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+html+'</body></html>');
     doc.close();
     setTimeout(function(){try{iframe.contentWindow.focus();iframe.contentWindow.print();}catch(e){alert('Print error: '+e.message);} setTimeout(function(){try{iframe.remove();}catch(e){}},1800);},250);
   }
@@ -5128,6 +5083,50 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 })();
 </script>
 
+<!-- v98 Resume Replay Lock: prevent same round from opening again after submit -->
+<script>
+(function(){
+  const previousSubmitV98 = window.liveSubmitResult;
+  window.liveSubmitResult = function(status){
+    const beforeRoom = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+    const roundBefore = beforeRoom ? Number(beforeRoom.roundId||beforeRoom.current_round||0) : (typeof liveActiveRoundId!=='undefined' ? Number(liveActiveRoundId||0) : 0);
+    const keyBefore = beforeRoom ? (beforeRoom.currentRoundKey || ('R'+roundBefore)) : ('R'+roundBefore);
+    if(previousSubmitV98) previousSubmitV98.apply(this, arguments);
+    try{
+      const room = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+      const rn = room ? Number(room.roundId||roundBefore||0) : roundBefore;
+      const key = room ? (room.currentRoundKey || keyBefore || ('R'+rn)) : (keyBefore || ('R'+rn));
+      if(rn){
+        liveSubmittedRoundId = rn;
+        if(typeof liveActiveRoundId!=='undefined') liveActiveRoundId = rn;
+        try{ localStorage.setItem('scm_last_started_round', String(rn)); }catch(e){}
+      }
+      liveSubmitted = true;
+      liveModeActive = false;
+      if(room && room.players && livePlayerId && room.players[livePlayerId]){
+        const p = room.players[livePlayerId];
+        p.results = p.results || {};
+        if(!p.results[key]){
+          p.results[key] = {
+            roundId: rn,
+            key: key,
+            label: room.currentRoundLabel || key,
+            stars: (typeof stars!=='undefined'?stars:0),
+            solved: (typeof solved!=='undefined'?solved:0),
+            time: (typeof lastUsedSeconds!=='undefined'?lastUsedSeconds:0),
+            level: room.level,
+            duration: room.duration,
+            status: status
+          };
+        }
+        p.status = status;
+        if(typeof liveSaveRoom==='function') liveSaveRoom(room);
+      }
+    }catch(e){ console.warn('v98 replay lock submit guard failed', e); }
+  };
+})();
+</script>
+
 <!-- v94 Shared Student Waiting Entry: Join and Resume use the same listening path -->
 <script>
 (function(){
@@ -5428,3 +5427,91 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 })();
 </script>
 
+
+
+<script>
+/* v101 clean replay guard: allow rejoin to current round if not submitted; block replay after submitted. */
+(function(){
+  function scmCurrentRoundKey101(room){
+    if(!room) return null;
+    return room.currentRoundKey || (room.roundId ? ('R'+room.roundId) : null);
+  }
+  function scmPlayer101(room){
+    try{return room && room.players && livePlayerId ? room.players[livePlayerId] : null;}catch(e){return null;}
+  }
+  function scmHasSubmittedCurrentRound101(room){
+    const p=scmPlayer101(room);
+    const key=scmCurrentRoundKey101(room);
+    if(!p || !key) return false;
+    if(p.results && p.results[key]) return true;
+    const st=String(p.status||'');
+    return (st.indexOf('Finished')>=0 || st.indexOf('Time Over')>=0) && room.status==='started' && p.time!=null;
+  }
+  function scmShowWaitingAfterSubmit101(room){
+    try{
+      if(typeof liveShow==='function') liveShow('liveStudentRoom');
+      const overlay=document.getElementById('liveOverlay');
+      if(overlay) overlay.style.display='flex';
+      const intro=document.getElementById('introOverlay');
+      if(intro) intro.style.display='none';
+      const status=document.getElementById('liveStudentStatus');
+      const p=scmPlayer101(room);
+      if(status){
+        const label=(room&&room.currentRoundLabel)||'Current round';
+        status.innerHTML='<div class="studentDoneBox">✅ '+label+' completed.<div class="waitingNext">Waiting for the teacher to save the round or start the next round…</div></div>';
+      }
+      if(room && room.roundId!=null){
+        try{liveSubmittedRoundId=room.roundId;}catch(e){}
+        try{liveSubmitted=true;}catch(e){}
+        try{liveModeActive=false;}catch(e){}
+      }
+    }catch(e){console.error('v101 waiting display failed',e);}
+  }
+  const previousBegin101 = window.liveBeginStudent;
+  window.liveBeginStudent=function(room){
+    try{
+      room = room || (typeof liveGetRoom==='function' ? liveGetRoom(liveRoomCode) : null);
+      if(scmHasSubmittedCurrentRound101(room)){
+        scmShowWaitingAfterSubmit101(room);
+        return;
+      }
+      if(typeof previousBegin101==='function') return previousBegin101(room);
+    }catch(e){console.error('v101 liveBeginStudent guard failed',e);}
+  };
+  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
+
+  window.liveRenderRoom=function(){
+    try{
+      if(!liveRoomCode) return;
+      const room=liveGetRoom(liveRoomCode);
+      if(!room) return;
+      const tb=document.getElementById('liveTeacherBoard');
+      if(tb && typeof liveBoardRows==='function') tb.innerHTML=liveBoardRows(room,true);
+      const sb=document.getElementById('liveStudentBoard');
+      if(sb && typeof liveBoardRows==='function') sb.innerHTML=liveBoardRows(room,false);
+      const label=document.getElementById('currentRoundLabel');
+      if(label) label.textContent=room.currentRoundLabel ? ('Current: '+room.currentRoundLabel) : 'Round not started';
+      const saved=document.getElementById('savedRoundsLine');
+      if(saved && typeof v15SavedRoundsText==='function') saved.textContent=v15SavedRoundsText(room);
+
+      if(liveRole==='student'){
+        if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
+        if(scmHasSubmittedCurrentRound101(room)){
+          scmShowWaitingAfterSubmit101(room);
+          return;
+        }
+        if(room.status==='starting' && room.startAt && livePreparedRoundId!==room.roundId){
+          livePreparedRoundId=room.roundId;
+          if(typeof livePrepareStart==='function') livePrepareStart(room);
+          return;
+        }
+        if(room.status==='started' && !liveModeActive && room.roundId!==liveSubmittedRoundId && room.questions && room.questions.length){
+          window.liveBeginStudent(room);
+          return;
+        }
+      }
+    }catch(e){console.error('v101 liveRenderRoom failed',e);}
+  };
+  try{ liveRenderRoom=window.liveRenderRoom; }catch(e){}
+})();
+</script>
