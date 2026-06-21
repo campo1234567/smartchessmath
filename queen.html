@@ -4413,6 +4413,94 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 })();
 </script>
 
+
+
+<script>
+/* v102 clean replay guard: allow rejoin to current round if not submitted; block replay after submitted. */
+(function(){
+  function scmCurrentRoundKey102(room){
+    if(!room) return null;
+    return room.currentRoundKey || (room.roundId ? ('R'+room.roundId) : null);
+  }
+  function scmPlayer102(room){
+    try{return room && room.players && livePlayerId ? room.players[livePlayerId] : null;}catch(e){return null;}
+  }
+  function scmHasSubmittedCurrentRound102(room){
+    const p=scmPlayer102(room);
+    const key=scmCurrentRoundKey102(room);
+    if(!p || !key) return false;
+    if(p.results && p.results[key]) return true;
+    const st=String(p.status||'');
+    return (st.indexOf('Finished')>=0 || st.indexOf('Time Over')>=0) && room.status==='started' && p.time!=null;
+  }
+  function scmShowWaitingAfterSubmit102(room){
+    try{
+      if(typeof liveShow==='function') liveShow('liveStudentRoom');
+      const overlay=document.getElementById('liveOverlay');
+      if(overlay) overlay.style.display='flex';
+      const intro=document.getElementById('introOverlay');
+      if(intro) intro.style.display='none';
+      const status=document.getElementById('liveStudentStatus');
+      if(status){
+        const label=(room&&room.currentRoundLabel)||'Current round';
+        status.innerHTML='<div class="studentDoneBox">✅ '+label+' completed.<div class="waitingNext">Waiting for the teacher to save the round or start the next round…</div></div>';
+      }
+      if(room && room.roundId!=null){
+        try{liveSubmittedRoundId=room.roundId;}catch(e){}
+        try{liveSubmitted=true;}catch(e){}
+        try{liveModeActive=false;}catch(e){}
+      }
+    }catch(e){console.error('v102 waiting display failed',e);}
+  }
+  const previousBegin102 = window.liveBeginStudent;
+  window.liveBeginStudent=function(room){
+    try{
+      room = room || (typeof liveGetRoom==='function' ? liveGetRoom(liveRoomCode) : null);
+      if(scmHasSubmittedCurrentRound102(room)){
+        scmShowWaitingAfterSubmit102(room);
+        return;
+      }
+      if(typeof previousBegin102==='function') return previousBegin102(room);
+    }catch(e){console.error('v102 liveBeginStudent guard failed',e);}
+  };
+  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
+
+  window.liveRenderRoom=function(){
+    try{
+      if(!liveRoomCode) return;
+      const room=liveGetRoom(liveRoomCode);
+      if(!room) return;
+      const tb=document.getElementById('liveTeacherBoard');
+      if(tb && typeof liveBoardRows==='function') tb.innerHTML=liveBoardRows(room,true);
+      const sb=document.getElementById('liveStudentBoard');
+      if(sb && typeof liveBoardRows==='function') sb.innerHTML=liveBoardRows(room,false);
+      const label=document.getElementById('currentRoundLabel');
+      if(label) label.textContent=room.currentRoundLabel ? ('Current: '+room.currentRoundLabel) : 'Round not started';
+      const saved=document.getElementById('savedRoundsLine');
+      if(saved && typeof v15SavedRoundsText==='function') saved.textContent=v15SavedRoundsText(room);
+
+      if(liveRole==='student'){
+        if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
+        if(scmHasSubmittedCurrentRound102(room)){
+          scmShowWaitingAfterSubmit102(room);
+          return;
+        }
+        if(room.status==='starting' && room.startAt && livePreparedRoundId!==room.roundId){
+          livePreparedRoundId=room.roundId;
+          if(typeof livePrepareStart==='function') livePrepareStart(room);
+          return;
+        }
+        if(room.status==='started' && !liveModeActive && room.roundId!==liveSubmittedRoundId && room.questions && room.questions.length){
+          window.liveBeginStudent(room);
+          return;
+        }
+      }
+    }catch(e){console.error('v102 liveRenderRoom failed',e);}
+  };
+  try{ liveRenderRoom=window.liveRenderRoom; }catch(e){}
+})();
+</script>
+
 </body>
 </html>
 
@@ -4624,7 +4712,95 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
     var w=window.open('','_blank');
     if(!w){alert('Please allow pop-ups to print this report.');return;}
     w.document.open();
-    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'
+
+<script>
+/* v102 clean replay guard: allow rejoin to current round if not submitted; block replay after submitted. */
+(function(){
+  function scmCurrentRoundKey102(room){
+    if(!room) return null;
+    return room.currentRoundKey || (room.roundId ? ('R'+room.roundId) : null);
+  }
+  function scmPlayer102(room){
+    try{return room && room.players && livePlayerId ? room.players[livePlayerId] : null;}catch(e){return null;}
+  }
+  function scmHasSubmittedCurrentRound102(room){
+    const p=scmPlayer102(room);
+    const key=scmCurrentRoundKey102(room);
+    if(!p || !key) return false;
+    if(p.results && p.results[key]) return true;
+    const st=String(p.status||'');
+    return (st.indexOf('Finished')>=0 || st.indexOf('Time Over')>=0) && room.status==='started' && p.time!=null;
+  }
+  function scmShowWaitingAfterSubmit102(room){
+    try{
+      if(typeof liveShow==='function') liveShow('liveStudentRoom');
+      const overlay=document.getElementById('liveOverlay');
+      if(overlay) overlay.style.display='flex';
+      const intro=document.getElementById('introOverlay');
+      if(intro) intro.style.display='none';
+      const status=document.getElementById('liveStudentStatus');
+      if(status){
+        const label=(room&&room.currentRoundLabel)||'Current round';
+        status.innerHTML='<div class="studentDoneBox">✅ '+label+' completed.<div class="waitingNext">Waiting for the teacher to save the round or start the next round…</div></div>';
+      }
+      if(room && room.roundId!=null){
+        try{liveSubmittedRoundId=room.roundId;}catch(e){}
+        try{liveSubmitted=true;}catch(e){}
+        try{liveModeActive=false;}catch(e){}
+      }
+    }catch(e){console.error('v102 waiting display failed',e);}
+  }
+  const previousBegin102 = window.liveBeginStudent;
+  window.liveBeginStudent=function(room){
+    try{
+      room = room || (typeof liveGetRoom==='function' ? liveGetRoom(liveRoomCode) : null);
+      if(scmHasSubmittedCurrentRound102(room)){
+        scmShowWaitingAfterSubmit102(room);
+        return;
+      }
+      if(typeof previousBegin102==='function') return previousBegin102(room);
+    }catch(e){console.error('v102 liveBeginStudent guard failed',e);}
+  };
+  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
+
+  window.liveRenderRoom=function(){
+    try{
+      if(!liveRoomCode) return;
+      const room=liveGetRoom(liveRoomCode);
+      if(!room) return;
+      const tb=document.getElementById('liveTeacherBoard');
+      if(tb && typeof liveBoardRows==='function') tb.innerHTML=liveBoardRows(room,true);
+      const sb=document.getElementById('liveStudentBoard');
+      if(sb && typeof liveBoardRows==='function') sb.innerHTML=liveBoardRows(room,false);
+      const label=document.getElementById('currentRoundLabel');
+      if(label) label.textContent=room.currentRoundLabel ? ('Current: '+room.currentRoundLabel) : 'Round not started';
+      const saved=document.getElementById('savedRoundsLine');
+      if(saved && typeof v15SavedRoundsText==='function') saved.textContent=v15SavedRoundsText(room);
+
+      if(liveRole==='student'){
+        if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
+        if(scmHasSubmittedCurrentRound102(room)){
+          scmShowWaitingAfterSubmit102(room);
+          return;
+        }
+        if(room.status==='starting' && room.startAt && livePreparedRoundId!==room.roundId){
+          livePreparedRoundId=room.roundId;
+          if(typeof livePrepareStart==='function') livePrepareStart(room);
+          return;
+        }
+        if(room.status==='started' && !liveModeActive && room.roundId!==liveSubmittedRoundId && room.questions && room.questions.length){
+          window.liveBeginStudent(room);
+          return;
+        }
+      }
+    }catch(e){console.error('v102 liveRenderRoom failed',e);}
+  };
+  try{ liveRenderRoom=window.liveRenderRoom; }catch(e){}
+})();
+</script>
+
+</body></html>');
     w.document.close();
     w.focus();
     setTimeout(function(){w.print();},350);
@@ -4746,7 +4922,95 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   function printHtmlDocument(title,bodyHtml){
     var css='<style>body{font-family:Arial,system-ui,sans-serif;color:#142033;margin:18px}h1{text-align:center;color:#0f5b2e;margin:0 0 10px}.meta{text-align:center;font-weight:900;margin:6px 0 14px;color:#17324d}.summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.summaryBox{background:#eef7ff;border:2px solid #c7ddff;border-radius:14px;padding:10px;text-align:center;font-weight:1000}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#203040;color:white;padding:8px}td{border-bottom:1px solid #dbe4ef;padding:7px;text-align:center}td:nth-child(2){text-align:left}.tieNote{font-size:12px;margin-top:8px;color:#334155;font-weight:900;background:#fff7cc;border:1px solid #f0d36d;border-radius:10px;padding:6px}@media print{@page{size:A4 landscape;margin:10mm}button{display:none!important}}</style>';
     var w=window.open('','_blank'); if(!w){alert('Please allow pop-ups to print this report.');return;}
-    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},350);
+    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'
+
+<script>
+/* v102 clean replay guard: allow rejoin to current round if not submitted; block replay after submitted. */
+(function(){
+  function scmCurrentRoundKey102(room){
+    if(!room) return null;
+    return room.currentRoundKey || (room.roundId ? ('R'+room.roundId) : null);
+  }
+  function scmPlayer102(room){
+    try{return room && room.players && livePlayerId ? room.players[livePlayerId] : null;}catch(e){return null;}
+  }
+  function scmHasSubmittedCurrentRound102(room){
+    const p=scmPlayer102(room);
+    const key=scmCurrentRoundKey102(room);
+    if(!p || !key) return false;
+    if(p.results && p.results[key]) return true;
+    const st=String(p.status||'');
+    return (st.indexOf('Finished')>=0 || st.indexOf('Time Over')>=0) && room.status==='started' && p.time!=null;
+  }
+  function scmShowWaitingAfterSubmit102(room){
+    try{
+      if(typeof liveShow==='function') liveShow('liveStudentRoom');
+      const overlay=document.getElementById('liveOverlay');
+      if(overlay) overlay.style.display='flex';
+      const intro=document.getElementById('introOverlay');
+      if(intro) intro.style.display='none';
+      const status=document.getElementById('liveStudentStatus');
+      if(status){
+        const label=(room&&room.currentRoundLabel)||'Current round';
+        status.innerHTML='<div class="studentDoneBox">✅ '+label+' completed.<div class="waitingNext">Waiting for the teacher to save the round or start the next round…</div></div>';
+      }
+      if(room && room.roundId!=null){
+        try{liveSubmittedRoundId=room.roundId;}catch(e){}
+        try{liveSubmitted=true;}catch(e){}
+        try{liveModeActive=false;}catch(e){}
+      }
+    }catch(e){console.error('v102 waiting display failed',e);}
+  }
+  const previousBegin102 = window.liveBeginStudent;
+  window.liveBeginStudent=function(room){
+    try{
+      room = room || (typeof liveGetRoom==='function' ? liveGetRoom(liveRoomCode) : null);
+      if(scmHasSubmittedCurrentRound102(room)){
+        scmShowWaitingAfterSubmit102(room);
+        return;
+      }
+      if(typeof previousBegin102==='function') return previousBegin102(room);
+    }catch(e){console.error('v102 liveBeginStudent guard failed',e);}
+  };
+  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
+
+  window.liveRenderRoom=function(){
+    try{
+      if(!liveRoomCode) return;
+      const room=liveGetRoom(liveRoomCode);
+      if(!room) return;
+      const tb=document.getElementById('liveTeacherBoard');
+      if(tb && typeof liveBoardRows==='function') tb.innerHTML=liveBoardRows(room,true);
+      const sb=document.getElementById('liveStudentBoard');
+      if(sb && typeof liveBoardRows==='function') sb.innerHTML=liveBoardRows(room,false);
+      const label=document.getElementById('currentRoundLabel');
+      if(label) label.textContent=room.currentRoundLabel ? ('Current: '+room.currentRoundLabel) : 'Round not started';
+      const saved=document.getElementById('savedRoundsLine');
+      if(saved && typeof v15SavedRoundsText==='function') saved.textContent=v15SavedRoundsText(room);
+
+      if(liveRole==='student'){
+        if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
+        if(scmHasSubmittedCurrentRound102(room)){
+          scmShowWaitingAfterSubmit102(room);
+          return;
+        }
+        if(room.status==='starting' && room.startAt && livePreparedRoundId!==room.roundId){
+          livePreparedRoundId=room.roundId;
+          if(typeof livePrepareStart==='function') livePrepareStart(room);
+          return;
+        }
+        if(room.status==='started' && !liveModeActive && room.roundId!==liveSubmittedRoundId && room.questions && room.questions.length){
+          window.liveBeginStudent(room);
+          return;
+        }
+      }
+    }catch(e){console.error('v102 liveRenderRoom failed',e);}
+  };
+  try{ liveRenderRoom=window.liveRenderRoom; }catch(e){}
+})();
+</script>
+
+</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},350);
   }
   window.printTeacherReport=function(){
     var card=by('teacherReportPrint'); if(!card)return alert('No report is open.');
