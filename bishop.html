@@ -321,6 +321,66 @@ button{background:linear-gradient(180deg,#ffbd4d,#f58220);color:white;cursor:poi
 .v44ChampTable th{background:#1f3347;color:#fff;padding:9px}
 .v44ChampTable td{padding:9px;border-bottom:1px solid #dbeafe;font-weight:900}
 .v44OpenBtn{background:#2563eb;color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:1000;cursor:pointer}
+
+/* SCM Mobile Live Class Responsive Fix v1 */
+
+@media (max-width: 760px){
+  .liveOverlay{
+    padding:8px!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+  .liveCard{
+    width:calc(100vw - 16px)!important;
+    max-width:calc(100vw - 16px)!important;
+    min-width:0!important;
+    margin:8px auto 24px!important;
+    padding:14px 10px!important;
+    border-width:4px!important;
+    border-radius:22px!important;
+    box-sizing:border-box!important;
+    overflow-x:hidden!important;
+  }
+  .liveCard h2{
+    font-size:clamp(22px,7vw,30px)!important;
+    line-height:1.18!important;
+    margin:6px 0 8px!important;
+    word-break:normal!important;
+  }
+  .liveCard h3{font-size:20px!important;margin:8px 0!important;}
+  .liveCard p{font-size:15px!important;line-height:1.35!important;}
+  .liveGrid{grid-template-columns:1fr!important;gap:10px!important;}
+  .liveBox{padding:10px!important;border-radius:18px!important;min-width:0!important;}
+  .liveRow{gap:6px!important;margin:7px 0!important;}
+  .liveInput, .liveCard select{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    font-size:15px!important;
+    padding:8px 10px!important;
+  }
+  .roomCodeBig{font-size:28px!important;padding:7px 14px!important;}
+  .leaderboard{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    border-spacing:0 6px!important;
+    font-size:12px!important;
+    white-space:nowrap!important;
+  }
+  .leaderboard th,.leaderboard td{padding:6px 7px!important;}
+  .countdownBig{font-size:44px!important;}
+}
+@media (max-width: 420px){
+  .liveCard{width:calc(100vw - 10px)!important;max-width:calc(100vw - 10px)!important;padding:12px 8px!important;}
+  .liveCard h2{font-size:23px!important;}
+  .liveCard p{font-size:14px!important;}
+  .liveInput, .liveCard select, .liveCard button{font-size:14px!important;}
+}
+
 </style>
 </head>
 <body>
