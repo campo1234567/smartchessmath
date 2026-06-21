@@ -4572,7 +4572,52 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
     document.body.appendChild(iframe);
     var doc=iframe.contentWindow.document;
     doc.open();
-    doc.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+html+'</body></html>');
+    doc.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+html+'
+<!-- v98 Resume Replay Lock: prevent same round from opening again after submit -->
+<script>
+(function(){
+  const previousSubmitV98 = window.liveSubmitResult;
+  window.liveSubmitResult = function(status){
+    const beforeRoom = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+    const roundBefore = beforeRoom ? Number(beforeRoom.roundId||beforeRoom.current_round||0) : (typeof liveActiveRoundId!=='undefined' ? Number(liveActiveRoundId||0) : 0);
+    const keyBefore = beforeRoom ? (beforeRoom.currentRoundKey || ('R'+roundBefore)) : ('R'+roundBefore);
+    if(previousSubmitV98) previousSubmitV98.apply(this, arguments);
+    try{
+      const room = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+      const rn = room ? Number(room.roundId||roundBefore||0) : roundBefore;
+      const key = room ? (room.currentRoundKey || keyBefore || ('R'+rn)) : (keyBefore || ('R'+rn));
+      if(rn){
+        liveSubmittedRoundId = rn;
+        if(typeof liveActiveRoundId!=='undefined') liveActiveRoundId = rn;
+        try{ localStorage.setItem('scm_last_started_round', String(rn)); }catch(e){}
+      }
+      liveSubmitted = true;
+      liveModeActive = false;
+      if(room && room.players && livePlayerId && room.players[livePlayerId]){
+        const p = room.players[livePlayerId];
+        p.results = p.results || {};
+        if(!p.results[key]){
+          p.results[key] = {
+            roundId: rn,
+            key: key,
+            label: room.currentRoundLabel || key,
+            stars: (typeof stars!=='undefined'?stars:0),
+            solved: (typeof solved!=='undefined'?solved:0),
+            time: (typeof lastUsedSeconds!=='undefined'?lastUsedSeconds:0),
+            level: room.level,
+            duration: room.duration,
+            status: status
+          };
+        }
+        p.status = status;
+        if(typeof liveSaveRoom==='function') liveSaveRoom(room);
+      }
+    }catch(e){ console.warn('v98 replay lock submit guard failed', e); }
+  };
+})();
+</script>
+
+</body></html>');
     doc.close();
     setTimeout(function(){try{iframe.contentWindow.focus();iframe.contentWindow.print();}catch(e){alert('Print error: '+e.message);} setTimeout(function(){try{iframe.remove();}catch(e){}},1800);},250);
   }
@@ -5080,50 +5125,6 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
     wrappedRefresh.__v80StrictWrap=true;
     window.scmRefreshRoomStudents=wrappedRefresh;
   }
-})();
-</script>
-
-<!-- v98 Resume Replay Lock: prevent same round from opening again after submit -->
-<script>
-(function(){
-  const previousSubmitV98 = window.liveSubmitResult;
-  window.liveSubmitResult = function(status){
-    const beforeRoom = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
-    const roundBefore = beforeRoom ? Number(beforeRoom.roundId||beforeRoom.current_round||0) : (typeof liveActiveRoundId!=='undefined' ? Number(liveActiveRoundId||0) : 0);
-    const keyBefore = beforeRoom ? (beforeRoom.currentRoundKey || ('R'+roundBefore)) : ('R'+roundBefore);
-    if(previousSubmitV98) previousSubmitV98.apply(this, arguments);
-    try{
-      const room = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
-      const rn = room ? Number(room.roundId||roundBefore||0) : roundBefore;
-      const key = room ? (room.currentRoundKey || keyBefore || ('R'+rn)) : (keyBefore || ('R'+rn));
-      if(rn){
-        liveSubmittedRoundId = rn;
-        if(typeof liveActiveRoundId!=='undefined') liveActiveRoundId = rn;
-        try{ localStorage.setItem('scm_last_started_round', String(rn)); }catch(e){}
-      }
-      liveSubmitted = true;
-      liveModeActive = false;
-      if(room && room.players && livePlayerId && room.players[livePlayerId]){
-        const p = room.players[livePlayerId];
-        p.results = p.results || {};
-        if(!p.results[key]){
-          p.results[key] = {
-            roundId: rn,
-            key: key,
-            label: room.currentRoundLabel || key,
-            stars: (typeof stars!=='undefined'?stars:0),
-            solved: (typeof solved!=='undefined'?solved:0),
-            time: (typeof lastUsedSeconds!=='undefined'?lastUsedSeconds:0),
-            level: room.level,
-            duration: room.duration,
-            status: status
-          };
-        }
-        p.status = status;
-        if(typeof liveSaveRoom==='function') liveSaveRoom(room);
-      }
-    }catch(e){ console.warn('v98 replay lock submit guard failed', e); }
-  };
 })();
 </script>
 
