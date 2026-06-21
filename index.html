@@ -131,7 +131,7 @@ h1 .gold{
   clip-path:ellipse(78% 100% at 50% 100%);z-index:1
 }
 
-.section{padding:24px 0}.sectionTitle{text-align:center;color:#06451d;font-size:38px;margin:0 0 8px;font-weight:900;letter-spacing:-.03em}.sectionTitle:after{content:"★";display:block;color:#f4c430;font-size:20px;line-height:1;margin-top:6px}.sectionSub{text-align:center;color:#163050;font-weight:800;max-width:720px;margin:0 auto 30px;line-height:1.55}
+.section{padding:24px 0}.sectionTitle{text-align:center;color:#06451d;font-size:38px;margin:0 0 8px;font-weight:900;letter-spacing:-.03em}.sectionTitle:after{content:"";display:none}.skillsLine{text-align:center;font-size:26px;font-weight:900;margin:6px 0 10px;color:#06451d;letter-spacing:6px}.skillsLine span{display:inline-block;cursor:help}.skillsLine .arrow{color:#f4a000;letter-spacing:0;margin:0 8px}.sectionSub{text-align:center;color:#163050;font-weight:800;max-width:720px;margin:0 auto 30px;line-height:1.55}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.program{background:#fff;border-radius:24px;padding:28px;box-shadow:0 18px 36px rgba(0,0,0,.11);border:1px solid #e2eddc;min-height:300px;display:flex;flex-direction:column;justify-content:space-between}.program .icon{font-size:62px}.program h3{font-size:24px;color:#0a2858;margin:16px 0 10px}.program p{font-size:16px;line-height:1.55;font-weight:800;color:#173050;margin:0 0 16px}.pills{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}.pill{border-radius:999px;background:#fff2c7;color:#d85c00;font-weight:900;padding:8px 13px}.pill:first-child{background:#dff6d8;color:#08792b}
 .grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:24px}
 .panel{background:#fff;border:1px solid #e2eddc;border-radius:24px;padding:26px;box-shadow:0 18px 36px rgba(0,0,0,.1)}.panel h3{font-size:28px;color:#0a2858;margin:0 0 10px}.roleGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.role{background:#fff;border:1px solid #e0ecda;border-radius:18px;text-align:center;padding:17px 8px;font-weight:900;box-shadow:0 8px 18px rgba(0,0,0,.06)}.roleIcon{font-size:34px;margin-bottom:6px}
@@ -247,23 +247,58 @@ h1 .gold{
 
   <section id="programs" class="container section">
     <h2 class="sectionTitle">Educational Programs</h2>
+    <div class="skillsLine" aria-label="Smart Chess Math skills">
+      <span title="Smart Chess Math Educational Programs">♞ ♛ ♜ ♝</span>
+      <span class="arrow">➜</span>
+      <span title="Creative Thinking">💡</span>
+      <span title="Strategic Thinking">🎯</span>
+      <span title="Planning & Organization">📋</span>
+      <span title="Pattern Recognition">🔍</span>
+    </div>
     <p class="sectionSub">Interactive chess-and-math programs designed for young learners, school pilots, competitions, and classroom practice.</p>
     <div class="cards">
       <article class="program">
         <div>
-          <div class="icon">♘</div>
+          <div class="icon">♞</div>
           <h3>Knight Number Quest</h3>
           <p>Knight movement, number targets, smart routes, time challenges, live class mode, and championship rankings.</p>
-          <div class="pills"><span class="pill">Age 8+</span><span class="pill">Tournament Ready</span></div>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Tournament Ready</span></div>
         </div>
         <a class="btn orange" href="knight.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">♛</div>
+          <h3>Queen Number Quest</h3>
+          <p>Queen lines, number targets, smart routes, quick practice mode, live class mode, championship reports, rankings, and certificates.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="queen.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">♜</div>
+          <h3>Rook Number Quest</h3>
+          <p>Master rook movement through straight-line challenges. Collect exact target numbers, build planning skills, improve speed, and compete in live championships.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="rook.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">♝</div>
+          <h3>Bishop Number Quest</h3>
+          <p>Build diagonal vision with the bishop. Find smart routes, collect exact target numbers, recognize patterns, and compete in live school championships.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="bishop.html">Open Program →</a>
       </article>
       <article class="program">
         <div>
           <div class="icon">⭐</div>
           <h3>Smart Moves Junior</h3>
           <p>Chess piece values, number recognition, logical thinking, quick challenges, and certificates for young learners.</p>
-          <div class="pills"><span class="pill">Age 7+</span><span class="pill">Game Mode</span></div>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Game Mode</span></div>
         </div>
         <a class="btn" href="#">Coming Soon ⏳</a>
       </article>
