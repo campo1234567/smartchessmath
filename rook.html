@@ -4538,44 +4538,6 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 
 
 
-<script>
-/* Smart Chess Math UI Add-on: safe home button after certificates only. Does not touch Timer, Resume, Submit Score, or Live Engine. */
-(function(){
-  function isLiveStudent(){
-    try{return !!(window.liveRoomCode && window.livePlayerId && window.liveRole==='student');}
-    catch(e){return false;}
-  }
-  window.scmBackToHomePage=function(){
-    if(isLiveStudent()){
-      const msg='The next round may start soon.\n\nAre you sure you want to leave the championship and return to the home page?';
-      if(!confirm(msg)) return;
-    }
-    window.location.href='index.html';
-  };
-  function addHomeButtons(){
-    try{
-      document.querySelectorAll('#finalText .printActions').forEach(function(actions){
-        if(!actions.querySelector('.scmHomeBtn')){
-          const btn=document.createElement('button');
-          btn.className='scmHomeBtn';
-          btn.type='button';
-          btn.innerHTML='🏠 Back to Home Page';
-          btn.onclick=window.scmBackToHomePage;
-          actions.appendChild(btn);
-        }
-      });
-    }catch(e){}
-  }
-  const style=document.createElement('style');
-  style.textContent='.scmHomeBtn{background:linear-gradient(180deg,#22c55e,#15803d)!important;color:white!important;box-shadow:0 4px 0 #065f46!important;border:3px solid #bbf7d0!important}.scmHomeBtn:hover{filter:brightness(1.06)}';
-  document.head.appendChild(style);
-  const target=document.getElementById('finalText');
-  if(target){new MutationObserver(addHomeButtons).observe(target,{childList:true,subtree:true});}
-  document.addEventListener('DOMContentLoaded',addHomeButtons);
-  setInterval(addHomeButtons,1200);
-})();
-</script>
-
 </body>
 </html>
 
@@ -4787,47 +4749,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
     var w=window.open('','_blank');
     if(!w){alert('Please allow pop-ups to print this report.');return;}
     w.document.open();
-    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'
-
-<script>
-/* Smart Chess Math UI Add-on: safe home button after certificates only. Does not touch Timer, Resume, Submit Score, or Live Engine. */
-(function(){
-  function isLiveStudent(){
-    try{return !!(window.liveRoomCode && window.livePlayerId && window.liveRole==='student');}
-    catch(e){return false;}
-  }
-  window.scmBackToHomePage=function(){
-    if(isLiveStudent()){
-      const msg='The next round may start soon.\n\nAre you sure you want to leave the championship and return to the home page?';
-      if(!confirm(msg)) return;
-    }
-    window.location.href='index.html';
-  };
-  function addHomeButtons(){
-    try{
-      document.querySelectorAll('#finalText .printActions').forEach(function(actions){
-        if(!actions.querySelector('.scmHomeBtn')){
-          const btn=document.createElement('button');
-          btn.className='scmHomeBtn';
-          btn.type='button';
-          btn.innerHTML='🏠 Back to Home Page';
-          btn.onclick=window.scmBackToHomePage;
-          actions.appendChild(btn);
-        }
-      });
-    }catch(e){}
-  }
-  const style=document.createElement('style');
-  style.textContent='.scmHomeBtn{background:linear-gradient(180deg,#22c55e,#15803d)!important;color:white!important;box-shadow:0 4px 0 #065f46!important;border:3px solid #bbf7d0!important}.scmHomeBtn:hover{filter:brightness(1.06)}';
-  document.head.appendChild(style);
-  const target=document.getElementById('finalText');
-  if(target){new MutationObserver(addHomeButtons).observe(target,{childList:true,subtree:true});}
-  document.addEventListener('DOMContentLoaded',addHomeButtons);
-  setInterval(addHomeButtons,1200);
-})();
-</script>
-
-</body></html>');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');
     w.document.close();
     w.focus();
     setTimeout(function(){w.print();},350);
@@ -4949,47 +4871,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   function printHtmlDocument(title,bodyHtml){
     var css='<style>body{font-family:Arial,system-ui,sans-serif;color:#142033;margin:18px}h1{text-align:center;color:#0f5b2e;margin:0 0 10px}.meta{text-align:center;font-weight:900;margin:6px 0 14px;color:#17324d}.summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.summaryBox{background:#eef7ff;border:2px solid #c7ddff;border-radius:14px;padding:10px;text-align:center;font-weight:1000}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#203040;color:white;padding:8px}td{border-bottom:1px solid #dbe4ef;padding:7px;text-align:center}td:nth-child(2){text-align:left}.tieNote{font-size:12px;margin-top:8px;color:#334155;font-weight:900;background:#fff7cc;border:1px solid #f0d36d;border-radius:10px;padding:6px}@media print{@page{size:A4 landscape;margin:10mm}button{display:none!important}}</style>';
     var w=window.open('','_blank'); if(!w){alert('Please allow pop-ups to print this report.');return;}
-    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'
-
-<script>
-/* Smart Chess Math UI Add-on: safe home button after certificates only. Does not touch Timer, Resume, Submit Score, or Live Engine. */
-(function(){
-  function isLiveStudent(){
-    try{return !!(window.liveRoomCode && window.livePlayerId && window.liveRole==='student');}
-    catch(e){return false;}
-  }
-  window.scmBackToHomePage=function(){
-    if(isLiveStudent()){
-      const msg='The next round may start soon.\n\nAre you sure you want to leave the championship and return to the home page?';
-      if(!confirm(msg)) return;
-    }
-    window.location.href='index.html';
-  };
-  function addHomeButtons(){
-    try{
-      document.querySelectorAll('#finalText .printActions').forEach(function(actions){
-        if(!actions.querySelector('.scmHomeBtn')){
-          const btn=document.createElement('button');
-          btn.className='scmHomeBtn';
-          btn.type='button';
-          btn.innerHTML='🏠 Back to Home Page';
-          btn.onclick=window.scmBackToHomePage;
-          actions.appendChild(btn);
-        }
-      });
-    }catch(e){}
-  }
-  const style=document.createElement('style');
-  style.textContent='.scmHomeBtn{background:linear-gradient(180deg,#22c55e,#15803d)!important;color:white!important;box-shadow:0 4px 0 #065f46!important;border:3px solid #bbf7d0!important}.scmHomeBtn:hover{filter:brightness(1.06)}';
-  document.head.appendChild(style);
-  const target=document.getElementById('finalText');
-  if(target){new MutationObserver(addHomeButtons).observe(target,{childList:true,subtree:true});}
-  document.addEventListener('DOMContentLoaded',addHomeButtons);
-  setInterval(addHomeButtons,1200);
-})();
-</script>
-
-</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},350);
+    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},350);
   }
   window.printTeacherReport=function(){
     var card=by('teacherReportPrint'); if(!card)return alert('No report is open.');
