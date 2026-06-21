@@ -4576,6 +4576,71 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 })();
 </script>
 
+
+
+<script>
+/* SCM Report Print Fix v91
+   Purpose: Print Current Round Report / Top Players as tables only.
+   It prevents certificatePrint from being used when the teacher is printing reports. */
+(function(){
+  function by(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function clean(html){
+    var box=document.createElement('div');
+    box.innerHTML=html||'';
+    box.querySelectorAll('script,.certificate,#certificatePrint,.certControls,.scmCertActions,.printActions').forEach(function(e){e.remove();});
+    box.querySelectorAll('button').forEach(function(b){
+      var s=document.createElement('span');
+      s.textContent=(b.textContent||'').replace('🏆 Final Certificate','').replace('Print Certificate','').trim();
+      b.parentNode.replaceChild(s,b);
+    });
+    return box.innerHTML;
+  }
+  function printReportDocument(title, html){
+    var css='<style>'+
+      '@page{size:A4 landscape;margin:10mm}'+
+      'body{font-family:Arial,system-ui,sans-serif;color:#142033;margin:0;background:white}'+
+      'h1{text-align:center;color:#0f5b2e;margin:0 0 10px;font-size:24px}'+
+      '.meta{text-align:center;font-weight:900;margin:6px 0 14px;color:#17324d}'+
+      '.summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}'+
+      '.summaryBox{background:#eef7ff;border:2px solid #c7ddff;border-radius:14px;padding:10px;text-align:center;font-weight:1000}'+
+      '.tieNote{font-size:12px;margin-top:8px;color:#334155;font-weight:900;background:#fff7cc;border:1px solid #f0d36d;border-radius:10px;padding:6px;text-align:center}'+
+      'table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}'+
+      'th{background:#203040;color:white;padding:7px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'+
+      'td{border-bottom:1px solid #dbe4ef;padding:6px;text-align:center}td:nth-child(2){text-align:left}'+
+      'button{display:none!important}'+
+      '</style>';
+    var iframe=document.createElement('iframe');
+    iframe.style.position='fixed';iframe.style.right='0';iframe.style.bottom='0';iframe.style.width='0';iframe.style.height='0';iframe.style.border='0';
+    document.body.appendChild(iframe);
+    var doc=iframe.contentWindow.document;
+    doc.open();
+    doc.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+html+'</body></html>');
+    doc.close();
+    setTimeout(function(){try{iframe.contentWindow.focus();iframe.contentWindow.print();}catch(e){alert('Print error: '+e.message);} setTimeout(function(){try{iframe.remove();}catch(e){}},1800);},250);
+  }
+  window.printTeacherReport=function(){
+    var card=by('teacherReportPrint');
+    if(!card) return alert('No report is open.');
+    var title=(card.querySelector('h2')&&card.querySelector('h2').textContent)||'Report';
+    var summary=by('reportSummary')?clean(by('reportSummary').innerHTML):'';
+    var table=by('reportTableBox')?clean(by('reportTableBox').innerHTML):'';
+    printReportDocument(title,'<h1>'+esc(title)+'</h1>'+summary+table);
+  };
+  function bindReportPrintButton(){
+    try{
+      document.querySelectorAll('#teacherReportPrint .reportActions button').forEach(function(btn){
+        if((btn.textContent||'').toLowerCase().indexOf('print')>=0){
+          btn.onclick=function(e){if(e)e.preventDefault();window.printTeacherReport();return false;};
+        }
+      });
+    }catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded',bindReportPrintButton);
+  setInterval(bindReportPrintButton,1000);
+})();
+</script>
+
 </body>
 </html>
 
