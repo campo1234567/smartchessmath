@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Queen Number Quest — Online Stable</title>
 <style>
 :root{--board:min(640px,92vw);--green1:#7fc957;--green2:#62A043;--green3:#427b2d;--lime:#a8ff4a}
@@ -326,85 +325,87 @@ button{background:linear-gradient(180deg,#ffbd4d,#f58220);color:white;cursor:poi
 </head>
 <body>
 <div class="introOverlay" id="introOverlay">
-<div class="introCard">
-<h1>♕ Queen Number Quest</h1>
-<p>Choose your level and time, then help the glowing queen collect numbers and reach the target exactly. Higher levels give more number choices and smarter routes.</p>
-<div class="introControls">
-<label><b>Level:</b>
-<select id="introLevel">
-<option value="1">Level 1 — Beginner Queen</option>
-<option value="2">Level 2 — Line Explorer</option>
-<option value="3">Level 3 — Best Line Master</option>
-</select>
-</label>
-<label><b>Duration:</b>
-<select id="introDuration">
-<option value="60">1 Minute</option>
-<option value="120">2 Minutes</option>
-<option selected="" value="180">3 Minutes</option>
-<option value="300">5 Minutes</option>
-</select>
-</label>
-<button class="soundBtn" onclick="startFromIntro()">🔊 Start with Sound</button>
-</div>
-</div>
+  <div class="introCard">
+    <h1>♕ Queen Number Quest</h1>
+    <p>Choose your level and time, then help the glowing queen collect numbers and reach the target exactly. Higher levels give more number choices and smarter routes.</p>
+    <div class="introControls">
+      <label><b>Level:</b>
+        <select id="introLevel">
+          <option value="1">Level 1 — Beginner Queen</option>
+          <option value="2">Level 2 — Line Explorer</option>
+          <option value="3">Level 3 — Best Line Master</option>
+        </select>
+      </label>
+      <label><b>Duration:</b>
+        <select id="introDuration">
+          <option value="60">1 Minute</option>
+          <option value="120">2 Minutes</option>
+          <option value="180" selected>3 Minutes</option>
+          <option value="300">5 Minutes</option>
+        </select>
+      </label>
+      <button class="soundBtn" onclick="startFromIntro()">🔊 Start with Sound</button>
+    </div>
+  </div>
 </div>
 <div class="overlay" id="overlay"><div class="final"><h2 id="finalTitle">Great Job!</h2><p id="finalText">You completed the challenge.</p></div></div>
+
 <div class="liveOverlay" id="liveOverlay">
-<div class="liveCard">
-<h2>🏫 Live Class Challenge — Queen Number Quest</h2>
-<p>Teacher creates a room. Students join, wait, then everyone starts together.</p>
-<div id="liveHome">
-<div class="liveGrid">
-<div class="liveBox">
-<h3>👩‍🏫 Teacher</h3>
-<div class="liveRow">
-<label><b>Level:</b> <select id="liveTeacherLevel"><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option></select></label>
-<label><b>Time:</b> <select id="liveTeacherDuration"><option value="60">1 Minute</option><option value="120">2 Minutes</option><option selected="" value="180">3 Minutes</option><option value="300">5 Minutes</option></select></label>
-</div>
-<button class="liveBtn" onclick="liveCreateRoom()">Create Room</button>
-</div>
-<div class="liveBox">
-<h3>🧒 Student</h3>
-<div class="liveRow"><input class="liveInput" id="liveStudentName" placeholder="Student name"/><input class="liveInput" id="liveJoinCode" placeholder="Room code"/></div>
-<button onclick="liveJoinRoom()">Join Room</button>
-</div>
-</div>
-<div class="liveRow"><button onclick="openPracticeMode()">🎮 Practice Mode</button></div><p class="liveNote">School Race Mode: students enter name + room code, then wait for the teacher. Demo mode works across tabs in the same browser. Online play from different devices needs Supabase/Firebase later.</p>
-</div>
-<div id="liveTeacherRoom" style="display:none">
-<h3>Teacher Room</h3><div>Room Code</div><div class="roomCodeBig" id="liveRoomCodeTeacher">----</div>
-<div class="liveRow"><button onclick="liveStartChallenge()">🚀 Start Challenge</button><button class="liveBtn" onclick="showTeacherReport()">🖨️ Print Results</button><button onclick="liveBackHome()">Close</button></div>
-<div class="countdownBig" id="teacherCountdown" style="display:none">3</div>
-<table class="leaderboard"><thead><tr><th>#</th><th>Student</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time Used</th><th>Action</th></tr></thead><tbody id="liveTeacherBoard"></tbody></table>
-</div>
-<div id="liveStudentRoom" style="display:none">
-<h3>Waiting Room</h3><div>Room Code</div><div class="roomCodeBig" id="liveRoomCodeStudent">----</div>
-<p id="liveStudentStatus">Waiting for the teacher to start...</p>
-<div class="countdownBig" id="studentCountdown" style="display:none">3</div>
-<table class="leaderboard"><thead><tr><th>#</th><th>Student</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time Used</th></tr></thead><tbody id="liveStudentBoard"></tbody></table>
-<div class="liveRow"><button onclick="liveLeaveRoom()">Leave</button></div>
-</div>
-</div>
+  <div class="liveCard">
+    <h2>🏫 Live Class Challenge — Queen Number Quest</h2>
+    <p>Teacher creates a room. Students join, wait, then everyone starts together.</p>
+    <div id="liveHome">
+      <div class="liveGrid">
+        <div class="liveBox">
+          <h3>👩‍🏫 Teacher</h3>
+          <div class="liveRow">
+            <label><b>Level:</b> <select id="liveTeacherLevel"><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option></select></label>
+            <label><b>Time:</b> <select id="liveTeacherDuration"><option value="60">1 Minute</option><option value="120">2 Minutes</option><option value="180" selected>3 Minutes</option><option value="300">5 Minutes</option></select></label>
+          </div>
+          <button class="liveBtn" onclick="liveCreateRoom()">Create Room</button>
+        </div>
+        <div class="liveBox">
+          <h3>🧒 Student</h3>
+          <div class="liveRow"><input class="liveInput" id="liveStudentName" placeholder="Student name"><input class="liveInput" id="liveJoinCode" placeholder="Room code"></div>
+          <button onclick="liveJoinRoom()">Join Room</button>
+        </div>
+      </div>
+      <div class="liveRow"><button onclick="openPracticeMode()">🎮 Practice Mode</button></div><p class="liveNote">School Race Mode: students enter name + room code, then wait for the teacher. Demo mode works across tabs in the same browser. Online play from different devices needs Supabase/Firebase later.</p>
+    </div>
+    <div id="liveTeacherRoom" style="display:none">
+      <h3>Teacher Room</h3><div>Room Code</div><div class="roomCodeBig" id="liveRoomCodeTeacher">----</div>
+      <div class="liveRow"><button onclick="liveStartChallenge()">🚀 Start Challenge</button><button class="liveBtn" onclick="showTeacherReport()">🖨️ Print Results</button><button onclick="liveBackHome()">Close</button></div>
+      <div id="teacherCountdown" class="countdownBig" style="display:none">3</div>
+      <table class="leaderboard"><thead><tr><th>#</th><th>Student</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time Used</th><th>Action</th></tr></thead><tbody id="liveTeacherBoard"></tbody></table>
+    </div>
+    <div id="liveStudentRoom" style="display:none">
+      <h3>Waiting Room</h3><div>Room Code</div><div class="roomCodeBig" id="liveRoomCodeStudent">----</div>
+      <p id="liveStudentStatus">Waiting for the teacher to start...</p>
+      <div id="studentCountdown" class="countdownBig" style="display:none">3</div>
+      <table class="leaderboard"><thead><tr><th>#</th><th>Student</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time Used</th></tr></thead><tbody id="liveStudentBoard"></tbody></table>
+      <div class="liveRow"><button onclick="liveLeaveRoom()">Leave</button></div>
+    </div>
+  </div>
 </div>
 <div class="reportOverlay" id="reportOverlay"><div class="reportCard" id="teacherReportPrint"><h2>🏫 Queen Number Quest — Class Results</h2><div id="reportSummary"></div><div id="reportTableBox"></div><div class="reportActions"><button onclick="printTeacherReport()">🖨️ Print / Save PDF</button><button onclick="document.getElementById('reportOverlay').style.display='none'">Close</button></div></div></div>
+
 <div class="container">
 <div class="top"><div class="card">⏰ Time: <span id="time">03:00</span></div><div class="card">⭐ Stars: <span id="stars">0</span>/30</div><div class="card">❓ Question: <span id="qnum">1</span>/10</div><div class="card">🪙 Bonus Coins: <span id="coins">0</span></div></div>
 <div class="top">
-<div class="control">🎮 Level:
+  <div class="control">🎮 Level:
     <select id="level">
-<option value="1">Level 1 — Beginner Queen</option>
-<option value="2">Level 2 — Line Explorer</option>
-<option value="3">Level 3 — Best Line Master</option>
-</select>
-</div>
-<div class="control">⏳ Duration:<select id="duration"><option value="60">1 Minute</option><option value="120">2 Minutes</option><option selected="" value="180">3 Minutes</option><option value="300">5 Minutes</option></select></div>
-<button class="liveBtn" onclick="openLiveChallenge()">🏫 Live Class</button>
-<button onclick="startGame()">▶ Start</button>
+      <option value="1">Level 1 — Beginner Queen</option>
+      <option value="2">Level 2 — Line Explorer</option>
+      <option value="3">Level 3 — Best Line Master</option>
+    </select>
+  </div>
+  <div class="control">⏳ Duration:<select id="duration"><option value="60">1 Minute</option><option value="120">2 Minutes</option><option value="180" selected>3 Minutes</option><option value="300">5 Minutes</option></select></div>
+  <button class="liveBtn" onclick="openLiveChallenge()">🏫 Live Class</button>
+  <button onclick="startGame()">▶ Start</button>
 </div><div class="qstars" id="qstars"></div>
 <div class="stage"><div class="boardWrap"><div class="ranks" id="ranks"></div><div class="board" id="board"></div><div class="files" id="files"></div></div>
 <div class="side"><div class="panel"><div class="badge">Queen Number Quest</div><div class="question" id="question">Press Start</div><div class="rules" id="rules"></div><div class="scorebox"><div class="mini">Current Sum<b id="sum">0</b></div><div class="mini">Moves<b id="moves">0</b></div><div class="mini">Best<b id="best">-</b></div><div class="mini">Solved<b id="solved">0</b></div></div><div class="actions"><button onclick="showMoves()">Show Legal Moves</button><button onclick="resetQuestion()">Try Again</button><button onclick="skipQuestion()">Skip</button></div><div class="status" id="status">Collect the target number with the fewest legal queen lines.</div></div>
-<div class="panel" style="text-align:left;font-size:17px;line-height:1.45;font-weight:900"><b>How to play</b><br/>Move the queen. Collect numbers on the board. Reach the target exactly. More efficient routes earn more stars.</div></div></div>
+<div class="panel" style="text-align:left;font-size:17px;line-height:1.45;font-weight:900"><b>How to play</b><br>Move the queen. Collect numbers on the board. Reach the target exactly. More efficient routes earn more stars.</div></div></div>
 <div class="footer-credit">© Eng. Salman Ahmed Salman</div></div>
 <script>
 const files=['a','b','c','d','e','f','g','h'],board=document.getElementById('board');let squares={},allNames=[],questionIndex=0,stars=0,solved=0,coins=0,remaining=180,timer=null,running=false,current=null,queenPos=null,items={},currentSum=0,moves=0,history=[],legalVisible=false,queenPower=false;
@@ -764,6 +765,7 @@ function printTeacherReport(){document.body.classList.add('print-report');window
 buildBoard();buildQStars();updateQStars();draw();
 setTimeout(openLiveChallenge, 150);
 </script>
+
 <style>
 .champPanel{background:rgba(255,255,255,.72);border:3px solid #fff;border-radius:18px;padding:10px;margin:10px 0;color:#142033;font-weight:900}
 .champPanel input,.champPanel select{border:2px solid #8aa5c8;border-radius:10px;padding:8px 10px;font-weight:900;max-width:220px}
@@ -1060,6 +1062,9 @@ function showTeacherReport(){
 
 setTimeout(v14InitChampionshipUI,250);
 </script>
+
+
+
 <style>
 /* v16 Championship Edition: student profile, waiting room flow, stable IDs */
 .profileOverlay{position:fixed;inset:0;background:rgba(15,27,36,.86);display:none;align-items:center;justify-content:center;z-index:16000;padding:14px;overflow:auto}
@@ -1068,17 +1073,19 @@ setTimeout(v14InitChampionshipUI,250);
 @media(max-width:700px){.profileGrid{grid-template-columns:repeat(2,1fr)}.profileCard{padding:15px}.profileCard h2{font-size:24px}}
 @media print{body.print-profile *{visibility:hidden!important}body.print-profile #studentProfilePrint,body.print-profile #studentProfilePrint *{visibility:visible!important}body.print-profile #studentProfilePrint{position:fixed!important;left:10mm!important;top:10mm!important;width:277mm!important;min-height:185mm!important;background:white!important;color:#142033!important;box-shadow:none!important;border:0!important;border-radius:0!important;padding:0!important}.profileActions{display:none!important}@page{size:A4 landscape;margin:0}}
 </style>
+
 <div class="profileOverlay" id="studentProfileOverlay">
-<div class="profileCard" id="studentProfilePrint">
-<h2 id="profileTitle">👦 Student Profile</h2>
-<div id="profileSummary"></div>
-<div id="profileRounds"></div>
-<div class="profileActions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px">
-<button onclick="printStudentProfile()">🖨️ Print Student Report</button>
-<button onclick="document.getElementById('studentProfileOverlay').style.display='none'">Close</button>
+  <div class="profileCard" id="studentProfilePrint">
+    <h2 id="profileTitle">👦 Student Profile</h2>
+    <div id="profileSummary"></div>
+    <div id="profileRounds"></div>
+    <div class="profileActions" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px">
+      <button onclick="printStudentProfile()">🖨️ Print Student Report</button>
+      <button onclick="document.getElementById('studentProfileOverlay').style.display='none'">Close</button>
+    </div>
+  </div>
 </div>
-</div>
-</div>
+
 <script>
 /* v16 Championship Edition patch */
 (function(){
@@ -1289,6 +1296,8 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
 <!-- v17 fairness and usability fixes by ChatGPT -->
 <style>
 /* v17: larger student board + compact certificate */
@@ -1450,6 +1459,8 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
 <!-- v18 Championship Stars Ranking + Certificates patch -->
 <style>
 .champCertPanel{max-width:980px;margin:0 auto;background:linear-gradient(135deg,#fffdf3,#f4fff5 55%,#eef7ff);border:8px solid #d9a441;border-radius:28px;padding:28px 38px;color:#10251a;font-weight:1000;box-shadow:0 10px 30px rgba(0,0,0,.18);position:relative;overflow:hidden}.champCertPanel.silver{border-color:#aeb7c2}.champCertPanel.bronze{border-color:#b8753a}.champCertPanel.tie{border-color:#6bb7ff}.champCertTitle{font-size:30px;color:#0f5b2e;letter-spacing:1px;margin:10px 0}.champCertName{font-size:34px;color:#17324d;border-bottom:3px solid #d9a441;display:inline-block;padding:0 28px;margin:10px 0}.champAward{font-size:25px;color:#0f5b2e;margin:12px 0}.champStats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px auto;max-width:820px}.champStat{background:rgba(255,255,255,.84);border:2px solid rgba(15,91,46,.15);border-radius:14px;padding:12px;font-weight:1000}.champRounds{width:100%;border-collapse:collapse;margin-top:14px;background:white;border-radius:14px;overflow:hidden}.champRounds th{background:#203040;color:white;padding:8px}.champRounds td{border-bottom:1px solid #dbe4ef;padding:8px}.certBtnMini{padding:5px 9px!important;font-size:12px!important;border-radius:10px!important}@media print{body.print-champcert *{visibility:hidden!important}body.print-champcert #studentProfilePrint,body.print-champcert #studentProfilePrint *{visibility:visible!important}body.print-champcert #studentProfilePrint{position:fixed!important;left:10mm!important;top:10mm!important;width:277mm!important;min-height:185mm!important;background:white!important;color:#142033!important;box-shadow:none!important;border:0!important;border-radius:0!important;padding:0!important}.profileActions{display:none!important}@page{size:A4 landscape;margin:0}}
@@ -1544,6 +1555,9 @@ setTimeout(v14InitChampionshipUI,250);
   window.printChampionshipCertificate=function(){document.body.classList.add('print-champcert');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('print-champcert'),500)},80);};
 })();
 </script>
+
+
+
 <!-- v19 Final Championship Rules + Print Layout Patch -->
 <style>
 /* v19: final championship certificate compact print-safe layout */
@@ -1707,6 +1721,9 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
+
 <!-- v20 Correct Final Ranking + Round Certificate Consistency Patch -->
 <script>
 /* v20 fixes:
@@ -1886,6 +1903,9 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
+
 <!-- v22 Official-Round Flow Patch: pending result, teacher approval, waiting room between rounds -->
 <script>
 (function(){
@@ -2055,6 +2075,8 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
 <!-- v23 Unified Tournament Rules + Medal System Patch -->
 <style>
 .rulesBtnV23{background:linear-gradient(180deg,#a5d8ff,#339af0)!important;color:#10251a!important;box-shadow:0 4px 0 #1864ab!important}
@@ -2063,23 +2085,23 @@ setTimeout(v14InitChampionshipUI,250);
 .rulesCardV23 h2{margin:0 0 10px;text-align:center;color:#0f5b2e;font-size:30px}.rulesCardV23 h3{margin:14px 0 6px;color:#17324d}.rulesCardV23 p,.rulesCardV23 li{font-size:16px;line-height:1.45}.rulesCardV23 ul{margin:6px 0 8px 20px}.rulesExamplesV23{background:#fff;border:2px solid #dbe4ef;border-radius:14px;padding:10px;margin-top:8px}.rulesCloseV23{display:flex;justify-content:center;margin-top:14px}.achievementBadgeV23{display:inline-block;background:#eef7ff;border:2px solid #9bc8ef;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:1000;color:#17324d}
 </style>
 <div class="rulesOverlayV23" id="rulesOverlayV23"><div class="rulesCardV23">
-<h2>📖 Championship Rules</h2>
-<h3>Ranking System</h3>
-<p>For every round and for the final championship result, players are ranked by:</p>
-<ul><li><b>Stars</b> first</li><li><b>Questions Solved</b> second</li><li><b>Time Used</b> third</li></ul>
-<h3>Tie Rule</h3>
-<p>Players share the same rank only if Stars, Questions Solved, and Time Used are all equal.</p>
-<h3>Medals</h3>
-<ul><li>🥇 Rank 1 = Gold Champion</li><li>🥈 Rank 2 = Silver Runner-up</li><li>🥉 Rank 3 = Bronze Third Place</li><li>⭐ Rank 4 and above = Achievement Certificate with the final rank shown.</li></ul>
-<h3>Shared Medals</h3>
-<div class="rulesExamplesV23">
-<p><b>1, 1, 3</b> → Gold, Gold, Bronze. No Silver.</p>
-<p><b>1, 2, 2, 4</b> → Gold, Silver, Silver. No Bronze.</p>
-<p><b>1, 2, 3, 3, 3</b> → Gold, Silver, Bronze, Bronze, Bronze.</p>
-</div>
-<h3>Official Results</h3>
-<p>Round certificates and medals become official only after the teacher closes the round by pressing <b>Save Round Results</b>.</p>
-<div class="rulesCloseV23"><button onclick="document.getElementById('rulesOverlayV23').style.display='none'">Close</button></div>
+  <h2>📖 Championship Rules</h2>
+  <h3>Ranking System</h3>
+  <p>For every round and for the final championship result, players are ranked by:</p>
+  <ul><li><b>Stars</b> first</li><li><b>Questions Solved</b> second</li><li><b>Time Used</b> third</li></ul>
+  <h3>Tie Rule</h3>
+  <p>Players share the same rank only if Stars, Questions Solved, and Time Used are all equal.</p>
+  <h3>Medals</h3>
+  <ul><li>🥇 Rank 1 = Gold Champion</li><li>🥈 Rank 2 = Silver Runner-up</li><li>🥉 Rank 3 = Bronze Third Place</li><li>⭐ Rank 4 and above = Achievement Certificate with the final rank shown.</li></ul>
+  <h3>Shared Medals</h3>
+  <div class="rulesExamplesV23">
+    <p><b>1, 1, 3</b> → Gold, Gold, Bronze. No Silver.</p>
+    <p><b>1, 2, 2, 4</b> → Gold, Silver, Silver. No Bronze.</p>
+    <p><b>1, 2, 3, 3, 3</b> → Gold, Silver, Bronze, Bronze, Bronze.</p>
+  </div>
+  <h3>Official Results</h3>
+  <p>Round certificates and medals become official only after the teacher closes the round by pressing <b>Save Round Results</b>.</p>
+  <div class="rulesCloseV23"><button onclick="document.getElementById('rulesOverlayV23').style.display='none'">Close</button></div>
 </div></div>
 <script>
 (function(){
@@ -2200,6 +2222,8 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
 <style>
 @media print{
   body.print-certificate *{visibility:hidden!important}
@@ -2209,6 +2233,7 @@ setTimeout(v14InitChampionshipUI,250);
   @page{size:A4 landscape;margin:0}
 }
 </style>
+
 <!-- v24 Patch: fix official-result overlay from waiting room + print certificate button -->
 <script>
 (function(){
@@ -2232,6 +2257,8 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
 <!-- v26 Online API Step 1: D1 Join Room + Save Result + Teacher Room List -->
 <script>
 (function(){
@@ -2510,6 +2537,9 @@ setTimeout(v14InitChampionshipUI,250);
   });
 })();
 </script>
+
+
+
 <!-- v27 Online Start Sync: D1 start-challenge + room-status polling across devices -->
 <script>
 (function(){
@@ -2707,6 +2737,7 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
 <!-- v28 Live Progress + Teacher Auto Leaderboard Refresh -->
 <script>
 /* v82 No Live Progress Updates
@@ -2926,6 +2957,8 @@ setTimeout(v14InitChampionshipUI,250);
 })();
 
 </script>
+
+
 <!-- v29 Official Round Save: teacher save unlocks student official result across devices -->
 <script>
 (function(){
@@ -3124,6 +3157,8 @@ setTimeout(v14InitChampionshipUI,250);
   };
 })();
 </script>
+
+
 <!-- v31 Role Split + Multi-Round Student Return-to-Waiting-Room Fix -->
 <style>
 /* v31: clearer first screen and student-only waiting room */
@@ -3317,6 +3352,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   setTimeout(setupRoleUI,900);
 })();
 </script>
+
 <!-- v32 Tournament Fixes: official durations, certificate title, final ranking, championship details -->
 <style>
 /* v32 Admin form and reports polish */
@@ -3588,6 +3624,9 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   setTimeout(polishAdminFields,1200);
 })();
 </script>
+
+
+
 <!-- v34 Final Fixes: dedupe official D1 results, correct school/organizer separation, accurate totals -->
 <script>
 (function(){
@@ -3659,6 +3698,8 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   window.liveJoinRoom=async function(){const s=byId('liveStudentSchool'); if(s&&organizer(getRoom())&&s.value.trim().toLowerCase()===organizer(getRoom()).trim().toLowerCase())s.value=''; return oldJoin.apply(this,arguments)};
 })();
 </script>
+
+
 <!-- v38 SAFE HOTFIX: Resume Player + robust delete refresh + round lock/replay guard + Player ID column -->
 <style>
 .v38ResumeBtn{background:linear-gradient(180deg,#38bdf8,#0284c7)!important;color:#fff!important;border:0!important;border-radius:14px!important;font-weight:1000!important;box-shadow:0 4px 0 #075985!important;margin-left:8px!important}
@@ -3808,6 +3849,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   setTimeout(function(){installResumeButton(); if(typeof liveRenderRoom==='function') liveRenderRoom();},300);
 })();
 </script>
+
 <!-- v33 Critical Fixes: final ranking reads all 3 official D1 rounds + student school separated from organizer -->
 <style>
 .v33RuleNote{display:inline-block;background:#fff8d8;border:2px solid #f0c94b;border-radius:14px;padding:8px 14px;margin:8px 0;font-weight:1000;color:#17324d;line-height:1.35}
@@ -3945,6 +3987,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   };
 })();
 </script>
+
 <!-- v37 SAFE HOTFIX: rollback to stable live flow + only safe admin delete/UI fixes -->
 <style>
 #liveTeacherRoom.livePanel{max-width:min(1120px,96vw)!important;width:min(1120px,96vw)!important;overflow-x:auto!important}
@@ -3987,6 +4030,8 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   document.addEventListener('DOMContentLoaded',()=>setTimeout(polish,600));setInterval(polish,1500);
 })();
 </script>
+
+
 <!-- v42 SAFE HOTFIX: admin recovery, role permissions, clean messages, stable resume -->
 <style>
 #v42Banner{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:999998;background:#fff7c2;border:3px solid #facc15;color:#17324d;border-radius:18px;padding:14px 22px;box-shadow:0 10px 25px rgba(0,0,0,.22);font-size:20px;font-weight:1000;max-width:min(860px,92vw);text-align:center;display:none;line-height:1.35}
@@ -4044,6 +4089,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   setInterval(()=>{installAdminPanel();installButtons();pollMessage();recoverStart();},1800);
 })();
 </script>
+
 <!-- v44 HOTFIX: clearer Teacher/Supervisor permissions + Active Championships for Supervisor -->
 <script>
 (function(){
@@ -4108,6 +4154,8 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{enhanceAdminPanel();showMode();},600));
 })();
 </script>
+
+
 <!-- v45 CHAMPIONSHIP MANAGEMENT: login flow, final certificates, archive access -->
 <style>
 .v45Hidden{display:none!important}
@@ -4193,6 +4241,9 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   setInterval(()=>{patchLogin();installArchiveButton();fixClosePanel();cleanPrintTitles();},1500);
 })();
 </script>
+
+
+
 <!-- v71 Stable from v46: Print-only hardening for final certificates, no gate/start/polling changes -->
 <style>
 @media print{
@@ -4235,6 +4286,8 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   }
 })();
 </script>
+
+
 <!-- v77 Supervisor Archived Room State Fix: read-only archive mode + full saved rounds load -->
 <style>
 .scmArchiveModeBanner{background:#fff7cc;border:2px solid #f0c34e;border-radius:14px;padding:10px 14px;margin:10px 0;font-weight:1000;color:#7a4b00;text-align:center}
@@ -4359,107 +4412,145 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   document.addEventListener('DOMContentLoaded',function(){setTimeout(applyArchiveReadOnly,1200)});
 })();
 </script>
+
+
+
+<!-- v110 Queen Live-Class Stability Patch: start/rejoin/replay guard only. Does not touch print/report/certificate code. -->
+<style>
+@media (max-width:760px){
+  .liveOverlay{position:fixed!important;inset:0!important;width:100dvw!important;max-width:100dvw!important;padding:6px!important;margin:0!important;align-items:flex-start!important;justify-content:center!important;overflow-y:auto!important;overflow-x:hidden!important;transform:none!important;}
+  .liveCard{position:relative!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important;width:calc(100dvw - 12px)!important;max-width:calc(100dvw - 12px)!important;min-width:0!important;margin:6px auto 18px!important;padding:12px 8px!important;border-width:4px!important;border-radius:20px!important;box-sizing:border-box!important;overflow-x:hidden!important;}
+  .liveCard *{box-sizing:border-box;max-width:100%;}
+  .liveGrid{grid-template-columns:1fr!important;width:100%!important;}
+  .liveRow{width:100%!important;}
+  .liveInput,.liveCard select,.liveCard button{max-width:100%!important;}
+}
+</style>
 <script>
-/* SCM v107 Queen exact start/rejoin guard — matched to the working Bishop behavior.
-   Purpose: student opens on first Start, opens after rejoin if not submitted, and never replays a submitted round. */
 (function(){
-  function qRoom(){ try{return (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;}catch(e){return null;} }
-  function qKey(room){ return room ? (room.currentRoundKey || (room.roundId ? ('R'+room.roundId) : null)) : null; }
-  function qPlayer(room){ try{return room && room.players && livePlayerId ? room.players[livePlayerId] : null;}catch(e){return null;} }
-  function qSubmitted(room){
-    var p=qPlayer(room), key=qKey(room);
-    if(!p || !key) return false;
-    if(p.results && p.results[key]) return true;
-    var st=String(p.status||'');
-    return (st.indexOf('Finished')>=0 || st.indexOf('Time Over')>=0) && p.time!=null;
-  }
-  function qShowWaiting(room){
+  if(window.__SCM_QUEEN_V110_LIVE_GUARD__) return;
+  window.__SCM_QUEEN_V110_LIVE_GUARD__=true;
+  function by(id){return document.getElementById(id)}
+  function norm(v){return String(v||'').trim().toUpperCase()}
+  function getRoomSafe(code){try{return (typeof liveGetRoom==='function')?liveGetRoom(code||liveRoomCode):null}catch(e){return null}}
+  function saveRoomSafe(room){try{if(room&&typeof liveSaveRoom==='function')liveSaveRoom(room)}catch(e){}}
+  function currentKey(room){return (room&&(room.currentRoundKey||('R'+(room.roundId||1)))) || 'R1'}
+  function playerHasSubmitted(room,pid){try{var p=room&&room.players&&room.players[pid]; var k=currentKey(room); return !!(p&&p.results&&p.results[k]);}catch(e){return false}}
+  function setWaitingView(room){
     try{
+      var ov=by('overlay'); if(ov) ov.style.display='none';
+      var live=by('liveOverlay'); if(live) live.style.display='flex';
       if(typeof liveShow==='function') liveShow('liveStudentRoom');
-      var ov=document.getElementById('liveOverlay'); if(ov) ov.style.display='flex';
-      var intro=document.getElementById('introOverlay'); if(intro) intro.style.display='none';
-      var status=document.getElementById('liveStudentStatus');
-      if(status){
-        var label=(room&&room.currentRoundLabel)||'Current round';
-        status.innerHTML='<div class="studentDoneBox">✅ '+label+' completed.<div class="waitingNext">Waiting for the teacher to save the round or start the next round…</div></div>';
+      var codeEl=by('liveRoomCodeStudent'); if(codeEl&&room&&room.code) codeEl.textContent=room.code;
+      var st=by('liveStudentStatus');
+      if(st&&room&&typeof livePlayerId!=='undefined'){
+        var p=room.players&&room.players[livePlayerId];
+        if(p){
+          if(playerHasSubmitted(room,livePlayerId)) st.innerHTML='<div class="studentDoneBox">✅ '+(room.currentRoundLabel||currentKey(room))+' completed.<div class="waitingNext">Waiting for the teacher to close the round or start the next round…</div></div>';
+          else if(room.status==='starting') st.innerHTML='Get ready, <b>'+String(p.name||'Student')+'</b>! The round is starting...';
+          else if(room.status==='started') st.innerHTML='Challenge started. Good luck, <b>'+String(p.name||'Student')+'</b>!';
+          else st.innerHTML='Welcome <b>'+String(p.name||'Student')+'</b>. Waiting for teacher...';
+        }
       }
-      if(room && room.roundId!=null){ liveSubmittedRoundId=room.roundId; }
-      liveSubmitted=true; liveModeActive=false;
     }catch(e){}
   }
-  function qStartStudent(room){
-    room = room || qRoom();
-    if(!room || !room.questions || !room.questions.length) return;
-    if(qSubmitted(room)){ qShowWaiting(room); return; }
-    liveSubmitted=false;
-    liveSubmittedRoundId=null;
-    liveActiveRoundId=room.roundId;
-    liveModeActive=true;
-    liveFixedQuestions=JSON.parse(JSON.stringify(room.questions||[]));
-    var level=document.getElementById('level'); if(level) level.value=String(room.level||1);
-    var duration=document.getElementById('duration'); if(duration) duration.value=String(room.duration||180);
-    var ov=document.getElementById('liveOverlay'); if(ov) ov.style.display='none';
-    var intro=document.getElementById('introOverlay'); if(intro) intro.style.display='none';
-    try{
-      var r=qRoom();
-      if(r && r.players && livePlayerId && r.players[livePlayerId]){ r.players[livePlayerId].status='playing'; liveSaveRoom(r); }
-    }catch(e){}
-    if(typeof startGame==='function') startGame();
-  }
-  window.scmQueenV107StartStudent=qStartStudent;
 
   var oldJoin=window.liveJoinRoom;
-  window.liveJoinRoom=function(){
-    if(typeof oldJoin==='function') oldJoin.apply(this,arguments);
-    try{
-      var room=qRoom();
-      if(room){
-        if(!qSubmitted(room)){ liveSubmitted=false; liveSubmittedRoundId=null; }
-        if(room.status==='started' && room.questions && room.questions.length){ qStartStudent(room); }
-      }
-    }catch(e){}
-  };
-  try{ liveJoinRoom=window.liveJoinRoom; }catch(e){}
-
-  var oldPrepare=window.livePrepareStart;
-  window.livePrepareStart=function(room){
-    room=room||qRoom();
-    if(!room) return;
-    if(qSubmitted(room)){ qShowWaiting(room); return; }
-    liveSubmitted=false;
-    if(room.startAt && Date.now()>=room.startAt){ qStartStudent(room); return; }
-    if(typeof oldPrepare==='function') return oldPrepare.apply(this,arguments);
-  };
-  try{ livePrepareStart=window.livePrepareStart; }catch(e){}
-
-  var oldRender=window.liveRenderRoom;
-  window.liveRenderRoom=function(){
-    if(typeof oldRender==='function') oldRender.apply(this,arguments);
-    try{
-      if(!liveRoomCode || liveRole!=='student') return;
-      var room=qRoom(); if(!room) return;
-      if(qSubmitted(room)){ qShowWaiting(room); return; }
-      liveSubmitted=false;
-      if(room.status==='starting' && room.startAt){
-        if(Date.now()>=room.startAt){ qStartStudent(room); return; }
-        if(livePreparedRoundId!==room.roundId){ livePreparedRoundId=room.roundId; if(typeof livePrepareStart==='function') livePrepareStart(room); }
-      }
-      if(room.status==='started' && !liveModeActive && room.questions && room.questions.length){ qStartStudent(room); }
-    }catch(e){ console.error('Queen v107 render guard failed',e); }
-  };
-  try{ liveRenderRoom=window.liveRenderRoom; }catch(e){}
+  if(typeof oldJoin==='function'){
+    window.liveJoinRoom=function(){
+      var out=oldJoin.apply(this,arguments);
+      try{
+        var room=getRoomSafe(liveRoomCode);
+        if(room&&livePlayerId){
+          if(!room.players) room.players={};
+          if(room.players[livePlayerId]){
+            if(!room.players[livePlayerId].results) room.players[livePlayerId].results={};
+            if(playerHasSubmitted(room,livePlayerId)){
+              room.players[livePlayerId].status=room.players[livePlayerId].status||'Finished ✅';
+            }else if(room.status==='started'||room.status==='starting'){
+              room.players[livePlayerId].status='ready';
+            }else{
+              room.players[livePlayerId].status=room.players[livePlayerId].status||'waiting';
+            }
+            saveRoomSafe(room);
+          }
+          try{liveSubmitted=false;}catch(e){}
+          try{liveSubmittedRoundId=playerHasSubmitted(room,livePlayerId)?room.roundId:null;}catch(e){}
+          try{livePreparedRoundId=null;}catch(e){}
+          setWaitingView(room);
+        }
+      }catch(e){}
+      return out;
+    };
+  }
 
   var oldBegin=window.liveBeginStudent;
-  window.liveBeginStudent=function(room){
-    room=room||qRoom();
-    if(qSubmitted(room)){ qShowWaiting(room); return; }
-    return qStartStudent(room);
+  if(typeof oldBegin==='function'){
+    window.liveBeginStudent=function(room){
+      try{
+        room=room||getRoomSafe(liveRoomCode);
+        if(!room||!livePlayerId) return;
+        if(playerHasSubmitted(room,livePlayerId)){
+          try{liveModeActive=false;liveSubmitted=true;liveSubmittedRoundId=room.roundId;}catch(e){}
+          setWaitingView(room);
+          return;
+        }
+        try{liveSubmitted=false;liveSubmittedRoundId=null;}catch(e){}
+      }catch(e){}
+      return oldBegin.apply(this,arguments);
+    };
+  }
+
+  var oldRender=window.liveRenderRoom;
+  if(typeof oldRender==='function'){
+    window.liveRenderRoom=function(){
+      var out=oldRender.apply(this,arguments);
+      try{
+        var room=getRoomSafe(liveRoomCode);
+        if(room&&liveRole==='student'){
+          setWaitingView(room);
+          if(room.status==='starting'&&room.startAt&&!playerHasSubmitted(room,livePlayerId)){
+            if(livePreparedRoundId!==room.roundId && typeof livePrepareStart==='function'){
+              livePreparedRoundId=room.roundId;
+              livePrepareStart(room);
+            }
+          }
+          if(room.status==='started'&&!liveModeActive&&!playerHasSubmitted(room,livePlayerId)&&room.questions&&room.questions.length){
+            liveSubmitted=false;
+            liveSubmittedRoundId=null;
+            if(typeof liveBeginStudent==='function') liveBeginStudent(room);
+          }
+        }
+      }catch(e){}
+      return out;
+    };
+  }
+
+  var oldSubmit=window.liveSubmitResult;
+  if(typeof oldSubmit==='function'){
+    window.liveSubmitResult=function(status){
+      var out=oldSubmit.apply(this,arguments);
+      try{
+        var room=getRoomSafe(liveRoomCode);
+        if(room&&livePlayerId){
+          liveSubmitted=true;
+          liveSubmittedRoundId=room.roundId;
+          setWaitingView(room);
+        }
+      }catch(e){}
+      return out;
+    };
+  }
+
+  window.backToWaitingRoom=function(){
+    try{var room=getRoomSafe(liveRoomCode); setWaitingView(room); if(typeof liveRenderRoom==='function') liveRenderRoom();}catch(e){}
   };
-  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
 })();
 </script>
+
 </body>
 </html>
+
 <!-- v46 HOTFIX: stable PIN/login flow for Create/Open Championship -->
 <script>
 (function(){
@@ -4519,6 +4610,7 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   setInterval(patchButtons,2500);
 })();
 </script>
+
 <!-- v73 HOTFIX: teacher/admin certificate buttons from stable v46 data only -->
 <style>
 .scmCertLink{color:#075985!important;text-decoration:underline!important;font-weight:1000!important;cursor:pointer!important;background:transparent!important;border:0!important;padding:0!important;font:inherit!important}
@@ -4575,6 +4667,260 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   window.showFinalRanking=function(){const r=room();if(!r)return alert('No active room.');const arr=finalRows(r);if(!arr.length)return alert('Please save at least one round first.');const rows=arr.map(p=>`<tr><td>${p.rank}${p.tie?' (Tie)':''}</td><td><button class="scmCertLink" onclick="scmOpenFinalCertificate('${esc(p.id)}')">${esc(p.name)}</button></td><td><b>${p.totalStars}</b></td><td>${p.totalSolved}</td><td>${fmt(p.totalTime)}</td><td>${award(p.rank,p.tie,true)}</td><td><button class="scmCertBtn" onclick="scmOpenFinalCertificate('${esc(p.id)}')">🏆 Final Certificate</button></td></tr>`).join('');by('reportSummary').innerHTML=`<div class="finalChampion">🏆 Overall Champion: ${esc(arr[0].name)}</div><div><b>${esc(r.title||'Level Championship')}</b>${r.organizer?' &nbsp; <b>Organizer:</b> '+esc(r.organizer):''} &nbsp; <b>Completed Rounds:</b> ${Object.keys(r.rounds||{}).length} of 3</div><div class="tieNote">Final Ranking Rule: Total Stars → Total Solved → Lowest Total Time. Click the name or certificate button to print.</div>`;by('reportTableBox').innerHTML=`<table class="reportTable"><thead><tr><th>Rank</th><th>Student</th><th>Total Stars</th><th>Total Solved</th><th>Total Time</th><th>Award</th><th>Certificate</th></tr></thead><tbody>${rows}</tbody></table>`;by('reportOverlay').style.display='flex'}
 })();
 </script>
+
+
+<!-- v75 Official Reports Print + Correct Top Players (built on v74 stable) -->
+<script>
+(function(){
+  function by(id){return document.getElementById(id)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c})}
+  function n(v,d){v=Number(v);return isFinite(v)?v:(d||0)}
+  function fmt(sec){sec=n(sec,0);const m=Math.floor(sec/60),s=Math.floor(sec%60);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+  function activeRoomCode(){
+    var c='';
+    try{ if(typeof liveRoomCode!=='undefined' && liveRoomCode) c=liveRoomCode; }catch(e){}
+    if(!c) c=window.liveRoomCode||localStorage.getItem('scm_current_room_code')||localStorage.getItem('knq_current_room_code')||'';
+    if(!c){ var el=by('liveRoomCodeTeacher')||by('liveRoomCodeStudent')||document.querySelector('.roomCodeBig'); if(el)c=(el.textContent||'').trim(); }
+    return String(c||'').trim().toUpperCase();
+  }
+  function getRoom(){
+    var c=activeRoomCode(); if(!c)return null;
+    try{ if(typeof liveGetRoom==='function'){ var r=liveGetRoom(c); if(r)return r; } }catch(e){}
+    var keys=['knq_live_room_'+c,'scm_live_room_'+c,'live_room_'+c];
+    for(var i=0;i<keys.length;i++){try{var r=JSON.parse(localStorage.getItem(keys[i])||'null'); if(r)return r;}catch(e){}}
+    return null;
+  }
+  function roundNum(k){var m=String(k||'R1').match(/(\d+)/);return m?Number(m[1]):1}
+  function roundName(k){var r=roundNum(k);return r===1?'Round 1 — Standard 3 min':r===2?'Round 2 — Fast 2 min':r===3?'Round 3 — Blitz 1 min':'Round '+r}
+  function duration(k){var r=roundNum(k);return r===1?180:(r===2?120:60)}
+  function cmpScore(a,b,prefix){
+    var A=prefix?{stars:a.totalStars,solved:a.totalSolved,time:a.totalTime}:a;
+    var B=prefix?{stars:b.totalStars,solved:b.totalSolved,time:b.totalTime}:b;
+    return n(B.stars)-n(A.stars)||n(B.solved)-n(A.solved)||n(A.time,999999)-n(B.time,999999)||String(A.name||a.name||'').localeCompare(String(B.name||b.name||''));
+  }
+  function rankRows(rows,final){
+    rows=rows.slice().sort(function(a,b){return cmpScore(a,b,final)});
+    var prev=null,rank=0;
+    rows.forEach(function(x,i){
+      var same=prev && (final ? (n(x.totalStars)===n(prev.totalStars)&&n(x.totalSolved)===n(prev.totalSolved)&&n(x.totalTime)===n(prev.totalTime)) : (n(x.stars)===n(prev.stars)&&n(x.solved)===n(prev.solved)&&n(x.time)===n(prev.time)));
+      if(!same)rank=i+1; x.rank=rank; x.tie=!!same; prev=x;
+    });
+    return rows;
+  }
+  function playerId(p){return p.studentCode||p.id||('D1-'+(p.d1_student_id||''))}
+  function currentRoundKey(r){return String((r&&r.currentRoundKey)||window.__pendingOfficialRoundKey||'R1').toUpperCase()}
+  function allSavedRoundKeys(r){return Object.keys((r&&r.rounds)||{}).sort(function(a,b){return roundNum(a)-roundNum(b)})}
+  function roundRows(r,key){
+    key=key||currentRoundKey(r);
+    var saved=r&&r.rounds&&r.rounds[key];
+    var rows=[];
+    if(saved&&Array.isArray(saved.results)){
+      rows=saved.results.filter(function(x){return String(x.status||'')!=='Absent' && x.rank!==null}).map(function(x){
+        return {id:x.id,name:x.name||'Student',age:x.age,grade:x.grade,school:x.school||'',studentCode:x.studentCode||x.id,stars:n(x.stars),solved:n(x.solved),time:n(x.time),status:x.status||'Finished',label:saved.label||roundName(key),roundNumber:roundNum(key),duration:n(saved.duration,duration(key))};
+      });
+    }else{
+      Object.values((r&&r.players)||{}).forEach(function(p){
+        var rr=p.results&&p.results[key];
+        if(!rr&&(String(p.status||'').match(/Finished|Time Over/i)||n(p.stars)>0||n(p.solved)>0)){
+          rr={stars:p.stars,solved:p.solved,time:p.time,status:p.status,label:r.currentRoundLabel||roundName(key)};
+        }
+        if(rr) rows.push({id:p.id,name:p.name||'Student',age:p.age,grade:p.grade,school:p.school||r.school||'',studentCode:playerId(p),stars:n(rr.stars),solved:n(rr.solved||rr.solved_questions),time:n(rr.time||rr.total_time),status:rr.status||p.status||'Finished',label:rr.label||r.currentRoundLabel||roundName(key),roundNumber:roundNum(key),duration:n(rr.duration||r.duration,duration(key))});
+      });
+    }
+    return rankRows(rows,false);
+  }
+  function finalRows(r){
+    var keys=allSavedRoundKeys(r);
+    var rows=[];
+    Object.values((r&&r.players)||{}).forEach(function(p){
+      var totalStars=0,totalSolved=0,totalTime=0,rounds=[];
+      keys.forEach(function(k){
+        var saved=r.rounds&&r.rounds[k], rec=null;
+        if(saved&&Array.isArray(saved.results)) rec=saved.results.find(function(x){return String(x.id)===String(p.id) && String(x.status||'')!=='Absent'});
+        if(!rec && p.results) rec=p.results[k];
+        if(rec){
+          var row={label:(saved&&saved.label)||rec.label||roundName(k),stars:n(rec.stars),solved:n(rec.solved||rec.solved_questions),time:n(rec.time||rec.total_time),status:rec.status||'Finished',rank:rec.rank||''};
+          rounds.push(row); totalStars+=row.stars; totalSolved+=row.solved; totalTime+=row.time;
+        }
+      });
+      if(rounds.length)rows.push({id:p.id,name:p.name||'Student',age:p.age,grade:p.grade,school:p.school||r.school||'',studentCode:playerId(p),rounds:rounds,totalStars:totalStars,totalSolved:totalSolved,totalTime:totalTime});
+    });
+    return rankRows(rows,true);
+  }
+  function award(rank,final){if(rank===1)return final?'🥇 Gold Champion':'🥇 Gold'; if(rank===2)return final?'🥈 Silver Runner-up':'🥈 Silver'; if(rank===3)return final?'🥉 Bronze Third Place':'🥉 Bronze'; return 'Achievement';}
+  function setReport(title,summary,table){
+    var h=document.querySelector('#teacherReportPrint h2'); if(h)h.innerHTML=title;
+    if(by('reportSummary'))by('reportSummary').innerHTML=summary;
+    if(by('reportTableBox'))by('reportTableBox').innerHTML=table;
+    if(by('reportOverlay'))by('reportOverlay').style.display='flex';
+  }
+  function printHtmlDocument(title,bodyHtml){
+    var css='<style>body{font-family:Arial,system-ui,sans-serif;color:#142033;margin:18px}h1{text-align:center;color:#0f5b2e;margin:0 0 10px}.meta{text-align:center;font-weight:900;margin:6px 0 14px;color:#17324d}.summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.summaryBox{background:#eef7ff;border:2px solid #c7ddff;border-radius:14px;padding:10px;text-align:center;font-weight:1000}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#203040;color:white;padding:8px}td{border-bottom:1px solid #dbe4ef;padding:7px;text-align:center}td:nth-child(2){text-align:left}.tieNote{font-size:12px;margin-top:8px;color:#334155;font-weight:900;background:#fff7cc;border:1px solid #f0d36d;border-radius:10px;padding:6px}@media print{@page{size:A4 landscape;margin:10mm}button{display:none}}</style>';
+    var w=window.open('','_blank');
+    if(!w){alert('Please allow pop-ups to print this report.');return;}
+    w.document.open();
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(function(){w.print();},350);
+  }
+  window.printTeacherReport=function(){
+    var card=by('teacherReportPrint');
+    if(!card){alert('No report is open.');return;}
+    var h=card.querySelector('h2');
+    var title=h?(h.textContent||'Report'):'Report';
+    var summary=by('reportSummary')?by('reportSummary').innerHTML:'';
+    var table=by('reportTableBox')?by('reportTableBox').innerHTML:'';
+    printHtmlDocument(title,'<h1>'+esc(title)+'</h1>'+summary+table);
+  };
+  window.showTeacherReport=function(){
+    var r=getRoom(); if(!r)return alert('No active room.');
+    var key=currentRoundKey(r), arr=roundRows(r,key);
+    if(!arr.length)return alert('No results found for this round yet.');
+    var avg=(arr.reduce(function(a,p){return a+n(p.stars)},0)/arr.length).toFixed(1);
+    var leader=arr.filter(function(p){return p.rank===1}).map(function(p){return p.name}).join(' & ')||'-';
+    var fast=arr.slice().sort(function(a,b){return n(a.time,999999)-n(b.time,999999)})[0];
+    var rows=arr.map(function(p){return '<tr><td>'+p.rank+(p.tie?' (Tie)':'')+'</td><td><button class="scmCertLink" onclick="scmOpenRoundCertificate(\''+esc(p.id)+'\')">'+esc(p.name)+'</button></td><td>'+esc(p.age||'-')+'</td><td>'+esc(p.grade||'-')+'</td><td>'+esc(p.school||'-')+'</td><td>'+esc(p.status||'-')+'</td><td>'+p.stars+'/30</td><td>'+p.solved+'/10</td><td>'+fmt(p.time)+'</td><td>'+award(p.rank,false)+'</td></tr>';}).join('');
+    setReport('🖨️ Current Round Report','<div class="summaryGrid"><div class="summaryBox">👥 Participants<br><b>'+arr.length+'</b></div><div class="summaryBox">⭐ Average Stars<br><b>'+avg+'/30</b></div><div class="summaryBox">🏆 Round Leader<br><b>'+esc(leader)+'</b></div><div class="summaryBox">⚡ Fastest<br><b>'+(fast?esc(fast.name):'-')+'</b></div></div><div class="meta"><b>'+esc(r.title||'Level Championship')+'</b> &nbsp; <b>Room:</b> '+esc(r.code||activeRoomCode())+' &nbsp; <b>'+esc((arr[0]&&arr[0].label)||roundName(key))+'</b> &nbsp; <b>Date:</b> '+new Date().toLocaleDateString()+'</div><div class="tieNote">Click a student name to print the round certificate.</div>','<table class="reportTable"><thead><tr><th>Rank</th><th>Student</th><th>Age</th><th>Class</th><th>School</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time Used</th><th>Award</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  };
+  window.showFinalRanking=function(){
+    var r=getRoom(); if(!r)return alert('No active room.');
+    var arr=finalRows(r); if(!arr.length)return alert('Please save at least one round first.');
+    var rows=arr.map(function(p){return '<tr><td>'+p.rank+(p.tie?' (Tie)':'')+'</td><td><button class="scmCertLink" onclick="scmOpenFinalCertificate(\''+esc(p.id)+'\')">'+esc(p.name)+'</button></td><td>'+esc(p.age||'-')+'</td><td>'+esc(p.grade||'-')+'</td><td>'+esc(p.school||'-')+'</td><td><b>'+p.totalStars+'</b></td><td>'+p.totalSolved+'</td><td>'+fmt(p.totalTime)+'</td><td>'+award(p.rank,true)+'</td><td><button class="scmCertBtn" onclick="scmOpenFinalCertificate(\''+esc(p.id)+'\')">🏆 Final Certificate</button></td></tr>';}).join('');
+    setReport('🏆 Final Championship Ranking','<div class="summaryGrid"><div class="summaryBox">🥇 Champion<br><b>'+esc(arr.filter(p=>p.rank===1).map(p=>p.name).join(" & "))+'</b></div><div class="summaryBox">🥈 Rank 2<br><b>'+esc(arr.filter(p=>p.rank===2).map(p=>p.name).join(" & ")||"-")+'</b></div><div class="summaryBox">🥉 Rank 3<br><b>'+esc(arr.filter(p=>p.rank===3).map(p=>p.name).join(" & ")||"-")+'</b></div><div class="summaryBox">👥 Players<br><b>'+arr.length+'</b></div></div><div class="meta"><b>'+esc(r.title||'Level Championship')+'</b> &nbsp; <b>Room:</b> '+esc(r.code||activeRoomCode())+' &nbsp; <b>Completed Rounds:</b> '+allSavedRoundKeys(r).length+' of 3</div><div class="tieNote">Final Ranking Rule: Total Stars → Total Solved → Lowest Total Time. Click the student name to print certificate.</div>','<table class="reportTable"><thead><tr><th>Rank</th><th>Student</th><th>Age</th><th>Class</th><th>School</th><th>Total Stars</th><th>Total Solved</th><th>Total Time</th><th>Award</th><th>Certificate</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  };
+  window.showTopPlayersV40=function(limit){
+    var r=getRoom(); if(!r)return alert('No active room.');
+    if(!limit){var x=prompt('Show Top how many? Write 10, 20, or ALL','10'); if(!x)return; limit=String(x).toLowerCase()==='all'?0:Number(x)||10;}
+    var arr=finalRows(r); if(limit)arr=arr.slice(0,limit);
+    var rows=arr.map(function(p){return '<tr><td><b>'+p.rank+(p.tie?' (Tie)':'')+'</b></td><td>'+esc(p.studentCode||p.id)+'</td><td>'+esc(p.name)+'</td><td>'+esc(p.school||'-')+'</td><td>'+p.totalStars+'</td><td>'+p.totalSolved+'</td><td>'+fmt(p.totalTime)+'</td><td>'+award(p.rank,true)+'</td></tr>';}).join('');
+    setReport('🏅 Top Players','<div class="summaryGrid"><div class="summaryBox">🏅 Showing<br><b>'+(limit?('Top '+limit):'All Players')+'</b></div><div class="summaryBox">👥 Total Participants<br><b>'+finalRows(r).length+'</b></div><div class="summaryBox">⭐ Rule<br><b>Stars → Solved → Time</b></div><div class="summaryBox">🏆 Leader<br><b>'+esc((finalRows(r)[0]&&finalRows(r)[0].name)||'-')+'</b></div></div><div class="meta"><b>'+esc(r.title||'Level Championship')+'</b> &nbsp; <b>Room:</b> '+esc(r.code||activeRoomCode())+'</div>','<table class="reportTable"><thead><tr><th>Rank</th><th>Player ID</th><th>Student</th><th>School</th><th>Total Stars</th><th>Total Solved</th><th>Total Time</th><th>Award</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  };
+  window.showChampionshipDetails=function(){
+    var r=getRoom(); if(!r)return alert('No active room.');
+    var keys=allSavedRoundKeys(r); if(!keys.length)return alert('Please save at least one round first.');
+    var arr=finalRows(r);
+    var head=keys.map(function(k){return '<th>'+esc((r.rounds[k]&&r.rounds[k].label)||roundName(k))+'</th>';}).join('');
+    var rows=arr.map(function(p){
+      var cells=keys.map(function(k){
+        var rr=p.rounds.find(function(x){return x.label===((r.rounds[k]&&r.rounds[k].label)||roundName(k))}) || p.rounds[roundNum(k)-1];
+        return '<td>'+(rr?(rr.stars+'/30<br><small>'+rr.solved+'/10 • '+fmt(rr.time)+'</small>'):'Absent')+'</td>';
+      }).join('');
+      return '<tr><td>'+p.rank+(p.tie?' (Tie)':'')+'</td><td>'+esc(p.name)+'</td><td>'+esc(p.age||'-')+'</td><td>'+esc(p.grade||'-')+'</td><td>'+esc(p.school||'-')+'</td>'+cells+'<td><b>'+p.totalStars+'</b></td><td>'+p.totalSolved+'</td><td>'+fmt(p.totalTime)+'</td></tr>';
+    }).join('');
+    setReport('📊 Championship Details','<div class="summaryGrid"><div class="summaryBox">👥 Players<br><b>'+arr.length+'</b></div><div class="summaryBox">🔁 Rounds Saved<br><b>'+keys.length+'</b></div><div class="summaryBox">🏆 Champion<br><b>'+esc((arr[0]&&arr[0].name)||'-')+'</b></div><div class="summaryBox">📅 Date<br><b>'+new Date().toLocaleDateString()+'</b></div></div><div class="meta"><b>'+esc(r.title||'Level Championship')+'</b> &nbsp; <b>Room:</b> '+esc(r.code||activeRoomCode())+'</div>','<table class="reportTable"><thead><tr><th>Final Rank</th><th>Student</th><th>Age</th><th>Class</th><th>School</th>'+head+'<th>Total Stars</th><th>Total Solved</th><th>Total Time</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  };
+})();
+</script>
+
+<!-- v76 HOTFIX: reports use the selected saved round + block next round until previous is saved -->
+<script>
+(function(){
+  function by(id){return document.getElementById(id)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c})}
+  function n(v,d){v=Number(v);return isFinite(v)?v:(d||0)}
+  function fmt(sec){sec=n(sec,0);var m=Math.floor(sec/60),s=Math.floor(sec%60);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
+  function activeCode(){
+    var c='';
+    try{ if(typeof liveRoomCode!=='undefined' && liveRoomCode) c=liveRoomCode; }catch(e){}
+    if(!c) c=window.liveRoomCode||localStorage.getItem('scm_current_room_code')||localStorage.getItem('knq_current_room_code')||'';
+    if(!c){ var el=by('liveRoomCodeTeacher')||by('liveRoomCodeStudent')||document.querySelector('.roomCodeBig'); if(el)c=(el.textContent||'').trim(); }
+    return String(c||'').trim().toUpperCase();
+  }
+  function getRoom(){
+    var c=activeCode(); if(!c)return null;
+    try{ if(typeof liveGetRoom==='function'){ var r=liveGetRoom(c); if(r)return r; } }catch(e){}
+    var keys=['knq_live_room_'+c,'scm_live_room_'+c,'live_room_'+c];
+    for(var i=0;i<keys.length;i++){ try{ var x=JSON.parse(localStorage.getItem(keys[i])||'null'); if(x)return x; }catch(e){} }
+    return null;
+  }
+  function selectedKey(){
+    var sel=by('teacherRoundSelect')||by('champRoundSelect');
+    return String((sel&&sel.value)||'R1').toUpperCase();
+  }
+  function selectedLabel(){
+    var sel=by('teacherRoundSelect')||by('champRoundSelect');
+    return sel&&sel.selectedOptions&&sel.selectedOptions[0]?sel.selectedOptions[0].textContent:roundName(selectedKey());
+  }
+  function roundNum(k){var m=String(k||'R1').match(/(\d+)/);return m?Number(m[1]):1}
+  function roundName(k){var r=roundNum(k);return r===1?'Round 1 — Standard 3 min':(r===2?'Round 2 — Fast 2 min':(r===3?'Round 3 — Blitz 1 min':'Round '+r))}
+  function rankRows(rows,final){rows.sort(function(a,b){return n(final?b.totalStars:b.stars)-n(final?a.totalStars:a.stars)||n(final?b.totalSolved:b.solved)-n(final?a.totalSolved:a.solved)||n(final?a.totalTime:a.time,999999)-n(final?b.totalTime:b.time,999999)});var prev=null,rank=0;rows.forEach(function(x,i){var same=prev&&(final?(n(x.totalStars)===n(prev.totalStars)&&n(x.totalSolved)===n(prev.totalSolved)&&n(x.totalTime)===n(prev.totalTime)):(n(x.stars)===n(prev.stars)&&n(x.solved)===n(prev.solved)&&n(x.time)===n(prev.time)));if(!same)rank=i+1;x.rank=rank;x.tie=!!same;prev=x});return rows}
+  function allSavedRoundKeys(r){return Object.keys((r&&r.rounds)||{}).sort(function(a,b){return roundNum(a)-roundNum(b)})}
+  function award(rank,final){if(rank===1)return final?'🥇 Gold Champion':'🥇 Gold'; if(rank===2)return final?'🥈 Silver Runner-up':'🥈 Silver'; if(rank===3)return final?'🥉 Bronze Third Place':'🥉 Bronze'; return '⭐ Achievement'}
+  function savedRoundRows(r,key){
+    var saved=r&&r.rounds&&r.rounds[key];
+    if(!saved||!Array.isArray(saved.results)||!saved.results.length)return [];
+    return rankRows(saved.results.filter(function(x){return String(x.status||'')!=='Absent'}).map(function(x){return {id:x.id,name:x.name||'Student',age:x.age,grade:x.grade,school:x.school||'',studentCode:x.studentCode||x.id,stars:n(x.stars),solved:n(x.solved||x.solved_questions),time:n(x.time||x.total_time),status:x.status||'Finished',label:saved.label||roundName(key),roundNumber:roundNum(key)}}),false);
+  }
+  function finalRows(r){
+    var keys=allSavedRoundKeys(r), ids=new Set(), out=[];
+    Object.values((r&&r.players)||{}).forEach(function(p){ids.add(p.id)});
+    ids.forEach(function(id){
+      var p=r.players[id], totalStars=0,totalSolved=0,totalTime=0,rounds=[];
+      keys.forEach(function(k){
+        var saved=r.rounds&&r.rounds[k], rec=null;
+        if(saved&&Array.isArray(saved.results))rec=saved.results.find(function(x){return String(x.id)===String(id)&&String(x.status||'')!=='Absent'});
+        if(rec){var row={label:(saved&&saved.label)||roundName(k),stars:n(rec.stars),solved:n(rec.solved||rec.solved_questions),time:n(rec.time||rec.total_time),status:rec.status||'Finished',roundNumber:roundNum(k)};rounds.push(row);totalStars+=row.stars;totalSolved+=row.solved;totalTime+=row.time;}
+      });
+      if(rounds.length)out.push({id:p.id,name:p.name||'Student',age:p.age,grade:p.grade,school:p.school||'',studentCode:p.studentCode||p.id,rounds:rounds,totalStars:totalStars,totalSolved:totalSolved,totalTime:totalTime});
+    });
+    return rankRows(out,true);
+  }
+  function setReport(title,summary,table){
+    var h=document.querySelector('#teacherReportPrint h2'); if(h)h.innerHTML=title;
+    if(by('reportSummary'))by('reportSummary').innerHTML=summary;
+    if(by('reportTableBox'))by('reportTableBox').innerHTML=table;
+    if(by('reportOverlay'))by('reportOverlay').style.display='flex';
+  }
+  function cleanForPrint(html){
+    var box=document.createElement('div'); box.innerHTML=html;
+    box.querySelectorAll('button').forEach(function(b){var s=document.createElement('span');s.textContent=(b.textContent||'').replace('🏆 Final Certificate','').trim();b.parentNode.replaceChild(s,b)});
+    box.querySelectorAll('script,.certControls,.scmCertActions,.printActions').forEach(function(e){e.remove()});
+    return box.innerHTML;
+  }
+  function printHtmlDocument(title,bodyHtml){
+    var css='<style>body{font-family:Arial,system-ui,sans-serif;color:#142033;margin:18px}h1{text-align:center;color:#0f5b2e;margin:0 0 10px}.meta{text-align:center;font-weight:900;margin:6px 0 14px;color:#17324d}.summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.summaryBox{background:#eef7ff;border:2px solid #c7ddff;border-radius:14px;padding:10px;text-align:center;font-weight:1000}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#203040;color:white;padding:8px}td{border-bottom:1px solid #dbe4ef;padding:7px;text-align:center}td:nth-child(2){text-align:left}.tieNote{font-size:12px;margin-top:8px;color:#334155;font-weight:900;background:#fff7cc;border:1px solid #f0d36d;border-radius:10px;padding:6px}@media print{@page{size:A4 landscape;margin:10mm}button{display:none!important}}</style>';
+    var w=window.open('','_blank'); if(!w){alert('Please allow pop-ups to print this report.');return;}
+    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},350);
+  }
+  window.printTeacherReport=function(){
+    var card=by('teacherReportPrint'); if(!card)return alert('No report is open.');
+    var h=card.querySelector('h2'), title=h?(h.textContent||'Report'):'Report';
+    var summary=by('reportSummary')?cleanForPrint(by('reportSummary').innerHTML):'';
+    var table=by('reportTableBox')?cleanForPrint(by('reportTableBox').innerHTML):'';
+    printHtmlDocument(title,'<h1>'+esc(title)+'</h1>'+summary+table);
+  };
+  window.showTeacherReport=function(){
+    var r=getRoom(); if(!r)return alert('No active room.');
+    var key=selectedKey(), arr=savedRoundRows(r,key);
+    if(!arr.length)return alert(roundName(key)+' has not been saved yet.\nPlease save the round results first.');
+    var avg=(arr.reduce(function(a,p){return a+n(p.stars)},0)/arr.length).toFixed(1);
+    var leader=arr.filter(function(p){return p.rank===1}).map(function(p){return p.name}).join(' & ')||'-';
+    var fast=arr.slice().sort(function(a,b){return n(a.time,999999)-n(b.time,999999)})[0];
+    var rows=arr.map(function(p){return '<tr><td>'+p.rank+(p.tie?' (Tie)':'')+'</td><td><button class="scmCertLink" onclick="scmOpenRoundCertificate(\''+esc(p.id)+'\')">'+esc(p.name)+'</button></td><td>'+esc(p.age||'-')+'</td><td>'+esc(p.grade||'-')+'</td><td>'+esc(p.school||'-')+'</td><td>'+esc(p.status||'-')+'</td><td>'+p.stars+'/30</td><td>'+p.solved+'/10</td><td>'+fmt(p.time)+'</td><td>'+award(p.rank,false)+'</td></tr>'}).join('');
+    setReport('🖨️ Current Round Report','<div class="summaryGrid"><div class="summaryBox">👥 Participants<br><b>'+arr.length+'</b></div><div class="summaryBox">⭐ Average Stars<br><b>'+avg+'/30</b></div><div class="summaryBox">🏆 Round Leader<br><b>'+esc(leader)+'</b></div><div class="summaryBox">⚡ Fastest<br><b>'+(fast?esc(fast.name):'-')+'</b></div></div><div class="meta"><b>'+esc(r.title||'Level Championship')+'</b> &nbsp; <b>Room:</b> '+esc(r.code||activeCode())+' &nbsp; <b>'+esc((arr[0]&&arr[0].label)||roundName(key))+'</b> &nbsp; <b>Date:</b> '+new Date().toLocaleDateString()+'</div><div class="tieNote">Click a student name to print the round certificate.</div>','<table class="reportTable"><thead><tr><th>Rank</th><th>Student</th><th>Age</th><th>Class</th><th>School</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time Used</th><th>Award</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  };
+  window.showFinalRanking=function(){
+    var r=getRoom(); if(!r)return alert('No active room.');
+    var arr=finalRows(r); if(!arr.length)return alert('Please save at least one round first.');
+    var rows=arr.map(function(p){return '<tr><td>'+p.rank+(p.tie?' (Tie)':'')+'</td><td><button class="scmCertLink" onclick="scmOpenFinalCertificate(\''+esc(p.id)+'\')">'+esc(p.name)+'</button></td><td>'+esc(p.age||'-')+'</td><td>'+esc(p.grade||'-')+'</td><td>'+esc(p.school||'-')+'</td><td><b>'+p.totalStars+'</b></td><td>'+p.totalSolved+'</td><td>'+fmt(p.totalTime)+'</td><td>'+award(p.rank,true)+'</td><td><button class="scmCertBtn" onclick="scmOpenFinalCertificate(\''+esc(p.id)+'\')">🏆 Final Certificate</button></td></tr>'}).join('');
+    setReport('🏆 Final Championship Ranking','<div class="summaryGrid"><div class="summaryBox">🥇 Champion<br><b>'+esc(arr.filter(function(p){return p.rank===1}).map(function(p){return p.name}).join(' & '))+'</b></div><div class="summaryBox">🥈 Rank 2<br><b>'+esc(arr.filter(function(p){return p.rank===2}).map(function(p){return p.name}).join(' & ')||'-')+'</b></div><div class="summaryBox">🥉 Rank 3<br><b>'+esc(arr.filter(function(p){return p.rank===3}).map(function(p){return p.name}).join(' & ')||'-')+'</b></div><div class="summaryBox">👥 Players<br><b>'+arr.length+'</b></div></div><div class="meta"><b>'+esc(r.title||'Level Championship')+'</b> &nbsp; <b>Room:</b> '+esc(r.code||activeCode())+' &nbsp; <b>Completed Rounds:</b> '+allSavedRoundKeys(r).length+' of 3</div><div class="tieNote">Final Ranking Rule: Total Stars → Total Solved → Lowest Total Time. Click the student name to print certificate.</div>','<table class="reportTable"><thead><tr><th>Rank</th><th>Student</th><th>Age</th><th>Class</th><th>School</th><th>Total Stars</th><th>Total Solved</th><th>Total Time</th><th>Award</th><th>Certificate</th></tr></thead><tbody>'+rows+'</tbody></table>');
+  };
+  var oldLiveStart=window.liveStartChallenge;
+  window.liveStartChallenge=function(){
+    var r=getRoom(), key=selectedKey(), rn=roundNum(key);
+    if(rn>1){
+      var prev='R'+(rn-1);
+      if(!r || !r.rounds || !r.rounds[prev] || !Array.isArray(r.rounds[prev].results) || !r.rounds[prev].results.length){
+        return alert('Please save Round '+(rn-1)+' results before starting Round '+rn+'.');
+      }
+    }
+    return oldLiveStart.apply(this,arguments);
+  };
+})();
+</script>
+
+
 <script>
 /* v80 Clean New Room + Strict Student List Fix
    Prevents a newly created room from showing students cached from a previous room.
@@ -4684,636 +5030,4 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   }
 })();
 </script>
-<!-- v104 Queen clean logic sync from Bishop v101: rejoin + replay guard only, no UI/CSS changes -->
-<script>
-/* v104 Queen: restore stable game start + student rejoin + block replay after submitted. */
-(function(){
-  function scmStopStudentWaitingPollV104(){
-    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll){ clearInterval(liveRoomPoll); liveRoomPoll=null; } }catch(e){}
-  }
 
-  function scmV104StartGameCore(){
-    try{
-      if(typeof timer!=='undefined' && timer) clearInterval(timer);
-      questionIndex=0;
-      stars=0;
-      solved=0;
-      coins=0;
-      questionStates=Array(10).fill('empty');
-      running=true;
-      currentLevel=parseInt(document.getElementById('level').value,10);
-      selectedDuration=parseInt(document.getElementById('duration').value,10);
-      remaining=selectedDuration;
-      elapsedSeconds=0;
-      const overlay=document.getElementById('overlay');
-      if(overlay) overlay.style.display='none';
-      if(typeof updateTop==='function') updateTop();
-      if(typeof loadQuestion==='function') loadQuestion();
-      timer=setInterval(()=>{
-        remaining--;
-        elapsedSeconds++;
-        if(typeof updateTop==='function') updateTop();
-        if(remaining<=0){
-          if(timer) clearInterval(timer);
-          timer=null;
-          if(typeof finish==='function') finish(false);
-        }
-      },1000);
-      if(typeof updateTop==='function') updateTop();
-    }catch(e){
-      console.error('v104 Queen startGame failed',e);
-    }
-  }
-  window.startGame=scmV104StartGameCore;
-  try{ startGame=window.startGame; }catch(e){}
-
-  function scmCurrentRoundKey104(room){
-    if(!room) return null;
-    return room.currentRoundKey || (room.roundId ? ('R'+room.roundId) : null);
-  }
-  function scmPlayer104(room){
-    try{return room && room.players && livePlayerId ? room.players[livePlayerId] : null;}catch(e){return null;}
-  }
-  function scmHasSubmittedCurrentRound104(room){
-    const p=scmPlayer104(room);
-    const key=scmCurrentRoundKey104(room);
-    if(!p || !key) return false;
-    if(p.results && p.results[key]) return true;
-    const st=String(p.status||'');
-    return (st.indexOf('Finished')>=0 || st.indexOf('Time Over')>=0) && room.status==='started' && p.time!=null;
-  }
-  function scmShowWaitingAfterSubmit104(room){
-    try{
-      if(typeof liveShow==='function') liveShow('liveStudentRoom');
-      const overlay=document.getElementById('liveOverlay');
-      if(overlay) overlay.style.display='flex';
-      const intro=document.getElementById('introOverlay');
-      if(intro) intro.style.display='none';
-      const status=document.getElementById('liveStudentStatus');
-      const p=scmPlayer104(room);
-      if(status){
-        const label=(room&&room.currentRoundLabel)||'Current round';
-        status.innerHTML='<div class="studentDoneBox">✅ '+label+' completed.<div class="waitingNext">Waiting for the teacher to save the round or start the next round…</div></div>';
-      }
-      if(room && room.roundId!=null){
-        try{liveSubmittedRoundId=room.roundId;}catch(e){}
-        try{liveSubmitted=true;}catch(e){}
-        try{liveModeActive=false;}catch(e){}
-      }
-    }catch(e){console.error('v104 Queen waiting display failed',e);}
-  }
-
-  function scmV104BeginStudent(room){
-    try{
-      room = room || (typeof liveGetRoom==='function' ? liveGetRoom(liveRoomCode) : null);
-      if(scmHasSubmittedCurrentRound104(room)){
-        scmShowWaitingAfterSubmit104(room);
-        return;
-      }
-      if(liveModeActive || (room && room.roundId===liveSubmittedRoundId)) return;
-      scmStopStudentWaitingPollV104();
-      liveModeActive=true;
-      liveSubmitted=false;
-      if(typeof liveActiveRoundId!=='undefined' && room) liveActiveRoundId=room.roundId;
-      liveFixedQuestions=JSON.parse(JSON.stringify((room&&room.questions)||[]));
-      const levelEl=document.getElementById('level');
-      const durEl=document.getElementById('duration');
-      if(levelEl && room && room.level!=null) levelEl.value=String(room.level);
-      if(durEl && room && room.duration!=null) durEl.value=String(room.duration);
-      const liveOverlay=document.getElementById('liveOverlay');
-      const introOverlay=document.getElementById('introOverlay');
-      if(liveOverlay) liveOverlay.style.display='none';
-      if(introOverlay) introOverlay.style.display='none';
-      try{
-        const r=liveGetRoom(liveRoomCode);
-        if(r && r.players && r.players[livePlayerId]){
-          r.players[livePlayerId].status='playing';
-          liveSaveRoom(r);
-        }
-      }catch(e){}
-      window.startGame();
-      scmStopStudentWaitingPollV104();
-    }catch(e){
-      console.error('v104 Queen liveBeginStudent failed',e);
-    }
-  }
-  window.liveBeginStudent=scmV104BeginStudent;
-  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
-
-  window.liveRenderRoom=function(){
-    try{
-      if(!liveRoomCode) return;
-      const room=liveGetRoom(liveRoomCode);
-      if(!room) return;
-      const tb=document.getElementById('liveTeacherBoard');
-      if(tb && typeof liveBoardRows==='function') tb.innerHTML=liveBoardRows(room,true);
-      const sb=document.getElementById('liveStudentBoard');
-      if(sb && typeof liveBoardRows==='function') sb.innerHTML=liveBoardRows(room,false);
-      const label=document.getElementById('currentRoundLabel');
-      if(label) label.textContent=room.currentRoundLabel ? ('Current: '+room.currentRoundLabel) : 'Round not started';
-      const saved=document.getElementById('savedRoundsLine');
-      if(saved && typeof v15SavedRoundsText==='function') saved.textContent=v15SavedRoundsText(room);
-
-      if(liveRole==='student'){
-        if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
-        if(scmHasSubmittedCurrentRound104(room)){
-          scmShowWaitingAfterSubmit104(room);
-          return;
-        }
-        if(room.status==='starting' && room.startAt && livePreparedRoundId!==room.roundId){
-          livePreparedRoundId=room.roundId;
-          if(typeof livePrepareStart==='function') livePrepareStart(room);
-          return;
-        }
-        if(room.status==='started' && !liveModeActive && room.roundId!==liveSubmittedRoundId && room.questions && room.questions.length){
-          window.liveBeginStudent(room);
-          return;
-        }
-      }
-    }catch(e){console.error('v104 Queen liveRenderRoom failed',e);}
-  };
-  try{ liveRenderRoom=window.liveRenderRoom; }catch(e){}
-})();
-</script>
-<!-- v105 Queen mobile Live Class centering fix: UI only, no game/live logic change -->
-<style>
-html,body{max-width:100%!important;overflow-x:hidden!important;}
-#liveOverlay.liveOverlay{
-  position:fixed!important;
-  left:0!important;right:0!important;top:0!important;bottom:0!important;
-  width:100vw!important;max-width:100vw!important;
-  height:100vh!important;max-height:100vh!important;
-  margin:0!important;
-  padding:10px!important;
-  display:none;
-  align-items:flex-start!important;
-  justify-content:center!important;
-  overflow-y:auto!important;
-  overflow-x:hidden!important;
-  transform:none!important;
-}
-#liveOverlay.liveOverlay .liveCard{
-  width:calc(100vw - 20px)!important;
-  max-width:980px!important;
-  min-width:0!important;
-  margin:0 auto!important;
-  transform:none!important;
-  box-sizing:border-box!important;
-}
-#liveOverlay .liveGrid,#liveOverlay .liveRow,#liveOverlay .liveBox{
-  max-width:100%!important;
-  min-width:0!important;
-  box-sizing:border-box!important;
-}
-#liveOverlay .liveInput,#liveOverlay select,#liveOverlay button{
-  max-width:100%!important;
-}
-@media(max-width:760px){
-  #liveOverlay.liveOverlay{padding:8px!important;}
-  #liveOverlay.liveOverlay .liveCard{width:calc(100vw - 16px)!important;padding:14px!important;border-radius:22px!important;}
-  #liveOverlay .liveGrid{grid-template-columns:1fr!important;}
-  #liveOverlay .liveCard h2{font-size:24px!important;line-height:1.15!important;word-break:normal!important;}
-  #liveOverlay .liveCard p{font-size:15px!important;line-height:1.25!important;}
-}
-</style>
-<script>
-(function(){
-  const prevOpen = window.openLiveChallenge;
-  window.openLiveChallenge = function(){
-    try{ window.scrollTo(0,0); document.documentElement.scrollLeft=0; document.body.scrollLeft=0; }catch(e){}
-    if(typeof prevOpen==='function') prevOpen.apply(this, arguments);
-    try{
-      const o=document.getElementById('liveOverlay');
-      if(o){ o.scrollLeft=0; o.scrollTop=0; o.style.display='flex'; }
-    }catch(e){}
-  };
-  try{ openLiveChallenge=window.openLiveChallenge; }catch(e){}
-})();
-</script>
-<!-- v106: Bishop v101 proven rejoin/replay live logic appended for Queen -->
-<!-- v98 Resume Replay Lock: prevent same round from opening again after submit -->
-<script>
-(function(){
-  const previousSubmitV98 = window.liveSubmitResult;
-  window.liveSubmitResult = function(status){
-    const beforeRoom = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
-    const roundBefore = beforeRoom ? Number(beforeRoom.roundId||beforeRoom.current_round||0) : (typeof liveActiveRoundId!=='undefined' ? Number(liveActiveRoundId||0) : 0);
-    const keyBefore = beforeRoom ? (beforeRoom.currentRoundKey || ('R'+roundBefore)) : ('R'+roundBefore);
-    if(previousSubmitV98) previousSubmitV98.apply(this, arguments);
-    try{
-      const room = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
-      const rn = room ? Number(room.roundId||roundBefore||0) : roundBefore;
-      const key = room ? (room.currentRoundKey || keyBefore || ('R'+rn)) : (keyBefore || ('R'+rn));
-      if(rn){
-        liveSubmittedRoundId = rn;
-        if(typeof liveActiveRoundId!=='undefined') liveActiveRoundId = rn;
-        try{ localStorage.setItem('scm_last_started_round', String(rn)); }catch(e){}
-      }
-      liveSubmitted = true;
-      liveModeActive = false;
-      if(room && room.players && livePlayerId && room.players[livePlayerId]){
-        const p = room.players[livePlayerId];
-        p.results = p.results || {};
-        if(!p.results[key]){
-          p.results[key] = {
-            roundId: rn,
-            key: key,
-            label: room.currentRoundLabel || key,
-            stars: (typeof stars!=='undefined'?stars:0),
-            solved: (typeof solved!=='undefined'?solved:0),
-            time: (typeof lastUsedSeconds!=='undefined'?lastUsedSeconds:0),
-            level: room.level,
-            duration: room.duration,
-            status: status
-          };
-        }
-        p.status = status;
-        if(typeof liveSaveRoom==='function') liveSaveRoom(room);
-      }
-    }catch(e){ console.warn('v98 replay lock submit guard failed', e); }
-  };
-})();
-</script>
-<!-- v94 Shared Student Waiting Entry: Join and Resume use the same listening path -->
-<script>
-(function(){
-  const API='https://smartchessmath-api.campo1234567.workers.dev';
-  const STUDENT_WAIT_POLL_MS=2000;
-  function by(id){return document.getElementById(id)}
-  function txt(v){return String(v||'').trim()}
-  function upper(v){return txt(v).toUpperCase()}
-  function fmtId(id){return 'SCM-' + String(id||'').replace(/^D1-/,'').padStart(4,'0')}
-  async function api(path,opts){
-    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
-    const t=await r.text();
-    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
-  }
-  function makeOnlineRoom(code,data){
-    let room=(typeof liveGetRoom==='function')?liveGetRoom(code):null;
-    if(!room){
-      if(typeof buildLocalRoomFromOnline==='function'){
-        room=buildLocalRoomFromOnline(code,{championship_name:data.championship_name,championship_id:data.championship_id});
-      }else{
-        room={code:code,createdAt:Date.now(),status:'waiting',level:1,duration:180,questions:[],players:{},rounds:{},roundId:0,currentRoundKey:null,currentRoundLabel:'',online:true,championship_id:data.championship_id};
-      }
-    }
-    room.code=code;
-    room.online=true;
-    room.championship_id=data.championship_id || room.championship_id;
-    room.players=room.players||{};
-    return room;
-  }
-  function normalizePlayerData(data){
-    const sid=Number(data.student_id || data.d1_student_id || 0);
-    return {
-      room_code:upper(data.room_code || data.code),
-      student_id:sid,
-      championship_id:data.championship_id || window.scmOnlineChampionshipId || null,
-      championship_name:data.championship_name || '',
-      student_name:data.student_name || data.name || livePlayerName || 'Student',
-      age:data.age || '',
-      grade:data.grade || '',
-      school_name:data.school_name || data.school || '',
-      player_id:data.player_id || (sid ? fmtId(sid) : '')
-    };
-  }
-  window.scmEnterStudentWaitingRoomV94=function(raw){
-    const data=normalizePlayerData(raw||{});
-    if(!data.room_code || !data.student_id) return false;
-
-    if(typeof ensureLiveChannel==='function') ensureLiveChannel();
-    window.liveRole='student'; try{liveRole='student'}catch(e){}
-    window.liveRoomCode=data.room_code; try{liveRoomCode=data.room_code}catch(e){}
-    window.livePlayerName=data.student_name; try{livePlayerName=data.student_name}catch(e){}
-    window.livePlayerId='D1-'+data.student_id; try{livePlayerId='D1-'+data.student_id}catch(e){}
-    window.scmOnlineStudentId=data.student_id;
-    window.scmOnlineChampionshipId=data.championship_id;
-
-    let room=makeOnlineRoom(data.room_code,data);
-    const pid='D1-'+data.student_id;
-    const old=room.players[pid]||{};
-    room.players[pid]=Object.assign(old,{
-      id:pid,
-      d1_student_id:data.student_id,
-      studentCode:data.player_id || fmtId(data.student_id),
-      name:data.student_name,
-      age:data.age || old.age || '',
-      grade:data.grade || old.grade || '',
-      school:data.school_name || old.school || '',
-      status:(String(old.status||'').match(/Finished|Time Over/i) ? old.status : 'waiting'),
-      stars:old.stars||0,
-      solved:old.solved||0,
-      time:old.time==null?null:old.time,
-      joinedAt:old.joinedAt||Date.now(),
-      results:old.results||{}
-    });
-
-    try{ window.liveSubmitted=false; liveSubmitted=false; }catch(e){}
-    try{ window.liveSubmittedRoundId=null; liveSubmittedRoundId=null; }catch(e){}
-    try{ window.livePreparedRoundId=null; livePreparedRoundId=null; }catch(e){}
-    try{ window.liveModeActive=false; liveModeActive=false; }catch(e){}
-    try{ window.liveFixedQuestions=null; liveFixedQuestions=null; }catch(e){}
-
-    if(typeof liveSaveRoom==='function') liveSaveRoom(room);
-    if(typeof setOnlineSession==='function') setOnlineSession({role:'student',room_code:data.room_code,student_id:data.student_id,championship_id:data.championship_id});
-    if(by('liveRoomCodeStudent')) by('liveRoomCodeStudent').textContent=data.room_code;
-    if(typeof liveShow==='function') liveShow('liveStudentRoom');
-    if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
-    if(typeof liveRenderRoom==='function') liveRenderRoom();
-    if(typeof ensureOnlineBadge==='function') ensureOnlineBadge('Student waiting: '+(data.player_id||fmtId(data.student_id)));
-
-    if(window.liveRoomPoll) clearInterval(window.liveRoomPoll);
-    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll) clearInterval(liveRoomPoll); }catch(e){}
-    const poll=function(){
-      try{
-        if((window.liveRole||liveRole)!=='student') return;
-        if(!(window.liveRoomCode||liveRoomCode)) return;
-        if(window.liveModeActive || (typeof liveModeActive!=='undefined' && liveModeActive)) return;
-        if(typeof scmRefreshRoomStudents==='function') scmRefreshRoomStudents(window.liveRoomCode||liveRoomCode);
-        else if(typeof liveRenderRoom==='function') liveRenderRoom();
-      }catch(e){}
-    };
-    window.liveRoomPoll=setInterval(poll,STUDENT_WAIT_POLL_MS);
-    try{ liveRoomPoll=window.liveRoomPoll; }catch(e){}
-    setTimeout(poll,300);
-    return true;
-  };
-
-  const previousJoin=window.liveJoinRoom;
-  if(typeof previousJoin==='function'){
-    window.liveJoinRoom=async function(){
-      const out=await previousJoin.apply(this,arguments);
-      try{
-        if((window.liveRole||liveRole)==='student' && (window.liveRoomCode||liveRoomCode) && window.scmOnlineStudentId){
-          const room=(typeof liveGetRoom==='function')?liveGetRoom(window.liveRoomCode||liveRoomCode):null;
-          const p=room&&room.players&&(room.players[window.livePlayerId||livePlayerId]);
-          window.scmEnterStudentWaitingRoomV94({
-            room_code:window.liveRoomCode||liveRoomCode,
-            student_id:window.scmOnlineStudentId,
-            championship_id:window.scmOnlineChampionshipId || (room&&room.championship_id),
-            championship_name:room&&room.title,
-            student_name:(p&&p.name)||window.livePlayerName||livePlayerName,
-            age:p&&p.age,
-            grade:p&&p.grade,
-            school_name:p&&p.school,
-            player_id:p&&p.studentCode
-          });
-        }
-      }catch(e){}
-      return out;
-    };
-  }
-
-  window.resumePlayerV38=async function(){
-    const playerId=prompt('Enter Player ID');
-    if(!playerId) return;
-    try{
-      const data=await api('/api/resume-player',{method:'POST',body:JSON.stringify({player_id:playerId})});
-      if(!data.ok){alert(data.error||'Player ID not found.');return;}
-      window.scmEnterStudentWaitingRoomV94(data);
-      try{ if(typeof scmCheckRoomStatusNow==='function') setTimeout(()=>scmCheckRoomStatusNow(),250); }catch(e){}
-    }catch(e){alert('Resume Player error: '+e.message);}
-  };
-
-  document.addEventListener('DOMContentLoaded',function(){
-    setTimeout(function(){
-      try{
-        const joinBtn=[...document.querySelectorAll('#liveHome .liveBox:nth-child(2) button')].find(b=>String(b.textContent||'').trim()==='Join Room');
-        if(joinBtn && !by('v38ResumePlayerBtn')){
-          const btn=document.createElement('button');
-          btn.id='v38ResumePlayerBtn';
-          btn.type='button';
-          btn.className='v38ResumeBtn';
-          btn.textContent='Resume Player';
-          btn.onclick=window.resumePlayerV38;
-          joinBtn.insertAdjacentElement('afterend',btn);
-        }
-      }catch(e){}
-    },500);
-  });
-})();
-</script>
-<!-- v96 Restore V82 Timer After Shared Join/Resume Start -->
-<script>
-(function(){
-  function clearStudentWaitingPollV96(){
-    try{ if(window.liveRoomPoll){ clearInterval(window.liveRoomPoll); window.liveRoomPoll=null; } }catch(e){}
-    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll){ clearInterval(liveRoomPoll); liveRoomPoll=null; } }catch(e){}
-  }
-  function restoreV82RoundTimerV96(){
-    try{
-      if(typeof liveModeActive!=='undefined' && !liveModeActive) return;
-      if(typeof current==='undefined' || !current) return;
-      if(typeof selectedDuration==='undefined') return;
-      if(typeof remaining==='undefined') return;
-      if(!Number.isFinite(Number(remaining)) || Number(remaining)<=0){ remaining=Number(selectedDuration)||180; }
-      running=true;
-      if(typeof timer!=='undefined' && timer){ clearInterval(timer); }
-      timer=setInterval(()=>{
-        remaining--;
-        if(typeof elapsedSeconds!=='undefined') elapsedSeconds++;
-        if(typeof updateTop==='function') updateTop();
-        if(remaining<=0){
-          if(timer) clearInterval(timer);
-          timer=null;
-          if(typeof finish==='function') finish(false);
-        }
-      },1000);
-      if(typeof updateTop==='function') updateTop();
-    }catch(e){ console.warn('v96 timer restore failed',e); }
-  }
-  const oldLiveBeginStudentV96=window.liveBeginStudent;
-  if(typeof oldLiveBeginStudentV96==='function' && !oldLiveBeginStudentV96.__v96TimerRestore){
-    const wrapped=function(room){
-      clearStudentWaitingPollV96();
-      const out=oldLiveBeginStudentV96.apply(this,arguments);
-      clearStudentWaitingPollV96();
-      setTimeout(restoreV82RoundTimerV96,80);
-      setTimeout(function(){
-        try{
-          if(typeof running!=='undefined' && running && typeof remaining!=='undefined' && Number(remaining)>=Number(selectedDuration)-1){
-            restoreV82RoundTimerV96();
-          }
-        }catch(e){}
-      },1350);
-      return out;
-    };
-    wrapped.__v96TimerRestore=true;
-    window.liveBeginStudent=wrapped;
-  }
-  const oldBackToWaitingV96=window.backToWaitingRoom;
-  if(typeof oldBackToWaitingV96==='function' && !oldBackToWaitingV96.__v96TimerRestore){
-    const wrappedBack=function(){
-      try{ if(typeof timer!=='undefined' && timer){ clearInterval(timer); timer=null; } }catch(e){}
-      try{ running=false; }catch(e){}
-      return oldBackToWaitingV96.apply(this,arguments);
-    };
-    wrappedBack.__v96TimerRestore=true;
-    window.backToWaitingRoom=wrappedBack;
-  }
-})();
-</script>
-<!-- v97 Restore V82 Timer Chain Exactly After Shared Join/Resume -->
-<script>
-(function(){
-  function scmStopStudentWaitingPollV97(){
-    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll){ clearInterval(liveRoomPoll); liveRoomPoll=null; } }catch(e){}
-    try{ if(window.liveRoomPoll){ clearInterval(window.liveRoomPoll); window.liveRoomPoll=null; } }catch(e){}
-  }
-
-  function scmV82StartGameCore(){
-    try{
-      if(typeof timer!=='undefined' && timer) clearInterval(timer);
-      questionIndex=0;
-      stars=0;
-      solved=0;
-      coins=0;
-      questionStates=Array(10).fill('empty');
-      running=true;
-      currentLevel=parseInt(document.getElementById('level').value,10);
-      selectedDuration=parseInt(document.getElementById('duration').value,10);
-      remaining=selectedDuration;
-      elapsedSeconds=0;
-      const overlay=document.getElementById('overlay');
-      if(overlay) overlay.style.display='none';
-      if(typeof updateTop==='function') updateTop();
-      if(typeof loadQuestion==='function') loadQuestion();
-      timer=setInterval(()=>{
-        remaining--;
-        elapsedSeconds++;
-        if(typeof updateTop==='function') updateTop();
-        if(remaining<=0){
-          if(timer) clearInterval(timer);
-          timer=null;
-          if(typeof finish==='function') finish(false);
-        }
-      },1000);
-      if(typeof updateTop==='function') updateTop();
-    }catch(e){
-      console.error('v97 V82 timer chain failed',e);
-    }
-  }
-
-  // Replace any accumulated wrapper chain with the original V82-style startGame.
-  window.startGame=scmV82StartGameCore;
-  try{ startGame=window.startGame; }catch(e){}
-
-  function scmV97BeginStudent(room){
-    try{
-      if(liveModeActive || (room && room.roundId===liveSubmittedRoundId)) return;
-      scmStopStudentWaitingPollV97();
-      liveModeActive=true;
-      liveSubmitted=false;
-      if(typeof liveActiveRoundId!=='undefined' && room) liveActiveRoundId=room.roundId;
-      liveFixedQuestions=JSON.parse(JSON.stringify((room&&room.questions)||[]));
-      const levelEl=document.getElementById('level');
-      const durEl=document.getElementById('duration');
-      if(levelEl && room && room.level!=null) levelEl.value=String(room.level);
-      if(durEl && room && room.duration!=null) durEl.value=String(room.duration);
-      const liveOverlay=document.getElementById('liveOverlay');
-      const introOverlay=document.getElementById('introOverlay');
-      if(liveOverlay) liveOverlay.style.display='none';
-      if(introOverlay) introOverlay.style.display='none';
-      try{
-        const r=liveGetRoom(liveRoomCode);
-        if(r && r.players && r.players[livePlayerId]){
-          r.players[livePlayerId].status='playing';
-          liveSaveRoom(r);
-        }
-      }catch(e){}
-      window.startGame();
-      scmStopStudentWaitingPollV97();
-    }catch(e){
-      console.error('v97 liveBeginStudent failed',e);
-    }
-  }
-  window.liveBeginStudent=scmV97BeginStudent;
-  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
-})();
-</script>
-<script>
-/* v101 clean replay guard: allow rejoin to current round if not submitted; block replay after submitted. */
-(function(){
-  function scmCurrentRoundKey101(room){
-    if(!room) return null;
-    return room.currentRoundKey || (room.roundId ? ('R'+room.roundId) : null);
-  }
-  function scmPlayer101(room){
-    try{return room && room.players && livePlayerId ? room.players[livePlayerId] : null;}catch(e){return null;}
-  }
-  function scmHasSubmittedCurrentRound101(room){
-    const p=scmPlayer101(room);
-    const key=scmCurrentRoundKey101(room);
-    if(!p || !key) return false;
-    if(p.results && p.results[key]) return true;
-    const st=String(p.status||'');
-    return (st.indexOf('Finished')>=0 || st.indexOf('Time Over')>=0) && room.status==='started' && p.time!=null;
-  }
-  function scmShowWaitingAfterSubmit101(room){
-    try{
-      if(typeof liveShow==='function') liveShow('liveStudentRoom');
-      const overlay=document.getElementById('liveOverlay');
-      if(overlay) overlay.style.display='flex';
-      const intro=document.getElementById('introOverlay');
-      if(intro) intro.style.display='none';
-      const status=document.getElementById('liveStudentStatus');
-      const p=scmPlayer101(room);
-      if(status){
-        const label=(room&&room.currentRoundLabel)||'Current round';
-        status.innerHTML='<div class="studentDoneBox">✅ '+label+' completed.<div class="waitingNext">Waiting for the teacher to save the round or start the next round…</div></div>';
-      }
-      if(room && room.roundId!=null){
-        try{liveSubmittedRoundId=room.roundId;}catch(e){}
-        try{liveSubmitted=true;}catch(e){}
-        try{liveModeActive=false;}catch(e){}
-      }
-    }catch(e){console.error('v101 waiting display failed',e);}
-  }
-  const previousBegin101 = window.liveBeginStudent;
-  window.liveBeginStudent=function(room){
-    try{
-      room = room || (typeof liveGetRoom==='function' ? liveGetRoom(liveRoomCode) : null);
-      if(scmHasSubmittedCurrentRound101(room)){
-        scmShowWaitingAfterSubmit101(room);
-        return;
-      }
-      if(typeof previousBegin101==='function') return previousBegin101(room);
-    }catch(e){console.error('v101 liveBeginStudent guard failed',e);}
-  };
-  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
-
-  window.liveRenderRoom=function(){
-    try{
-      if(!liveRoomCode) return;
-      const room=liveGetRoom(liveRoomCode);
-      if(!room) return;
-      const tb=document.getElementById('liveTeacherBoard');
-      if(tb && typeof liveBoardRows==='function') tb.innerHTML=liveBoardRows(room,true);
-      const sb=document.getElementById('liveStudentBoard');
-      if(sb && typeof liveBoardRows==='function') sb.innerHTML=liveBoardRows(room,false);
-      const label=document.getElementById('currentRoundLabel');
-      if(label) label.textContent=room.currentRoundLabel ? ('Current: '+room.currentRoundLabel) : 'Round not started';
-      const saved=document.getElementById('savedRoundsLine');
-      if(saved && typeof v15SavedRoundsText==='function') saved.textContent=v15SavedRoundsText(room);
-
-      if(liveRole==='student'){
-        if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
-        if(scmHasSubmittedCurrentRound101(room)){
-          scmShowWaitingAfterSubmit101(room);
-          return;
-        }
-        if(room.status==='starting' && room.startAt && livePreparedRoundId!==room.roundId){
-          livePreparedRoundId=room.roundId;
-          if(typeof livePrepareStart==='function') livePrepareStart(room);
-          return;
-        }
-        if(room.status==='started' && !liveModeActive && room.roundId!==liveSubmittedRoundId && room.questions && room.questions.length){
-          window.liveBeginStudent(room);
-          return;
-        }
-      }
-    }catch(e){console.error('v101 liveRenderRoom failed',e);}
-  };
-  try{ liveRenderRoom=window.liveRenderRoom; }catch(e){}
-})();
-</script>
