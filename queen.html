@@ -2058,7 +2058,7 @@ setTimeout(v14InitChampionshipUI,250);
     const played=(saved.results||[]).filter(r=>String(r.status||'')!=='Absent');
     const tie=played.filter(r=>r.rank===rec.rank).length>1;
     const info=roundCertInfo(rec.rank,tie);
-    const levelName=(saved.level||currentLevel)===1?'Beginner Queen':((saved.level||currentLevel)===2?'Line Explorer':'Best Line Master');
+    const levelName=(saved.level||currentLevel)===1?'Beginner Queen':((saved.level||currentLevel)===2?'Number Explorer':'Best Route Master');
     if(byId('finalTitle')) byId('finalTitle').textContent=String(rec.status||'').includes('Time')?'⏰ Time Limit Reached!':'🎉 Challenge Complete!';
     if(byId('finalText')) byId('finalText').innerHTML=`
       <p style="font-size:24px;font-weight:1000">🎉 Congratulations, ${(rec.name||'Student').split(/\s+/)[0]}!</p>
@@ -2215,7 +2215,7 @@ setTimeout(v14InitChampionshipUI,250);
 
   window.viewOfficialRoundResult=function(){
     const room=liveGetRoom(liveRoomCode); if(!room)return alert('No active room found.'); const key=window.__pendingOfficialRoundKey||currentKey(room); const saved=room.rounds&&room.rounds[key]; if(!saved)return alert('The official result is not ready yet. Please wait until the teacher clicks Save Round Results.'); const rec=(saved.results||[]).find(r=>r.id===livePlayerId); if(!rec||String(rec.status||'')==='Absent')return alert('Your official result was not found for this round. Please ask your teacher to save/refresh the round results.');
-    const played=(saved.results||[]).filter(r=>String(r.status||'')!=='Absent'); const tie=played.filter(r=>r.rank===rec.rank).length>1; const info=certInfo(rec.rank,tie); const levelName=(saved.level||currentLevel)===1?'Beginner Queen':((saved.level||currentLevel)===2?'Line Explorer':'Best Line Master');
+    const played=(saved.results||[]).filter(r=>String(r.status||'')!=='Absent'); const tie=played.filter(r=>r.rank===rec.rank).length>1; const info=certInfo(rec.rank,tie); const levelName=(saved.level||currentLevel)===1?'Beginner Queen':((saved.level||currentLevel)===2?'Number Explorer':'Best Route Master');
     if(byId('finalTitle'))byId('finalTitle').textContent=String(rec.status||'').includes('Time')?'⏰ Time Limit Reached!':'🎉 Challenge Complete!';
     if(byId('finalText'))byId('finalText').innerHTML=`<p style="font-size:24px;font-weight:1000">🎉 Congratulations, ${(rec.name||'Student').split(/\s+/)[0]}!</p><p style="font-size:18px;font-weight:1000;color:#0f5b2e">🏆 Round Rank: #${rec.rank}${tie?' (Tie)':''} of ${played.length} Students</p><div class="certificate ${info.className}" id="certificatePrint"><div class="certHeader"><div class="certLogo">♕</div><div class="certProgram"><div class="name">Queen Number Quest</div><div class="sub">Math & Chess Educational Challenge</div></div><div class="certSeal">🏆</div></div><div class="certTitle">CERTIFICATE OF ACHIEVEMENT</div><div class="awarded">This certificate is proudly awarded to</div><div class="studentName">${rec.name||'Student'}</div><div class="certText">for successfully completing <b>Queen Number Quest</b> and demonstrating mathematical thinking, problem solving, and chess planning skills.</div><div class="certStats"><div class="certStat">⭐ Stars Earned<br><b>${n(rec.stars)}/30</b></div><div class="certStat">📈 Questions Solved<br><b>${n(rec.solved)}/10</b></div><div class="certStat">⏱ Time Used<br><b>${fmt(rec.time)} / ${fmt(saved.duration||selectedDuration)}</b></div><div class="certStat">🎮 Level<br><b>${levelName}</b></div><div class="certStat">🏫 School<br><b>${rec.school||room.school||'-'}</b></div><div class="certStat">🆔 Student ID<br><b>${rec.studentCode||rec.id||'-'}</b></div><div class="certStat">🎂 Age / Class<br><b>${rec.age||'-'} / ${rec.grade||'-'}</b></div></div><div class="certLevel">${info.title}<br>${info.subtitle}</div><div class="certText">${info.comment}</div><div class="certText">📅 Date: <b>${new Date().toLocaleDateString()}</b></div><div class="presentedBlock"><div class="presentedLabel">Presented By</div><div class="presentedName">Eng. Salman Ahmed Salman</div><div class="presentedRole">Head of Schools & eSports Committee<br>Arab Chess Federation – Author of Math & Chess</div></div></div><div class="printActions"><button onclick="printCertificate()">🖨️ Print Certificate / Save as PDF</button><button onclick="backToWaitingRoom()">🏫 Back to Waiting Room</button></div>`;
     if(byId('overlay'))byId('overlay').style.display='flex';
@@ -3296,6 +3296,9 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   }
   async function checkStudentRoundStatus(){
     try{
+      // v95 TIMER GUARD: once the game board is open, waiting/resume polling must not
+      // touch the round state or clear the game timer.
+      if((typeof running!=='undefined' && running) || (typeof liveModeActive!=='undefined' && liveModeActive)) return;
       if(liveRole!=='student' || !liveRoomCode) return;
       const data=await api('/api/room-status?room_code='+encodeURIComponent(liveRoomCode));
       if(!data.ok || !data.championship) return;
@@ -3308,8 +3311,18 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
       updateStudentInfoBox(room,ch);
       if(started && !finished && rn>0){
         const localRound=Number(room.roundId||0);
-        const hasAlreadyStartedThisRound = studentLastStartedRound===rn && localRound===rn && (liveModeActive || room.status==='started' || room.status==='starting');
-        const completedThisRound = studentLastStartedRound===rn && (liveSubmittedRoundId===rn || (room.players&&room.players[livePlayerId]&&room.players[livePlayerId].results&&room.players[livePlayerId].results[roundKey(rn)]));
+        const playerRec = room.players && room.players[livePlayerId] ? room.players[livePlayerId] : null;
+        const resultKey = roundKey(rn);
+        const completedThisRound =
+          liveSubmittedRoundId===rn ||
+          ((typeof liveActiveRoundId!=='undefined') && liveSubmitted && liveActiveRoundId===rn) ||
+          (playerRec && playerRec.results && playerRec.results[resultKey]) ||
+          (playerRec && localRound===rn && /Finished|Time Over/.test(String(playerRec.status||'')));
+        const hasAlreadyStartedThisRound =
+          !completedThisRound &&
+          studentLastStartedRound===rn &&
+          localRound===rn &&
+          (liveModeActive || room.status==='started' || room.status==='starting');
         if(!hasAlreadyStartedThisRound && !completedThisRound){
           studentLastStartedRound=rn; localStorage.setItem('scm_last_started_round',String(rn));
           resetForNewStudentRound(room,rn,ch);
@@ -4415,135 +4428,46 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 
 
 
-<!-- v110 Queen Live-Class Stability Patch: start/rejoin/replay guard only. Does not touch print/report/certificate code. -->
-<style>
-@media (max-width:760px){
-  .liveOverlay{position:fixed!important;inset:0!important;width:100dvw!important;max-width:100dvw!important;padding:6px!important;margin:0!important;align-items:flex-start!important;justify-content:center!important;overflow-y:auto!important;overflow-x:hidden!important;transform:none!important;}
-  .liveCard{position:relative!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important;width:calc(100dvw - 12px)!important;max-width:calc(100dvw - 12px)!important;min-width:0!important;margin:6px auto 18px!important;padding:12px 8px!important;border-width:4px!important;border-radius:20px!important;box-sizing:border-box!important;overflow-x:hidden!important;}
-  .liveCard *{box-sizing:border-box;max-width:100%;}
-  .liveGrid{grid-template-columns:1fr!important;width:100%!important;}
-  .liveRow{width:100%!important;}
-  .liveInput,.liveCard select,.liveCard button{max-width:100%!important;}
-}
-</style>
+<!-- v98 Resume Replay Lock: prevent same round from opening again after submit -->
 <script>
 (function(){
-  if(window.__SCM_QUEEN_V110_LIVE_GUARD__) return;
-  window.__SCM_QUEEN_V110_LIVE_GUARD__=true;
-  function by(id){return document.getElementById(id)}
-  function norm(v){return String(v||'').trim().toUpperCase()}
-  function getRoomSafe(code){try{return (typeof liveGetRoom==='function')?liveGetRoom(code||liveRoomCode):null}catch(e){return null}}
-  function saveRoomSafe(room){try{if(room&&typeof liveSaveRoom==='function')liveSaveRoom(room)}catch(e){}}
-  function currentKey(room){return (room&&(room.currentRoundKey||('R'+(room.roundId||1)))) || 'R1'}
-  function playerHasSubmitted(room,pid){try{var p=room&&room.players&&room.players[pid]; var k=currentKey(room); return !!(p&&p.results&&p.results[k]);}catch(e){return false}}
-  function setWaitingView(room){
+  const previousSubmitV98 = window.liveSubmitResult;
+  window.liveSubmitResult = function(status){
+    const beforeRoom = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+    const roundBefore = beforeRoom ? Number(beforeRoom.roundId||beforeRoom.current_round||0) : (typeof liveActiveRoundId!=='undefined' ? Number(liveActiveRoundId||0) : 0);
+    const keyBefore = beforeRoom ? (beforeRoom.currentRoundKey || ('R'+roundBefore)) : ('R'+roundBefore);
+    if(previousSubmitV98) previousSubmitV98.apply(this, arguments);
     try{
-      var ov=by('overlay'); if(ov) ov.style.display='none';
-      var live=by('liveOverlay'); if(live) live.style.display='flex';
-      if(typeof liveShow==='function') liveShow('liveStudentRoom');
-      var codeEl=by('liveRoomCodeStudent'); if(codeEl&&room&&room.code) codeEl.textContent=room.code;
-      var st=by('liveStudentStatus');
-      if(st&&room&&typeof livePlayerId!=='undefined'){
-        var p=room.players&&room.players[livePlayerId];
-        if(p){
-          if(playerHasSubmitted(room,livePlayerId)) st.innerHTML='<div class="studentDoneBox">✅ '+(room.currentRoundLabel||currentKey(room))+' completed.<div class="waitingNext">Waiting for the teacher to close the round or start the next round…</div></div>';
-          else if(room.status==='starting') st.innerHTML='Get ready, <b>'+String(p.name||'Student')+'</b>! The round is starting...';
-          else if(room.status==='started') st.innerHTML='Challenge started. Good luck, <b>'+String(p.name||'Student')+'</b>!';
-          else st.innerHTML='Welcome <b>'+String(p.name||'Student')+'</b>. Waiting for teacher...';
-        }
+      const room = (typeof liveGetRoom==='function' && liveRoomCode) ? liveGetRoom(liveRoomCode) : null;
+      const rn = room ? Number(room.roundId||roundBefore||0) : roundBefore;
+      const key = room ? (room.currentRoundKey || keyBefore || ('R'+rn)) : (keyBefore || ('R'+rn));
+      if(rn){
+        liveSubmittedRoundId = rn;
+        if(typeof liveActiveRoundId!=='undefined') liveActiveRoundId = rn;
+        try{ localStorage.setItem('scm_last_started_round', String(rn)); }catch(e){}
       }
-    }catch(e){}
-  }
-
-  var oldJoin=window.liveJoinRoom;
-  if(typeof oldJoin==='function'){
-    window.liveJoinRoom=function(){
-      var out=oldJoin.apply(this,arguments);
-      try{
-        var room=getRoomSafe(liveRoomCode);
-        if(room&&livePlayerId){
-          if(!room.players) room.players={};
-          if(room.players[livePlayerId]){
-            if(!room.players[livePlayerId].results) room.players[livePlayerId].results={};
-            if(playerHasSubmitted(room,livePlayerId)){
-              room.players[livePlayerId].status=room.players[livePlayerId].status||'Finished ✅';
-            }else if(room.status==='started'||room.status==='starting'){
-              room.players[livePlayerId].status='ready';
-            }else{
-              room.players[livePlayerId].status=room.players[livePlayerId].status||'waiting';
-            }
-            saveRoomSafe(room);
-          }
-          try{liveSubmitted=false;}catch(e){}
-          try{liveSubmittedRoundId=playerHasSubmitted(room,livePlayerId)?room.roundId:null;}catch(e){}
-          try{livePreparedRoundId=null;}catch(e){}
-          setWaitingView(room);
+      liveSubmitted = true;
+      liveModeActive = false;
+      if(room && room.players && livePlayerId && room.players[livePlayerId]){
+        const p = room.players[livePlayerId];
+        p.results = p.results || {};
+        if(!p.results[key]){
+          p.results[key] = {
+            roundId: rn,
+            key: key,
+            label: room.currentRoundLabel || key,
+            stars: (typeof stars!=='undefined'?stars:0),
+            solved: (typeof solved!=='undefined'?solved:0),
+            time: (typeof lastUsedSeconds!=='undefined'?lastUsedSeconds:0),
+            level: room.level,
+            duration: room.duration,
+            status: status
+          };
         }
-      }catch(e){}
-      return out;
-    };
-  }
-
-  var oldBegin=window.liveBeginStudent;
-  if(typeof oldBegin==='function'){
-    window.liveBeginStudent=function(room){
-      try{
-        room=room||getRoomSafe(liveRoomCode);
-        if(!room||!livePlayerId) return;
-        if(playerHasSubmitted(room,livePlayerId)){
-          try{liveModeActive=false;liveSubmitted=true;liveSubmittedRoundId=room.roundId;}catch(e){}
-          setWaitingView(room);
-          return;
-        }
-        try{liveSubmitted=false;liveSubmittedRoundId=null;}catch(e){}
-      }catch(e){}
-      return oldBegin.apply(this,arguments);
-    };
-  }
-
-  var oldRender=window.liveRenderRoom;
-  if(typeof oldRender==='function'){
-    window.liveRenderRoom=function(){
-      var out=oldRender.apply(this,arguments);
-      try{
-        var room=getRoomSafe(liveRoomCode);
-        if(room&&liveRole==='student'){
-          setWaitingView(room);
-          if(room.status==='starting'&&room.startAt&&!playerHasSubmitted(room,livePlayerId)){
-            if(livePreparedRoundId!==room.roundId && typeof livePrepareStart==='function'){
-              livePreparedRoundId=room.roundId;
-              livePrepareStart(room);
-            }
-          }
-          if(room.status==='started'&&!liveModeActive&&!playerHasSubmitted(room,livePlayerId)&&room.questions&&room.questions.length){
-            liveSubmitted=false;
-            liveSubmittedRoundId=null;
-            if(typeof liveBeginStudent==='function') liveBeginStudent(room);
-          }
-        }
-      }catch(e){}
-      return out;
-    };
-  }
-
-  var oldSubmit=window.liveSubmitResult;
-  if(typeof oldSubmit==='function'){
-    window.liveSubmitResult=function(status){
-      var out=oldSubmit.apply(this,arguments);
-      try{
-        var room=getRoomSafe(liveRoomCode);
-        if(room&&livePlayerId){
-          liveSubmitted=true;
-          liveSubmittedRoundId=room.roundId;
-          setWaitingView(room);
-        }
-      }catch(e){}
-      return out;
-    };
-  }
-
-  window.backToWaitingRoom=function(){
-    try{var room=getRoomSafe(liveRoomCode); setWaitingView(room); if(typeof liveRenderRoom==='function') liveRenderRoom();}catch(e){}
+        p.status = status;
+        if(typeof liveSaveRoom==='function') liveSaveRoom(room);
+      }
+    }catch(e){ console.warn('v98 replay lock submit guard failed', e); }
   };
 })();
 </script>
@@ -5031,3 +4955,303 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 })();
 </script>
 
+
+<!-- v94 Shared Student Waiting Entry: Join and Resume use the same listening path -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const STUDENT_WAIT_POLL_MS=2000;
+  function by(id){return document.getElementById(id)}
+  function txt(v){return String(v||'').trim()}
+  function upper(v){return txt(v).toUpperCase()}
+  function fmtId(id){return 'SCM-' + String(id||'').replace(/^D1-/,'').padStart(4,'0')}
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const t=await r.text();
+    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
+  }
+  function makeOnlineRoom(code,data){
+    let room=(typeof liveGetRoom==='function')?liveGetRoom(code):null;
+    if(!room){
+      if(typeof buildLocalRoomFromOnline==='function'){
+        room=buildLocalRoomFromOnline(code,{championship_name:data.championship_name,championship_id:data.championship_id});
+      }else{
+        room={code:code,createdAt:Date.now(),status:'waiting',level:1,duration:180,questions:[],players:{},rounds:{},roundId:0,currentRoundKey:null,currentRoundLabel:'',online:true,championship_id:data.championship_id};
+      }
+    }
+    room.code=code;
+    room.online=true;
+    room.championship_id=data.championship_id || room.championship_id;
+    room.players=room.players||{};
+    return room;
+  }
+  function normalizePlayerData(data){
+    const sid=Number(data.student_id || data.d1_student_id || 0);
+    return {
+      room_code:upper(data.room_code || data.code),
+      student_id:sid,
+      championship_id:data.championship_id || window.scmOnlineChampionshipId || null,
+      championship_name:data.championship_name || '',
+      student_name:data.student_name || data.name || livePlayerName || 'Student',
+      age:data.age || '',
+      grade:data.grade || '',
+      school_name:data.school_name || data.school || '',
+      player_id:data.player_id || (sid ? fmtId(sid) : '')
+    };
+  }
+  window.scmEnterStudentWaitingRoomV94=function(raw){
+    const data=normalizePlayerData(raw||{});
+    if(!data.room_code || !data.student_id) return false;
+
+    if(typeof ensureLiveChannel==='function') ensureLiveChannel();
+    window.liveRole='student'; try{liveRole='student'}catch(e){}
+    window.liveRoomCode=data.room_code; try{liveRoomCode=data.room_code}catch(e){}
+    window.livePlayerName=data.student_name; try{livePlayerName=data.student_name}catch(e){}
+    window.livePlayerId='D1-'+data.student_id; try{livePlayerId='D1-'+data.student_id}catch(e){}
+    window.scmOnlineStudentId=data.student_id;
+    window.scmOnlineChampionshipId=data.championship_id;
+
+    let room=makeOnlineRoom(data.room_code,data);
+    const pid='D1-'+data.student_id;
+    const old=room.players[pid]||{};
+    room.players[pid]=Object.assign(old,{
+      id:pid,
+      d1_student_id:data.student_id,
+      studentCode:data.player_id || fmtId(data.student_id),
+      name:data.student_name,
+      age:data.age || old.age || '',
+      grade:data.grade || old.grade || '',
+      school:data.school_name || old.school || '',
+      status:(String(old.status||'').match(/Finished|Time Over/i) ? old.status : 'waiting'),
+      stars:old.stars||0,
+      solved:old.solved||0,
+      time:old.time==null?null:old.time,
+      joinedAt:old.joinedAt||Date.now(),
+      results:old.results||{}
+    });
+
+    try{ window.liveSubmitted=false; liveSubmitted=false; }catch(e){}
+    try{ window.liveSubmittedRoundId=null; liveSubmittedRoundId=null; }catch(e){}
+    try{ window.livePreparedRoundId=null; livePreparedRoundId=null; }catch(e){}
+    try{ window.liveModeActive=false; liveModeActive=false; }catch(e){}
+    try{ window.liveFixedQuestions=null; liveFixedQuestions=null; }catch(e){}
+
+    if(typeof liveSaveRoom==='function') liveSaveRoom(room);
+    if(typeof setOnlineSession==='function') setOnlineSession({role:'student',room_code:data.room_code,student_id:data.student_id,championship_id:data.championship_id});
+    if(by('liveRoomCodeStudent')) by('liveRoomCodeStudent').textContent=data.room_code;
+    if(typeof liveShow==='function') liveShow('liveStudentRoom');
+    if(typeof v16UpdateStudentWaitingText==='function') v16UpdateStudentWaitingText(room);
+    if(typeof liveRenderRoom==='function') liveRenderRoom();
+    if(typeof ensureOnlineBadge==='function') ensureOnlineBadge('Student waiting: '+(data.player_id||fmtId(data.student_id)));
+
+    if(window.liveRoomPoll) clearInterval(window.liveRoomPoll);
+    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll) clearInterval(liveRoomPoll); }catch(e){}
+    const poll=function(){
+      try{
+        if((window.liveRole||liveRole)!=='student') return;
+        if(!(window.liveRoomCode||liveRoomCode)) return;
+        if(window.liveModeActive || (typeof liveModeActive!=='undefined' && liveModeActive)) return;
+        if(typeof scmRefreshRoomStudents==='function') scmRefreshRoomStudents(window.liveRoomCode||liveRoomCode);
+        else if(typeof liveRenderRoom==='function') liveRenderRoom();
+      }catch(e){}
+    };
+    window.liveRoomPoll=setInterval(poll,STUDENT_WAIT_POLL_MS);
+    try{ liveRoomPoll=window.liveRoomPoll; }catch(e){}
+    setTimeout(poll,300);
+    return true;
+  };
+
+  const previousJoin=window.liveJoinRoom;
+  if(typeof previousJoin==='function'){
+    window.liveJoinRoom=async function(){
+      const out=await previousJoin.apply(this,arguments);
+      try{
+        if((window.liveRole||liveRole)==='student' && (window.liveRoomCode||liveRoomCode) && window.scmOnlineStudentId){
+          const room=(typeof liveGetRoom==='function')?liveGetRoom(window.liveRoomCode||liveRoomCode):null;
+          const p=room&&room.players&&(room.players[window.livePlayerId||livePlayerId]);
+          window.scmEnterStudentWaitingRoomV94({
+            room_code:window.liveRoomCode||liveRoomCode,
+            student_id:window.scmOnlineStudentId,
+            championship_id:window.scmOnlineChampionshipId || (room&&room.championship_id),
+            championship_name:room&&room.title,
+            student_name:(p&&p.name)||window.livePlayerName||livePlayerName,
+            age:p&&p.age,
+            grade:p&&p.grade,
+            school_name:p&&p.school,
+            player_id:p&&p.studentCode
+          });
+        }
+      }catch(e){}
+      return out;
+    };
+  }
+
+  window.resumePlayerV38=async function(){
+    const playerId=prompt('Enter Player ID');
+    if(!playerId) return;
+    try{
+      const data=await api('/api/resume-player',{method:'POST',body:JSON.stringify({player_id:playerId})});
+      if(!data.ok){alert(data.error||'Player ID not found.');return;}
+      window.scmEnterStudentWaitingRoomV94(data);
+      try{ if(typeof scmCheckRoomStatusNow==='function') setTimeout(()=>scmCheckRoomStatusNow(),250); }catch(e){}
+    }catch(e){alert('Resume Player error: '+e.message);}
+  };
+
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(function(){
+      try{
+        const joinBtn=[...document.querySelectorAll('#liveHome .liveBox:nth-child(2) button')].find(b=>String(b.textContent||'').trim()==='Join Room');
+        if(joinBtn && !by('v38ResumePlayerBtn')){
+          const btn=document.createElement('button');
+          btn.id='v38ResumePlayerBtn';
+          btn.type='button';
+          btn.className='v38ResumeBtn';
+          btn.textContent='Resume Player';
+          btn.onclick=window.resumePlayerV38;
+          joinBtn.insertAdjacentElement('afterend',btn);
+        }
+      }catch(e){}
+    },500);
+  });
+})();
+</script>
+
+<!-- v96 Restore V82 Timer After Shared Join/Resume Start -->
+<script>
+(function(){
+  function clearStudentWaitingPollV96(){
+    try{ if(window.liveRoomPoll){ clearInterval(window.liveRoomPoll); window.liveRoomPoll=null; } }catch(e){}
+    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll){ clearInterval(liveRoomPoll); liveRoomPoll=null; } }catch(e){}
+  }
+  function restoreV82RoundTimerV96(){
+    try{
+      if(typeof liveModeActive!=='undefined' && !liveModeActive) return;
+      if(typeof current==='undefined' || !current) return;
+      if(typeof selectedDuration==='undefined') return;
+      if(typeof remaining==='undefined') return;
+      if(!Number.isFinite(Number(remaining)) || Number(remaining)<=0){ remaining=Number(selectedDuration)||180; }
+      running=true;
+      if(typeof timer!=='undefined' && timer){ clearInterval(timer); }
+      timer=setInterval(()=>{
+        remaining--;
+        if(typeof elapsedSeconds!=='undefined') elapsedSeconds++;
+        if(typeof updateTop==='function') updateTop();
+        if(remaining<=0){
+          if(timer) clearInterval(timer);
+          timer=null;
+          if(typeof finish==='function') finish(false);
+        }
+      },1000);
+      if(typeof updateTop==='function') updateTop();
+    }catch(e){ console.warn('v96 timer restore failed',e); }
+  }
+  const oldLiveBeginStudentV96=window.liveBeginStudent;
+  if(typeof oldLiveBeginStudentV96==='function' && !oldLiveBeginStudentV96.__v96TimerRestore){
+    const wrapped=function(room){
+      clearStudentWaitingPollV96();
+      const out=oldLiveBeginStudentV96.apply(this,arguments);
+      clearStudentWaitingPollV96();
+      setTimeout(restoreV82RoundTimerV96,80);
+      setTimeout(function(){
+        try{
+          if(typeof running!=='undefined' && running && typeof remaining!=='undefined' && Number(remaining)>=Number(selectedDuration)-1){
+            restoreV82RoundTimerV96();
+          }
+        }catch(e){}
+      },1350);
+      return out;
+    };
+    wrapped.__v96TimerRestore=true;
+    window.liveBeginStudent=wrapped;
+  }
+  const oldBackToWaitingV96=window.backToWaitingRoom;
+  if(typeof oldBackToWaitingV96==='function' && !oldBackToWaitingV96.__v96TimerRestore){
+    const wrappedBack=function(){
+      try{ if(typeof timer!=='undefined' && timer){ clearInterval(timer); timer=null; } }catch(e){}
+      try{ running=false; }catch(e){}
+      return oldBackToWaitingV96.apply(this,arguments);
+    };
+    wrappedBack.__v96TimerRestore=true;
+    window.backToWaitingRoom=wrappedBack;
+  }
+})();
+</script>
+
+<!-- v97 Restore V82 Timer Chain Exactly After Shared Join/Resume -->
+<script>
+(function(){
+  function scmStopStudentWaitingPollV97(){
+    try{ if(typeof liveRoomPoll!=='undefined' && liveRoomPoll){ clearInterval(liveRoomPoll); liveRoomPoll=null; } }catch(e){}
+    try{ if(window.liveRoomPoll){ clearInterval(window.liveRoomPoll); window.liveRoomPoll=null; } }catch(e){}
+  }
+
+  function scmV82StartGameCore(){
+    try{
+      if(typeof timer!=='undefined' && timer) clearInterval(timer);
+      questionIndex=0;
+      stars=0;
+      solved=0;
+      coins=0;
+      questionStates=Array(10).fill('empty');
+      running=true;
+      currentLevel=parseInt(document.getElementById('level').value,10);
+      selectedDuration=parseInt(document.getElementById('duration').value,10);
+      remaining=selectedDuration;
+      elapsedSeconds=0;
+      const overlay=document.getElementById('overlay');
+      if(overlay) overlay.style.display='none';
+      if(typeof updateTop==='function') updateTop();
+      if(typeof loadQuestion==='function') loadQuestion();
+      timer=setInterval(()=>{
+        remaining--;
+        elapsedSeconds++;
+        if(typeof updateTop==='function') updateTop();
+        if(remaining<=0){
+          if(timer) clearInterval(timer);
+          timer=null;
+          if(typeof finish==='function') finish(false);
+        }
+      },1000);
+      if(typeof updateTop==='function') updateTop();
+    }catch(e){
+      console.error('v97 V82 timer chain failed',e);
+    }
+  }
+
+  // Replace any accumulated wrapper chain with the original V82-style startGame.
+  window.startGame=scmV82StartGameCore;
+  try{ startGame=window.startGame; }catch(e){}
+
+  function scmV97BeginStudent(room){
+    try{
+      if(liveModeActive || (room && room.roundId===liveSubmittedRoundId)) return;
+      scmStopStudentWaitingPollV97();
+      liveModeActive=true;
+      liveSubmitted=false;
+      if(typeof liveActiveRoundId!=='undefined' && room) liveActiveRoundId=room.roundId;
+      liveFixedQuestions=JSON.parse(JSON.stringify((room&&room.questions)||[]));
+      const levelEl=document.getElementById('level');
+      const durEl=document.getElementById('duration');
+      if(levelEl && room && room.level!=null) levelEl.value=String(room.level);
+      if(durEl && room && room.duration!=null) durEl.value=String(room.duration);
+      const liveOverlay=document.getElementById('liveOverlay');
+      const introOverlay=document.getElementById('introOverlay');
+      if(liveOverlay) liveOverlay.style.display='none';
+      if(introOverlay) introOverlay.style.display='none';
+      try{
+        const r=liveGetRoom(liveRoomCode);
+        if(r && r.players && r.players[livePlayerId]){
+          r.players[livePlayerId].status='playing';
+          liveSaveRoom(r);
+        }
+      }catch(e){}
+      window.startGame();
+      scmStopStudentWaitingPollV97();
+    }catch(e){
+      console.error('v97 liveBeginStudent failed',e);
+    }
+  }
+  window.liveBeginStudent=scmV97BeginStudent;
+  try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
+})();
+</script>
