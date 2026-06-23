@@ -1,7 +1,11 @@
-SmartChessMath Contact Worker Setup
+SmartChessMath Contact Worker Setup — v4
 
 Purpose:
-This is a separate Cloudflare Worker for website messages only. It is not connected to the game/program Worker.
+This Worker is separate from all chess programs. It is used only for website messages:
+- School Championship Requests
+- Partnership Requests
+- Sponsor / Donor inquiries
+- General Contact messages
 
 Files included:
 - index.html
@@ -10,22 +14,45 @@ Files included:
 - contact-worker.js
 - CONTACT_WORKER_SETUP.txt
 
-Recommended Cloudflare route:
+Recommended upload structure:
+index.html
+join-our-mission/
+  index.html
+  images/
+contact-worker.js
+
+Cloudflare Worker route:
 smartchessmath.com/contact-api/*
 
-Required Worker variables/secrets:
+Website forms submit to:
+/contact-api/message
+
+Required Worker secrets / variables:
 RESEND_API_KEY = your Resend API key
 TO_EMAIL = campo12345@yahoo.com
 FROM_EMAIL = SmartChessMath <requests@your-verified-domain.com>
 ALLOWED_ORIGIN = https://smartchessmath.com
 
+Important email note:
+FROM_EMAIL must be from a verified sending domain in Resend. If this is not configured, the form will show a professional error and no email will be sent.
+
 Optional KV binding:
 CONTACT_KV
-If attached, the Worker will also store a copy of each message.
+If added, the Worker stores a copy of every submitted message.
 
-Important:
-- FROM_EMAIL must use a verified sending domain in Resend.
-- The website forms already submit to /contact-api/message.
-- The user will see only a professional success message.
-- No mailto window opens.
-- The form clears after successful sending.
+Deployment steps:
+1. Create a new Cloudflare Worker only for contact messages.
+2. Paste contact-worker.js into that Worker.
+3. Add the route: smartchessmath.com/contact-api/*
+4. Add the required Worker variables/secrets.
+5. Deploy the Worker.
+6. Test the form from smartchessmath.com, not only from local files.
+
+What the visitor sees after correct setup:
+- The request is submitted.
+- The form clears.
+- A professional success message appears.
+- No email window opens.
+- The visitor does not see the destination email.
+
+This Worker is not connected to Knight, Rook, Bishop, Queen, D1, or the game API.

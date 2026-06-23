@@ -36,10 +36,11 @@ a{color:inherit}
 .brandTitle{line-height:1}
 .brandTitle strong{display:block;font-size:26px;color:#06451d;letter-spacing:-.03em}
 .brandTitle span{display:block;font-size:13px;color:#f05a00;font-weight:900;letter-spacing:.12em;margin-top:3px;text-transform:uppercase}
-.menu{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.menu a{font-weight:900;text-decoration:none;color:#07351b;padding:10px 12px;border-radius:999px}
+.menu{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.menu a{font-weight:900;text-decoration:none;color:#07351b;padding:9px 11px;border-radius:999px;font-size:15px;line-height:1;white-space:nowrap}
 .menu a:hover{background:#eaf8e6}
 .menu a.missionLink{background:linear-gradient(180deg,#fff2a8,#ffd21f);color:#08285a;border:1px solid #efc928;box-shadow:0 5px 13px rgba(0,0,0,.10)}
+.menu a.dashboardLink{background:linear-gradient(180deg,#1fbc4d,#07852b);color:#fff;box-shadow:0 5px 0 #065d20,0 10px 18px rgba(0,0,0,.12)}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
   border:0;border-radius:14px;padding:14px 19px;text-decoration:none;font-weight:900;
@@ -227,9 +228,9 @@ h1 .gold{
       <a href="#programs">Programs</a>
       <a href="#championships">Championships</a>
       <a href="#workflow">Workflow</a>
-      <a class="missionLink" href="join-our-mission/index.html">🌍 Join Our Mission</a>
+      <a class="missionLink" href="join-our-mission/index.html">🌍 Mission</a>
       <a href="#contact">Contact</a>
-      <a class="btn dashboard" href="dashboard.html">🎓 Teacher Dashboard</a>
+      <a class="dashboardLink" href="dashboard.html">🎓 Dashboard</a>
     </nav>
   </div>
 </header>
@@ -413,7 +414,7 @@ h1 .gold{
       form.reset();
       if(status){status.style.color='#08792b';status.textContent='✅ Thank you! Your request has been received successfully. Our team will contact you soon.';}
     }catch(err){
-      if(status){status.style.color='#b42318';status.textContent='⚠️ The request could not be sent now. Please try again later or contact SmartChessMath directly.';}
+      if(status){status.style.color='#b42318';status.textContent='⚠️ We could not submit your request right now. Please try again after the contact Worker is configured.';}
     }finally{
       if(btn){btn.disabled=false;btn.textContent=original;}
     }
