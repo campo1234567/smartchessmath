@@ -5322,6 +5322,42 @@ body.sb-engine .sbAutoNote{display:none!important}
 body.sb-engine .sbFooter{margin-top:4px!important}
 @media(max-width:900px){body.sb-engine .card,body.sb-engine .control{font-size:13px!important;padding:5px 8px!important;min-height:40px!important}body.sb-engine select,body.sb-engine button{font-size:13px!important;padding:6px 8px!important}body.sb-engine .sbScale{height:275px!important}body.sb-engine .sbBeam{width:430px!important}body.sb-engine .sbPan{width:155px!important;top:130px!important}body.sb-engine .sbPan.left{left:14px!important}body.sb-engine .sbPan.right{right:14px!important}body.sb-engine .sbStand{height:175px!important}.sbAutoNote{display:none!important}}
 @media(max-width:900px){.sbBoard{min-height:560px;padding:12px}.sbScale{height:230px}.sbBeam{width:410px}.sbPan{width:150px}.sbPan.left{left:20px}.sbPan.right{right:20px}.sbBowl{font-size:27px}.sbPieceBtn{min-width:76px;font-size:18px!important;padding:8px!important}.sbTarget{height:70px;font-size:44px}.sbTitle{font-size:24px}}
+/* SCM Balance layout refinement: larger play area, narrower right panel, bigger pans and pieces */
+body.sb-engine .container{max-width:1360px!important}
+body.sb-engine .stage{grid-template-columns:minmax(800px,1fr) 300px!important;gap:12px!important;align-items:start!important}
+body.sb-engine .side{gap:10px!important}
+body.sb-engine .side .panel{padding:12px!important;border-radius:20px!important}
+body.sb-engine .side .panel:first-child .badge{margin-bottom:5px!important}
+body.sb-engine .side .panel:first-child::after{content:'One Number... Endless Possibilities!';display:block;margin:5px auto 8px;color:#fff6b8;font-size:13px;font-weight:1000;line-height:1.2}
+body.sb-engine .side .panel:first-child .question{font-size:clamp(23px,2.4vw,32px)!important}
+body.sb-engine .scorebox{gap:7px!important;margin-top:10px!important}
+body.sb-engine .mini{padding:7px 6px!important}
+body.sb-engine .mini b{font-size:22px!important}
+body.sb-engine .status{font-size:17px!important;min-height:42px!important}
+body.sb-engine .boardWrap{width:min(900px,calc(100vw - 350px))!important;max-width:900px!important}
+body.sb-engine .sbBoard{min-height:650px!important;padding:12px 18px 10px!important}
+body.sb-engine .sbTitle{font-size:30px!important;margin:0 0 2px!important}
+body.sb-engine .sbMission{font-size:17px!important;margin-bottom:6px!important}
+body.sb-engine .sbTarget{height:74px!important;min-width:116px!important;font-size:52px!important;margin:2px auto 4px!important}
+body.sb-engine .sbScale{height:365px!important;max-width:850px!important;margin:0 auto 4px!important}
+body.sb-engine .sbStand{top:88px!important;height:246px!important;width:24px!important}
+body.sb-engine .sbBase{bottom:9px!important;width:246px!important;height:52px!important}
+body.sb-engine .sbPivot{top:72px!important;width:48px!important;height:48px!important}
+body.sb-engine .sbBeam{top:96px!important;width:750px!important;height:18px!important}
+body.sb-engine .sbPan{top:154px!important;width:270px!important;height:124px!important}
+body.sb-engine .sbPan.left{left:14px!important}
+body.sb-engine .sbPan.right{right:14px!important}
+body.sb-engine .sbPan:before{top:-90px!important;height:104px!important;width:5px!important}
+body.sb-engine .sbBowl{height:96px!important;font-size:46px!important;border-radius:0 0 98px 98px!important;gap:8px!important}
+body.sb-engine .sbPieces{gap:13px!important;margin:8px auto!important}
+body.sb-engine .sbPieceBtn{min-width:118px!important;font-size:28px!important;padding:11px 13px!important;border-radius:20px!important}
+body.sb-engine .sbPieceBtn span{font-size:17px!important;margin-top:3px!important}
+body.sb-engine .sbClear{font-size:16px!important;padding:8px 15px!important}
+body.sb-engine .sbFooter{display:none!important}
+body.sb-engine .sbDesignerFooter{display:block;text-align:center;color:#eaffd6;font-size:13px;font-weight:900;margin:6px auto 0;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+@media(max-width:1040px){body.sb-engine .stage{grid-template-columns:1fr!important}body.sb-engine .boardWrap{width:min(94vw,900px)!important}body.sb-engine .side{width:100%!important}}
+@media(max-width:900px){body.sb-engine .sbBoard{min-height:590px!important}body.sb-engine .sbScale{height:300px!important;max-width:94vw!important}body.sb-engine .sbBeam{width:min(560px,82vw)!important}body.sb-engine .sbPan{width:min(205px,33vw)!important;top:140px!important}body.sb-engine .sbPan.left{left:10px!important}body.sb-engine .sbPan.right{right:10px!important}body.sb-engine .sbBowl{height:78px!important;font-size:34px!important}body.sb-engine .sbPieceBtn{min-width:96px!important;font-size:23px!important;padding:9px 10px!important}}
+
 </style>
 <script>
 (function(){
@@ -5339,9 +5375,12 @@ body.sb-engine .sbFooter{margin-top:4px!important}
     document.body.classList.add('sb-engine');
     const wrap=document.querySelector('.boardWrap'); if(!wrap) return;
     if(!by('sbBoard')){
-      wrap.insertAdjacentHTML('beforeend',`<div class="sbBoard" id="sbBoard"><div class="sbLight" id="sbLight"></div><div class="sbTitle">⚖️ Smart Balance</div><div class="sbMission">One Number... Endless Possibilities!</div><div class="sbTarget" id="sbTarget">15</div><div class="sbScale" id="sbScale"><div class="sbStand"></div><div class="sbBase"></div><div class="sbPivot"></div><div class="sbBeam" id="sbBeam"></div><div class="sbPan left"><div class="sbBowl" id="sbLeftBowl"></div></div><div class="sbPan right"><div class="sbBowl" id="sbRightBowl">15</div></div></div><div class="sbPieces" id="sbPieces"></div><div class="sbPieces"><button class="sbClear" id="sbClearBtn">🧹 Clear</button></div><div class="sbFooter">Designed by Eng. Salman Ahmed Salman © SmartChessMath</div></div>`);
+      wrap.insertAdjacentHTML('beforeend',`<div class="sbBoard" id="sbBoard"><div class="sbLight" id="sbLight"></div><div class="sbTitle">⚖️ Smart Balance</div><div class="sbMission">One Number... Endless Possibilities!</div><div class="sbTarget" id="sbTarget">15</div><div class="sbScale" id="sbScale"><div class="sbStand"></div><div class="sbBase"></div><div class="sbPivot"></div><div class="sbBeam" id="sbBeam"></div><div class="sbPan left"><div class="sbBowl" id="sbLeftBowl"></div></div><div class="sbPan right"><div class="sbBowl" id="sbRightBowl">15</div></div></div><div class="sbPieces" id="sbPieces"></div><div class="sbPieces"><button class="sbClear" id="sbClearBtn">🧹 Clear</button></div></div>`);
       const box=by('sbPieces'); PIECES.forEach((p,i)=>{const b=document.createElement('button');b.className='sbPieceBtn';b.innerHTML=p.icon+'<span>'+p.name+' = '+p.v+'</span>';b.onclick=()=>addPiece(i);box.appendChild(b)});
       by('sbClearBtn').onclick=clearSelection;
+    }
+    if(!by('sbDesignerFooter')){
+      wrap.insertAdjacentHTML('afterend','<div class="sbDesignerFooter" id="sbDesignerFooter">Designed by Eng. Salman Ahmed Salman © SmartChessMath</div>');
     }
     const side=document.querySelector('.side');
     if(side && !by('sbProgressPanel')){
