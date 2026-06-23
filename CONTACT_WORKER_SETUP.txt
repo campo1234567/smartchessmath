@@ -1,0 +1,31 @@
+SmartChessMath Contact Worker Setup
+
+Purpose:
+This is a separate Cloudflare Worker for website messages only. It is not connected to the game/program Worker.
+
+Files included:
+- index.html
+- join-our-mission/index.html
+- join-our-mission/images/
+- contact-worker.js
+- CONTACT_WORKER_SETUP.txt
+
+Recommended Cloudflare route:
+smartchessmath.com/contact-api/*
+
+Required Worker variables/secrets:
+RESEND_API_KEY = your Resend API key
+TO_EMAIL = campo12345@yahoo.com
+FROM_EMAIL = SmartChessMath <requests@your-verified-domain.com>
+ALLOWED_ORIGIN = https://smartchessmath.com
+
+Optional KV binding:
+CONTACT_KV
+If attached, the Worker will also store a copy of each message.
+
+Important:
+- FROM_EMAIL must use a verified sending domain in Resend.
+- The website forms already submit to /contact-api/message.
+- The user will see only a professional success message.
+- No mailto window opens.
+- The form clears after successful sending.

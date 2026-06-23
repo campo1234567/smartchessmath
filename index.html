@@ -370,9 +370,9 @@ h1 .gold{
           <input name="school" placeholder="School / Organization" required>
           <input name="email" type="email" placeholder="Email" required>
           <textarea name="message" placeholder="Message"></textarea>
+          <input type="hidden" name="requestType" value="School Championship Request">
           <button class="btn" type="submit">Send Request →</button>
-          <div style="margin-top:14px;font-weight:900;color:#0a2858;line-height:1.5">📧 School championship requests are sent to:<br><a href="mailto:campo12345@yahoo.com" style="color:#08792b">campo12345@yahoo.com</a></div>
-          <div id="requestStatus" style="margin-top:12px;font-weight:900;color:#08792b"></div>
+          <div id="requestStatus" style="margin-top:14px;font-weight:900;color:#08792b;line-height:1.45"></div>
         </form>
       </div>
       <div class="contactBox">
@@ -395,25 +395,28 @@ h1 .gold{
 
 <script>
 (function(){
+  const CONTACT_ENDPOINT='/contact-api/message';
   const form=document.getElementById('schoolRequestForm');
   const status=document.getElementById('requestStatus');
   if(!form) return;
-  form.addEventListener('submit', function(e){
+  form.addEventListener('submit', async function(e){
     e.preventDefault();
-    const data=Object.fromEntries(new FormData(form).entries());
-    const subject='School Championship Request - SmartChessMath';
-    const body=[
-      'Contact Person: '+(data.contact||''),
-      'Mobile / WhatsApp: '+(data.mobile||''),
-      'Country: '+(data.country||''),
-      'School / Organization: '+(data.school||''),
-      'Email: '+(data.email||''),
-      '',
-      'Message:',
-      data.message||''
-    ].join('\n');
-    window.location.href='mailto:campo12345@yahoo.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-    status.textContent='Your email application is opening. Please send the message to complete your request.';
+    const btn=form.querySelector('button[type="submit"]');
+    const original=btn ? btn.textContent : '';
+    if(status){status.style.color='#08792b';status.textContent='Sending your request...';}
+    if(btn){btn.disabled=true;btn.textContent='Sending...';}
+    try{
+      const data=Object.fromEntries(new FormData(form).entries());
+      const res=await fetch(CONTACT_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const out=await res.json().catch(()=>({}));
+      if(!res.ok || out.ok===false) throw new Error(out.error || 'Unable to send request.');
+      form.reset();
+      if(status){status.style.color='#08792b';status.textContent='✅ Thank you! Your request has been received successfully. Our team will contact you soon.';}
+    }catch(err){
+      if(status){status.style.color='#b42318';status.textContent='⚠️ The request could not be sent now. Please try again later or contact SmartChessMath directly.';}
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent=original;}
+    }
   });
 })();
 </script>
