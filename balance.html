@@ -5276,3 +5276,112 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   try{ liveBeginStudent=window.liveBeginStudent; }catch(e){}
 })();
 </script>
+
+<!-- Smart Balance Engine Patch: replaces the chess board engine only; keeps Knight online gateway/worker/report scripts intact. -->
+<style>
+/* Smart Balance visual engine */
+body.sb-engine .boardWrap{display:block!important;width:min(720px,92vw);height:auto;margin:auto}
+body.sb-engine .ranks,body.sb-engine .files,body.sb-engine .board{display:none!important}
+.sbBoard{width:100%;min-height:620px;background:linear-gradient(180deg,#0d5a2f,#0b4a28);border:5px solid var(--lime);border-radius:26px;box-shadow:0 8px 0 #21482d,0 0 24px rgba(168,255,63,.55),inset 0 0 22px rgba(255,255,255,.09);padding:18px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.sbTitle{font-size:28px;font-weight:1000;text-shadow:0 3px 0 rgba(0,0,0,.28);margin:2px 0 5px}.sbMission{font-size:17px;font-weight:1000;color:#fff6b8;margin-bottom:8px}.sbTarget{display:inline-flex;align-items:center;justify-content:center;min-width:116px;height:82px;border-radius:24px;background:linear-gradient(180deg,#fff8a8,#ffd45b 60%,#f59f00);border:5px solid #fff;color:#08142a;font-size:54px;font-weight:1000;box-shadow:0 6px 0 #b96b00,0 0 30px rgba(255,216,74,.75);margin:4px auto 8px}
+.sbScale{position:relative;height:260px;margin:4px auto 10px;max-width:640px}.sbStand{position:absolute;left:50%;top:76px;width:18px;height:160px;transform:translateX(-50%);border-radius:999px;background:linear-gradient(90deg,#b9a7ff,#fff2a4,#b9a7ff);box-shadow:0 0 18px rgba(255,255,255,.55)}.sbBase{position:absolute;left:50%;bottom:20px;width:170px;height:42px;transform:translateX(-50%);background:linear-gradient(180deg,#ffd45b,#ffad3b);border-radius:50px 50px 24px 24px;box-shadow:0 8px 0 rgba(120,72,0,.35)}.sbPivot{position:absolute;left:50%;top:62px;width:38px;height:38px;transform:translateX(-50%);border-radius:50%;background:#ffb13b;box-shadow:0 0 22px #ffd75c}.sbBeam{position:absolute;left:50%;top:82px;width:520px;height:18px;transform-origin:center center;transform:translateX(-50%) rotate(var(--sb-tilt,0deg));border-radius:999px;background:linear-gradient(90deg,#c7b8ff,#ffe083,#c7b8ff);box-shadow:0 0 20px rgba(255,224,131,.85);transition:transform .35s ease}.sbPan{position:absolute;width:190px;height:88px;top:120px;transition:transform .35s ease}.sbPan.left{left:42px;transform:translateY(var(--sb-left-drop,0px))}.sbPan.right{right:42px;transform:translateY(var(--sb-right-drop,0px))}.sbPan:before{content:"";position:absolute;left:50%;top:-72px;width:6px;height:78px;transform:translateX(-50%);background:#c7b8ff;border-radius:9px}.sbBowl{position:absolute;left:0;right:0;bottom:0;height:70px;border-radius:0 0 80px 80px;background:linear-gradient(180deg,#fff4a6,#ffbd4d 58%,#ff9f32);border:5px solid #fff0a5;border-top:0;box-shadow:0 0 22px rgba(255,216,74,.65),inset 0 -12px 0 rgba(255,128,0,.14);display:flex;align-items:center;justify-content:center;gap:7px;color:#10251a;font-size:35px;font-weight:1000}.sbBowl.heavy{box-shadow:0 0 28px rgba(239,68,68,.95),inset 0 -18px 0 rgba(239,68,68,.25)}.sbLight{position:absolute;right:18px;top:14px;width:26px;height:26px;border-radius:50%;background:#ef4444;box-shadow:0 0 18px #ef4444;border:3px solid rgba(255,255,255,.8)}.sbLight.ok{background:#22c55e;box-shadow:0 0 22px #22c55e}.sbPieces{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:8px auto}.sbPieceBtn{min-width:92px;border-radius:18px;background:rgba(255,255,255,.15)!important;color:white!important;border:3px solid var(--lime)!important;box-shadow:0 4px 0 rgba(0,0,0,.28)!important;font-size:20px!important;padding:10px 12px!important}.sbPieceBtn span{display:block;font-size:15px}.sbCheck{background:linear-gradient(180deg,#63e6be,#12b886)!important;color:#10251a!important;box-shadow:0 4px 0 #087f5b!important}.sbClear{background:linear-gradient(180deg,#ff8787,#fa5252)!important;box-shadow:0 4px 0 #c92a2a!important}.sbProgress{background:#d9efff;color:#08142a;border:4px solid rgba(255,255,255,.85);border-radius:24px;padding:10px;margin:8px auto 0;max-width:620px;font-weight:1000}.sbProgress h3{margin:0 0 8px;font-size:23px}.sbSol{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.45);border:2px solid rgba(255,255,255,.8);border-radius:15px;padding:7px;margin:6px 0;font-size:18px}.sbSol.done{background:linear-gradient(180deg,#fff7a8,#ffd84a);box-shadow:0 0 16px rgba(255,216,74,.6)}.sbFooter{font-size:13px;font-weight:900;opacity:.9;margin-top:8px}.sbHidden{display:none!important}
+body.sb-engine .side .panel:first-child .rules{display:none!important}
+body.sb-engine .side .panel:first-child .actions{display:none!important}
+@media(max-width:900px){.sbBoard{min-height:560px;padding:12px}.sbScale{height:230px}.sbBeam{width:410px}.sbPan{width:150px}.sbPan.left{left:20px}.sbPan.right{right:20px}.sbBowl{font-size:27px}.sbPieceBtn{min-width:76px;font-size:18px!important;padding:8px!important}.sbTarget{height:70px;font-size:44px}.sbTitle{font-size:24px}}
+</style>
+<script>
+(function(){
+  const PIECES=[{k:'P',icon:'♙',name:'Pawn',v:1},{k:'N',icon:'♘',name:'Knight',v:3},{k:'B',icon:'♗',name:'Bishop',v:3},{k:'R',icon:'♖',name:'Rook',v:5},{k:'Q',icon:'♕',name:'Queen',v:9}];
+  let sb={target:15,selected:[],solutions:[],badTries:0};
+  function by(id){return document.getElementById(id)}
+  function sum(){return sb.selected.reduce((a,p)=>a+p.v,0)}
+  function keyOf(list){const c={P:0,N:0,B:0,R:0,Q:0};list.forEach(p=>c[p.k]++);return ['P','N','B','R','Q'].map(k=>k+c[k]).join('|')}
+  function textOf(list){return list.map(p=>p.icon).join(' + ')}
+  function sayTarget(){ if(typeof speak==='function') speak('Build the number '+sb.target+'. Find your first solution.'); }
+  function setStatus(t){const s=by('status'); if(s) s.innerHTML=t}
+  function setQuestion(t){const q=by('question'); if(q) q.innerHTML=t}
+  function updateTopSafe(){try{ if(typeof updateTop==='function') updateTop(); }catch(e){} }
+  function ensureUI(){
+    document.body.classList.add('sb-engine');
+    const wrap=document.querySelector('.boardWrap'); if(!wrap) return;
+    if(!by('sbBoard')){
+      wrap.insertAdjacentHTML('beforeend',`<div class="sbBoard" id="sbBoard"><div class="sbLight" id="sbLight"></div><div class="sbTitle">⚖️ Smart Balance</div><div class="sbMission">One Number... Endless Possibilities!</div><div class="sbTarget" id="sbTarget">15</div><div class="sbScale" id="sbScale"><div class="sbStand"></div><div class="sbBase"></div><div class="sbPivot"></div><div class="sbBeam" id="sbBeam"></div><div class="sbPan left"><div class="sbBowl" id="sbLeftBowl"></div></div><div class="sbPan right"><div class="sbBowl" id="sbRightBowl">15</div></div></div><div class="sbPieces" id="sbPieces"></div><div class="sbPieces"><button class="sbCheck" id="sbCheckBtn">✅ Check Balance</button><button class="sbClear" id="sbClearBtn">🧹 Clear</button></div><div class="sbProgress"><h3>⭐ Round Progress</h3><div class="sbSol" id="sbSol1">⭐ First Solution</div><div class="sbSol" id="sbSol2">⭐⭐ Second Solution</div><div class="sbSol" id="sbSol3">⭐⭐⭐ Third Solution</div></div><div class="sbFooter">Designed by Eng. Salman Ahmed Salman © SmartChessMath</div></div>`);
+      const box=by('sbPieces'); PIECES.forEach((p,i)=>{const b=document.createElement('button');b.className='sbPieceBtn';b.innerHTML=p.icon+'<span>'+p.name+' = '+p.v+'</span>';b.onclick=()=>addPiece(i);box.appendChild(b)});
+      by('sbCheckBtn').onclick=checkBalance; by('sbClearBtn').onclick=clearSelection;
+    }
+  }
+  function render(){
+    ensureUI();
+    const s=sum(), diff=s-sb.target;
+    if(by('sbTarget')) by('sbTarget').textContent=sb.target;
+    if(by('sbRightBowl')) by('sbRightBowl').textContent=sb.target;
+    if(by('sbLeftBowl')){by('sbLeftBowl').innerHTML=sb.selected.length?sb.selected.map(p=>p.icon).join(' '):'';by('sbLeftBowl').classList.toggle('heavy',s>sb.target)}
+    const tilt=Math.max(-11,Math.min(11,diff*1.35));
+    const leftDrop=Math.max(-18,Math.min(40,diff*4));
+    const rightDrop=Math.max(-18,Math.min(40,-diff*4));
+    const board=by('sbBoard'); if(board){board.style.setProperty('--sb-tilt',tilt+'deg');board.style.setProperty('--sb-left-drop',leftDrop+'px');board.style.setProperty('--sb-right-drop',rightDrop+'px')}
+    if(by('sbLight')) by('sbLight').classList.toggle('ok',s===sb.target && sb.selected.length>0);
+    for(let i=1;i<=3;i++){const el=by('sbSol'+i); if(el){el.classList.toggle('done',sb.solutions.length>=i); el.innerHTML=(i===1?'⭐ First Solution':i===2?'⭐⭐ Second Solution':'⭐⭐⭐ Third Solution')+(sb.solutions[i-1]?(' ✅'):'')}}
+    if(by('sum')) by('sum').textContent=s; if(by('moves')) by('moves').textContent=sb.selected.length; if(by('best')) by('best').textContent='3'; if(by('solved')) by('solved').textContent=solved||0;
+    setQuestion('🎯 Build <span style="color:#ffd84a">'+sb.target+'</span>');
+    updateTopSafe();
+  }
+  function addPiece(i){ if(!running) return; sb.selected.push(PIECES[i]); render(); if(typeof speak==='function') speak(PIECES[i].name+' '+PIECES[i].v); }
+  function clearSelection(){ sb.selected=[]; render(); }
+  function nextQuestion(auto){
+    questionIndex++;
+    if(questionIndex>=10){ if(typeof finish==='function') finish(true); return; }
+    loadQuestion();
+  }
+  function checkBalance(){
+    if(!running) return;
+    const s=sum();
+    if(!sb.selected.length){setStatus('Choose pieces first.');return;}
+    if(s!==sb.target){
+      sb.badTries++;
+      setStatus(s>sb.target?'🔴 Too heavy! Try a smaller combination.':'🟡 Too light! Add or change pieces.');
+      if(typeof speak==='function') speak(s>sb.target?'Too heavy.':'Too light.');
+      if(sb.badTries>=2){
+        questionStates[questionIndex]=sb.solutions.length?'solved':'skipped';
+        setStatus((sb.solutions.length?('⭐'.repeat(sb.solutions.length)+' Stars earned! '):'Good try! ')+'Moving to the next challenge.');
+        setTimeout(()=>nextQuestion(true),900);
+      }
+      render(); return;
+    }
+    const k=keyOf(sb.selected);
+    if(sb.solutions.includes(k)){
+      sb.badTries++;
+      setStatus('You already found this solution. Find another solution.');
+      if(typeof speak==='function') speak('You already found this solution. Find another solution.');
+      if(sb.badTries>=2){questionStates[questionIndex]='solved';setTimeout(()=>nextQuestion(true),900)}
+      return;
+    }
+    sb.solutions.push(k); stars++; sb.badTries=0; questionStates[questionIndex]='solved';
+    if(sb.solutions.length===1) solved++;
+    if(sb.solutions.length<3){setStatus('✅ '+textOf(sb.selected)+' = '+sb.target+'. Now find another different solution.'); if(typeof speak==='function') speak('Correct. Now find another different solution.'); sb.selected=[]; render(); return;}
+    setStatus('🏆 Perfect! Three different solutions found!'); if(typeof speak==='function') speak('Perfect. Three different solutions found.'); render();
+    setTimeout(()=>nextQuestion(true),950);
+  }
+  function targetForLevel(){
+    const lvl=parseInt((by('level')&&by('level').value)||currentLevel||1,10);
+    const pools={1:[7,8,9,10,11,12,13,14,15],2:[12,13,14,15,16,17,18,19,20],3:[15,16,17,18,19,20,21,22,23,24]};
+    return pools[lvl][Math.floor(Math.random()*pools[lvl].length)];
+  }
+  window.makeQuestion=function(){return {target:targetForLevel(),level:parseInt((by('level')&&by('level').value)||1,10),bestMoves:3,itemList:[]}};
+  window.loadQuestion=function(){
+    ensureUI();
+    current=(liveFixedQuestions&&liveFixedQuestions[questionIndex])?JSON.parse(JSON.stringify(liveFixedQuestions[questionIndex])):makeQuestion();
+    sb={target:current.target||targetForLevel(),selected:[],solutions:[],badTries:0};
+    currentSum=0;moves=0;legalVisible=false;
+    setStatus('🎯 Build '+sb.target+'. Find your first solution.');
+    render();
+    setTimeout(sayTarget,180);
+  };
+  window.resetQuestion=function(){ if(!running) return; sb.selected=[]; sb.badTries=0; setStatus('Try again. Find a different combination.'); render(); };
+  window.skipQuestion=function(){ if(!running) return; questionStates[questionIndex]=sb.solutions.length?'solved':'skipped'; nextQuestion(true); };
+  window.showMoves=function(){ setStatus('Use the piece buttons to build the target number.'); };
+  const oldStart=window.startGame;
+  window.startGame=function(){ ensureUI(); oldStart(); };
+  ensureUI(); render();
+})();
+</script>
