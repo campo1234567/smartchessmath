@@ -5334,7 +5334,7 @@ body.sb-engine .mini{padding:7px 6px!important}
 body.sb-engine .mini b{font-size:22px!important}
 body.sb-engine .status{font-size:17px!important;min-height:42px!important}
 body.sb-engine .boardWrap{width:100%!important;max-width:820px!important}
-body.sb-engine .sbBoard{min-height:796px!important;padding:12px 18px 10px!important}
+body.sb-engine .sbBoard{min-height:640px!important;padding:12px 18px 10px!important}
 body.sb-engine .sbTitle{font-size:30px!important;margin:0 0 2px!important}
 body.sb-engine .sbMission{font-size:17px!important;margin-bottom:6px!important}
 body.sb-engine .sbTarget{height:74px!important;min-width:116px!important;font-size:52px!important;margin:2px auto 4px!important}
@@ -5486,6 +5486,7 @@ body.sb-engine .sbDesignerFooter{display:block!important;text-align:center!impor
 @media screen and (min-width:761px){
   body.sb-engine .stage{align-items:start!important;}
   body.sb-engine .sbBoard{box-sizing:border-box!important;}
+  body.sb-engine .sbPieces{gap:13px!important;margin:24px auto 10px!important;}
 }
 @media screen and (max-width:760px){
   body.sb-engine .sbBoard,
@@ -5508,6 +5509,7 @@ body.sb-engine .sbDesignerFooter{display:block!important;text-align:center!impor
 
       if(window.innerWidth<=760){
         board.style.minHeight='';
+        board.style.height='';
         scale.style.height='';
         stand.style.height='';
         return;
@@ -5527,15 +5529,16 @@ body.sb-engine .sbDesignerFooter{display:block!important;text-align:center!impor
       if(!sideHeight || sideHeight<560) return;
 
       // Make the left balance frame end on the same line as the three right frames.
-      var targetBoardHeight=Math.max(sideHeight, 640);
+      var targetBoardHeight=Math.max(sideHeight, 796);
       board.style.minHeight=targetBoardHeight+'px';
+      board.style.height=targetBoardHeight+'px';
 
       // Give the added height to the real balance area, not to empty text space.
-      var scaleHeight=Math.max(355, Math.min(520, targetBoardHeight-285));
+      var scaleHeight=Math.max(450, Math.min(600, targetBoardHeight-230));
       scale.style.height=scaleHeight+'px';
 
       // Extend the central vertical stand so the scale looks taller and more realistic.
-      stand.style.height=Math.max(246, scaleHeight-106)+'px';
+      stand.style.height=Math.max(420, scaleHeight-60)+'px';
     }catch(e){}
   }
 
