@@ -513,7 +513,7 @@ function makeQuestion(){
 
 function loadQuestion(){current=(liveFixedQuestions&&liveFixedQuestions[questionIndex])?JSON.parse(JSON.stringify(liveFixedQuestions[questionIndex])):makeQuestion();knightPos=current.start;items={};current.itemList.forEach(it=>items[it.sq]=it.value);currentSum=0;moves=0;history=[];legalVisible=false;const levelName=currentLevel===1?'Balance Beginner':(currentLevel===2?'Number Explorer':'Combination Master');
 document.getElementById('status').innerHTML=levelName+': Choose a legal knight move. Reach the target exactly.';draw();speak(`Question ${questionIndex+1}. Collect ${current.target} points. Three stars equals ${current.bestMoves} moves. Two stars equals ${current.bestMoves+1} moves.`)}
-function startGame(){if(timer)clearInterval(timer);questionIndex=0;stars=0;solved=0;coins=0;questionStates=Array(10).fill('empty');running=true;currentLevel=parseInt(document.getElementById('level').value,10);selectedDuration=parseInt(document.getElementById('duration').value,10);remaining=selectedDuration;elapsedSeconds=0;document.getElementById('overlay').style.display='none';updateTop();loadQuestion();timer=setInterval(()=>{remaining--;elapsedSeconds++;updateTop();if(remaining<=0)finish(false)},1000)}
+function startGame(){window.sbUsedTargets=[];if(timer)clearInterval(timer);questionIndex=0;stars=0;solved=0;coins=0;questionStates=Array(10).fill('empty');running=true;currentLevel=parseInt(document.getElementById('level').value,10);selectedDuration=parseInt(document.getElementById('duration').value,10);remaining=selectedDuration;elapsedSeconds=0;document.getElementById('overlay').style.display='none';updateTop();loadQuestion();timer=setInterval(()=>{remaining--;elapsedSeconds++;updateTop();if(remaining<=0)finish(false)},1000)}
 function moveKnight(dest){if(!running||!current)return;if(!knightMoves(knightPos).includes(dest)){document.getElementById('status').innerHTML='❌ Illegal knight move. Try another square.';speak('Illegal knight move. Try another square.');return}legalVisible=false;history.push({knightPos,items:{...items},currentSum,moves});knightPos=dest;moves++;let eatenValue=null;if(items[dest]!==undefined){eatenValue=items[dest];currentSum+=eatenValue;animateEat(dest,eatenValue);delete items[dest]}else draw();if(currentSum===current.target)setTimeout(handleSuccess,eatenValue!==null?520:120);else if(currentSum>current.target){document.getElementById('status').innerHTML=`❌ Too many points! Target is ${current.target}. Try again.`;speak(`Too many points. Target is ${current.target}. Try again.`);draw()}else document.getElementById('status').innerHTML=`Good. You have ${currentSum}. Need ${current.target-currentSum} more.`;speak(`Good. You have ${currentSum}. Need ${current.target-currentSum} more.`)}
 function handleSuccess(){let earned=1;if(moves<=current.bestMoves)earned=3;else if(moves===current.bestMoves+1)earned=2;stars+=earned;solved++;questionStates[questionIndex]='solved';let msg=earned===3?'🏆 PERFECT SOLUTION! ⭐⭐⭐':earned===2?'🎉 GREAT JOB! ⭐⭐':'✅ Correct Answer! ⭐';document.getElementById('status').innerHTML=msg;speak(msg.replace('⭐⭐⭐','three stars').replace('⭐⭐','two stars').replace('⭐','one star'));draw();setTimeout(()=>{questionIndex++;if(questionIndex>=10)finish(true);else loadQuestion()},1250)}
 function resetQuestion(){if(!running||!current)return;knightPos=current.start;items={};current.itemList.forEach(it=>items[it.sq]=it.value);currentSum=0;moves=0;history=[];legalVisible=false;document.getElementById('status').innerHTML='Try again. Find a better route.';speak('Try again. Find a better route.');draw()}
@@ -4454,10 +4454,10 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   function comboText(arr){return arr.map(p=>p.icon).join(' + ')}
   function sumCombo(arr){return arr.reduce((a,p)=>a+p.v,0)}
   function generateCombos(target){const res=[];for(let p=0;p<=9;p++)for(let n=0;n<=5;n++)for(let b=0;b<=5;b++)for(let r=0;r<=4;r++)for(let q=0;q<=2;q++){let s=p+3*n+3*b+5*r+9*q;let cnt=p+n+b+r+q;if(s===target&&cnt>0&&cnt<=6){let arr=[];for(let i=0;i<p;i++)arr.push(PIECES[0]);for(let i=0;i<n;i++)arr.push(PIECES[1]);for(let i=0;i<b;i++)arr.push(PIECES[2]);for(let i=0;i<r;i++)arr.push(PIECES[3]);for(let i=0;i<q;i++)arr.push(PIECES[4]);res.push(arr)}}return res.sort((a,b)=>a.length-b.length||comboText(a).localeCompare(comboText(b)))}
-  window.makeQuestion=function(){let targets=[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];for(let i=0;i<80;i++){let t=targets[Math.floor(Math.random()*targets.length)];let c=generateCombos(t);if(c.length>=3)return {type:'balance',target:t,solutions:c.slice(0,8),level:currentLevel||1,bestMoves:3}}return {type:'balance',target:15,solutions:generateCombos(15).slice(0,8),level:1,bestMoves:3}};
+  window.makeQuestion=function(){let targets=[10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25];window.sbUsedTargets=Array.isArray(window.sbUsedTargets)?window.sbUsedTargets:[];let available=targets.filter(n=>!window.sbUsedTargets.includes(n));if(!available.length){window.sbUsedTargets=[];available=targets.slice();}for(let i=0;i<120;i++){let t=available[Math.floor(Math.random()*available.length)];let c=generateCombos(t);if(c.length>=3){window.sbUsedTargets.push(t);return {type:'balance',target:t,solutions:c.slice(0,8),level:currentLevel||1,bestMoves:3}}}let t=available[0]||15;window.sbUsedTargets.push(t);return {type:'balance',target:t,solutions:generateCombos(t).slice(0,8),level:1,bestMoves:3}};
   function buildBalanceContainer(){
     let c=document.querySelector('.container'); if(!c)return;
-    c.innerHTML=`<div class="balanceShell"><div class="balanceTitle">⚖️ Smart Balance</div><div class="balanceSub">One Number... Endless Possibilities!</div><div class="balanceSub" style="font-size:18px">Build the target number with chess pieces — find up to three different solutions</div><div class="balanceTop"><div class="balanceCard">👤 <span id="sbPlayerName">Player</span></div><div class="balanceCard">⭐ Stars: <span id="stars">0</span>/30</div><div class="balanceCard" style="font-size:20px">⏱ Time: <span id="time">03:00</span></div><div class="balanceCard">🧩 Question: <span id="qnum">1</span>/10</div><div class="balanceCard">🎯 Target: <span id="sbTargetTop">0</span></div></div><div id="qstars" class="qstars"></div><div class="balanceStage"><div class="balanceBoard"><div style="font-size:28px;font-weight:1000">Build the number</div><div class="targetBadge" id="sbTarget">0</div><div class="scaleArea" id="scaleArea"><div class="indicator" id="sbLight"></div><div class="beam" id="sbBeam"></div><div class="fulcrum"></div><div class="base"></div><div class="pan leftPan" id="leftPan"><div class="panPieces" id="leftPieces"></div></div><div class="pan rightPan" id="rightPan"><div class="targetCoin" id="rightCoin">0</div></div></div><div class="pieceTray" id="pieceTray"></div><div class="balanceStatus" id="status">Use chess pieces to make the same number.</div><div style="font-size:15px;font-weight:1000;color:#fff7b8;margin-top:4px">Automatic checking — no Check button needed.</div></div><div style="display:grid;gap:10px"><div class="progressPanel"><h2>⭐ Round Progress</h2><div style="font-size:18px;margin-bottom:7px">Question stars: <span id="sbQuestionStars">0</span>/3<br>Total stars: <span id="sbTotalStars">0</span>/30</div><div class="progressRows"><div class="progressRow" id="solRow0">⭐ First Solution</div><div class="progressRow" id="solRow1">⭐⭐ Second Solution</div><div class="progressRow" id="solRow2">⭐⭐⭐ Third Solution</div></div></div><div class="valuesPanel"><h2>♟ Piece Values</h2><div class="valuesGrid">${PIECES.map(p=>`<div class="valueCell">${p.icon}<b>${p.name} = ${p.v}</b></div>`).join('')}</div></div><div class="howPanel"><h2>How to Play</h2><div><b>Example: Target 15</b></div><div>♖ + ♖ + ♖ = 15</div><div>♕ + ♖ + ♙ = 15</div><div>♕ + ♘ + ♗ = 15</div></div></div></div><div class="footer-credit">Designed by Eng. Salman Ahmed Salman © SmartChessMath</div></div>`;
+    c.innerHTML=`<div class="balanceShell"><div class="balanceTitle">⚖️ Smart Balance</div><div class="balanceSub">One Number... Endless Possibilities!</div><div class="balanceSub" style="font-size:18px">Build the target number with chess pieces — find up to three different solutions</div><div class="balanceTop"><div class="balanceCard">👤 <span id="sbPlayerName">Player</span></div><div class="balanceCard">⭐ Stars: <span id="stars">0</span>/30</div><div class="balanceCard" style="font-size:20px">⏱ Time: <span id="time">03:00</span></div><div class="balanceCard">🧩 Question: <span id="qnum">1</span>/10</div><div class="balanceCard">🎯 Target: <span id="sbTargetTop">0</span></div></div><div id="qstars" class="qstars"></div><div class="balanceStage"><div class="balanceBoard"><div style="font-size:28px;font-weight:1000">Build the number</div><div class="targetBadge" id="sbTarget">0</div><div class="scaleArea" id="scaleArea"><div class="indicator" id="sbLight"></div><div class="beam" id="sbBeam"></div><div class="fulcrum"></div><div class="base"></div><div class="pan leftPan" id="leftPan"><div class="panPieces" id="leftPieces"></div></div><div class="pan rightPan" id="rightPan"><div class="targetCoin" id="rightCoin">0</div></div></div><div class="pieceTray" id="pieceTray"></div><div class="balanceStatus" id="status">Use chess pieces to make the same number.</div></div><div style="display:grid;gap:10px"><div class="progressPanel"><h2>⭐ Round Progress</h2><div style="font-size:18px;margin-bottom:7px">Question stars: <span id="sbQuestionStars">0</span>/3<br>Total stars: <span id="sbTotalStars">0</span>/30</div><div class="progressRows"><div class="progressRow" id="solRow0">⭐ First Solution</div><div class="progressRow" id="solRow1">⭐⭐ Second Solution</div><div class="progressRow" id="solRow2">⭐⭐⭐ Third Solution</div></div></div><div class="valuesPanel"><h2>♟ Piece Values</h2><div class="valuesGrid">${PIECES.map(p=>`<div class="valueCell">${p.icon}<b>${p.name} = ${p.v}</b></div>`).join('')}</div></div><div class="howPanel"><h2>How to Play</h2><div><b>Example: Target 15</b></div><div>♖ + ♖ + ♖ = 15</div><div>♕ + ♖ + ♙ = 15</div><div>♕ + ♘ + ♗ = 15</div></div></div></div><div class="footer-credit">Designed by Eng. Salman Ahmed Salman © SmartChessMath</div></div>`;
     buildQStars(); updateQStars();
     const tray=by('pieceTray'); PIECES.forEach((p,i)=>{let b=document.createElement('button');b.className='pieceBtn';b.innerHTML=`${p.icon}<span>+${p.v}</span>`;b.onclick=()=>addPiece(i);tray.appendChild(b)}); let clr=document.createElement('button');clr.className='pieceBtn clearBtn';clr.innerHTML='🗑<span>Clear</span>';clr.onclick=clearCombo;tray.appendChild(clr);
   }
@@ -5298,6 +5298,29 @@ body.sb-engine .sbBowl{height:78px;font-size:38px}
 body.sb-engine .sbStand{height:190px}.sbAutoNote{font-size:15px;color:#fff6b8;font-weight:1000;margin-top:4px}
 body.sb-engine #sbProgressPanel{display:block!important;text-align:center}.sbProgress{margin:0 auto;max-width:100%}
 body.sb-engine .qstar.solved{background:linear-gradient(#fff7a8,#ffd84a)!important;color:#09210f;box-shadow:0 0 12px rgba(255,216,74,.9),0 2px 0 rgba(0,0,0,.25);transform:scale(1.08)}
+
+/* SCM Balance focused patch: compact top controls + larger realistic scale (screen only) */
+body.sb-engine .top{gap:8px!important;margin-bottom:4px!important}
+body.sb-engine .card,body.sb-engine .control{font-size:15px!important;padding:6px 10px!important;border-radius:14px!important;border-width:2px!important;min-height:46px!important}
+body.sb-engine .control{gap:7px!important}
+body.sb-engine select,body.sb-engine button{font-size:15px!important;padding:7px 10px!important;border-radius:11px!important;border-width:2px!important;box-shadow:0 3px 0 rgba(0,0,0,.22)!important}
+body.sb-engine .liveBtn,body.sb-engine #rulesBtnV23{min-height:46px!important;padding:7px 12px!important}
+body.sb-engine .qstars{margin-top:2px!important;gap:4px!important}
+body.sb-engine .qstar{width:23px!important;height:23px!important;border-radius:7px!important}
+body.sb-engine .sbBoard{min-height:620px!important;padding:14px 18px 12px!important}
+body.sb-engine .sbScale{height:340px!important;max-width:760px!important;margin-top:2px!important;margin-bottom:4px!important}
+body.sb-engine .sbStand{top:86px!important;height:220px!important;width:22px!important;background:linear-gradient(90deg,#d49218,#fff2a4,#d49218)!important}
+body.sb-engine .sbBase{bottom:14px!important;width:220px!important;height:48px!important}
+body.sb-engine .sbPivot{top:72px!important;width:44px!important;height:44px!important}
+body.sb-engine .sbBeam{top:93px!important;width:660px!important;height:16px!important;background:linear-gradient(180deg,#ffe57b,#d69422)!important}
+body.sb-engine .sbPan{top:142px!important;width:225px!important;height:110px!important}
+body.sb-engine .sbPan.left{left:18px!important}
+body.sb-engine .sbPan.right{right:18px!important}
+body.sb-engine .sbPan:before{top:-76px!important;height:86px!important;width:4px!important;background:#ffe98a!important}
+body.sb-engine .sbBowl{height:84px!important;font-size:40px!important;border-color:#fff0a5!important}
+body.sb-engine .sbAutoNote{display:none!important}
+body.sb-engine .sbFooter{margin-top:4px!important}
+@media(max-width:900px){body.sb-engine .card,body.sb-engine .control{font-size:13px!important;padding:5px 8px!important;min-height:40px!important}body.sb-engine select,body.sb-engine button{font-size:13px!important;padding:6px 8px!important}body.sb-engine .sbScale{height:275px!important}body.sb-engine .sbBeam{width:430px!important}body.sb-engine .sbPan{width:155px!important;top:130px!important}body.sb-engine .sbPan.left{left:14px!important}body.sb-engine .sbPan.right{right:14px!important}body.sb-engine .sbStand{height:175px!important}.sbAutoNote{display:none!important}}
 @media(max-width:900px){.sbBoard{min-height:560px;padding:12px}.sbScale{height:230px}.sbBeam{width:410px}.sbPan{width:150px}.sbPan.left{left:20px}.sbPan.right{right:20px}.sbBowl{font-size:27px}.sbPieceBtn{min-width:76px;font-size:18px!important;padding:8px!important}.sbTarget{height:70px;font-size:44px}.sbTitle{font-size:24px}}
 </style>
 <script>
@@ -5316,7 +5339,7 @@ body.sb-engine .qstar.solved{background:linear-gradient(#fff7a8,#ffd84a)!importa
     document.body.classList.add('sb-engine');
     const wrap=document.querySelector('.boardWrap'); if(!wrap) return;
     if(!by('sbBoard')){
-      wrap.insertAdjacentHTML('beforeend',`<div class="sbBoard" id="sbBoard"><div class="sbLight" id="sbLight"></div><div class="sbTitle">⚖️ Smart Balance</div><div class="sbMission">One Number... Endless Possibilities!</div><div class="sbTarget" id="sbTarget">15</div><div class="sbScale" id="sbScale"><div class="sbStand"></div><div class="sbBase"></div><div class="sbPivot"></div><div class="sbBeam" id="sbBeam"></div><div class="sbPan left"><div class="sbBowl" id="sbLeftBowl"></div></div><div class="sbPan right"><div class="sbBowl" id="sbRightBowl">15</div></div></div><div class="sbPieces" id="sbPieces"></div><div class="sbPieces"><button class="sbClear" id="sbClearBtn">🧹 Clear</button></div><div class="sbAutoNote">Automatic checking: the program checks the balance without pressing a button.</div><div class="sbFooter">Designed by Eng. Salman Ahmed Salman © SmartChessMath</div></div>`);
+      wrap.insertAdjacentHTML('beforeend',`<div class="sbBoard" id="sbBoard"><div class="sbLight" id="sbLight"></div><div class="sbTitle">⚖️ Smart Balance</div><div class="sbMission">One Number... Endless Possibilities!</div><div class="sbTarget" id="sbTarget">15</div><div class="sbScale" id="sbScale"><div class="sbStand"></div><div class="sbBase"></div><div class="sbPivot"></div><div class="sbBeam" id="sbBeam"></div><div class="sbPan left"><div class="sbBowl" id="sbLeftBowl"></div></div><div class="sbPan right"><div class="sbBowl" id="sbRightBowl">15</div></div></div><div class="sbPieces" id="sbPieces"></div><div class="sbPieces"><button class="sbClear" id="sbClearBtn">🧹 Clear</button></div><div class="sbFooter">Designed by Eng. Salman Ahmed Salman © SmartChessMath</div></div>`);
       const box=by('sbPieces'); PIECES.forEach((p,i)=>{const b=document.createElement('button');b.className='sbPieceBtn';b.innerHTML=p.icon+'<span>'+p.name+' = '+p.v+'</span>';b.onclick=()=>addPiece(i);box.appendChild(b)});
       by('sbClearBtn').onclick=clearSelection;
     }
@@ -5381,8 +5404,18 @@ body.sb-engine .qstar.solved{background:linear-gradient(#fff7a8,#ffd84a)!importa
   }
   function targetForLevel(){
     const lvl=parseInt((by('level')&&by('level').value)||currentLevel||1,10);
-    const pools={1:[7,8,9,10,11,12,13,14,15],2:[12,13,14,15,16,17,18,19,20],3:[15,16,17,18,19,20,21,22,23,24]};
-    return pools[lvl][Math.floor(Math.random()*pools[lvl].length)];
+    const pools={
+      1:[10,11,12,13,14,15,16,17,18,19,20,21],
+      2:[12,13,14,15,16,17,18,19,20,21,22,23,24],
+      3:[14,15,16,17,18,19,20,21,22,23,24,25,26,27,28]
+    };
+    const pool=pools[lvl]||pools[1];
+    window.sbUsedTargets=Array.isArray(window.sbUsedTargets)?window.sbUsedTargets:[];
+    let available=pool.filter(n=>!window.sbUsedTargets.includes(n));
+    if(!available.length){ window.sbUsedTargets=[]; available=pool.slice(); }
+    const target=available[Math.floor(Math.random()*available.length)];
+    window.sbUsedTargets.push(target);
+    return target;
   }
   window.makeQuestion=function(){return {target:targetForLevel(),level:parseInt((by('level')&&by('level').value)||1,10),bestMoves:3,itemList:[]}};
   window.loadQuestion=function(){
@@ -5398,7 +5431,7 @@ body.sb-engine .qstar.solved{background:linear-gradient(#fff7a8,#ffd84a)!importa
   window.skipQuestion=function(){ if(!running) return; questionStates[questionIndex]=sb.solutions.length?'solved':'skipped'; nextQuestion(true); };
   window.showMoves=function(){ setStatus('Use the piece buttons to build the target number.'); };
   const oldStart=window.startGame;
-  window.startGame=function(){ ensureUI(); oldStart(); };
+  window.startGame=function(){ window.sbUsedTargets=[]; ensureUI(); oldStart(); };
   ensureUI(); render();
 })();
 </script>
