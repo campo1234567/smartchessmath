@@ -5474,3 +5474,36 @@ body.sb-engine .sbDesignerFooter{display:block;text-align:center;color:#eaffd6;f
   ensureUI(); render();
 })();
 </script>
+
+<style>
+/* SCM HOTFIX: keep the information panels on the RIGHT on laptop/tablet widths.
+   This patch is screen-only and does not touch print/live/championship logic. */
+@media screen and (min-width:820px){
+  body.sb-engine .container{max-width:1180px!important;width:100%!important;margin:0 auto!important}
+  body.sb-engine .stage{
+    display:grid!important;
+    grid-template-columns:minmax(610px,calc(100vw - 390px)) 300px!important;
+    gap:12px!important;
+    align-items:start!important;
+    justify-content:center!important;
+  }
+  body.sb-engine .boardWrap{width:100%!important;max-width:760px!important;margin:0!important}
+  body.sb-engine .side{width:300px!important;max-width:300px!important;display:grid!important;gap:10px!important}
+  body.sb-engine .sbBoard{min-height:590px!important;padding:12px 16px 10px!important}
+  body.sb-engine .sbScale{height:330px!important;max-width:720px!important;margin:0 auto 4px!important}
+  body.sb-engine .sbBeam{width:min(650px,92%)!important}
+  body.sb-engine .sbPan{width:238px!important;height:112px!important;top:146px!important}
+  body.sb-engine .sbPan.left{left:12px!important}
+  body.sb-engine .sbPan.right{right:12px!important}
+  body.sb-engine .sbBowl{height:88px!important;font-size:42px!important}
+  body.sb-engine .sbPieceBtn{min-width:104px!important;font-size:25px!important;padding:10px 11px!important}
+  body.sb-engine .sbPieceBtn span{font-size:16px!important}
+  body.sb-engine .side .panel:first-child{max-width:300px!important}
+  body.sb-engine .footer-credit,body.sb-engine .sbDesignerFooter{position:static!important;display:block!important;text-align:center!important;margin:8px auto 0!important}
+}
+@media screen and (max-width:819px){
+  body.sb-engine .stage{grid-template-columns:1fr!important}
+  body.sb-engine .boardWrap{width:94vw!important;margin:0 auto!important}
+  body.sb-engine .side{width:94vw!important;margin:0 auto!important}
+}
+</style>
