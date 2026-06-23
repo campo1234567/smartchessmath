@@ -4493,6 +4493,80 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
 })();
 </script>
 
+
+
+<!-- SCM Balance equal-height practical hotfix: match main balance frame to right panels and extend scale stand -->
+<style id="scm-balance-equal-height-hotfix">
+@media screen and (min-width:761px){
+  body.sb-engine .stage{align-items:start!important;}
+  body.sb-engine .sbBoard{box-sizing:border-box!important;}
+  body.sb-engine .sbScale{transition:height .18s ease!important;}
+  body.sb-engine .sbStand{transition:height .18s ease!important;}
+}
+@media screen and (max-width:760px){
+  body.sb-engine .sbBoard,
+  body.sb-engine .sbScale,
+  body.sb-engine .sbStand{min-height:initial;}
+}
+</style>
+<script id="scm-balance-equal-height-hotfix-js">
+(function(){
+  function scmBalanceEqualizeFrames(){
+    try{
+      if(!document.body || !document.body.classList.contains('sb-engine')) return;
+      var stage=document.querySelector('body.sb-engine .stage');
+      var side=document.querySelector('body.sb-engine .side');
+      var board=document.querySelector('body.sb-engine .sbBoard');
+      var scale=document.querySelector('body.sb-engine .sbScale');
+      var stand=document.querySelector('body.sb-engine .sbStand');
+      if(!stage || !side || !board || !scale || !stand) return;
+
+      if(window.innerWidth<=760){
+        board.style.minHeight='';
+        scale.style.height='';
+        stand.style.height='';
+        return;
+      }
+
+      // The right column contains three frames. Use their combined real height as the target
+      // so the main balance frame ends at the same visual line.
+      var sideHeight=Math.ceil(side.getBoundingClientRect().height);
+      if(!sideHeight || sideHeight<520) return;
+
+      var boardHeight=Math.max(sideHeight, 680);
+      board.style.minHeight=boardHeight+'px';
+
+      // Give the gained height to the actual scale area, not to empty text space.
+      var scaleHeight=Math.max(355, Math.min(500, boardHeight-285));
+      scale.style.height=scaleHeight+'px';
+
+      // Longer vertical stand/lever support for a more realistic balance.
+      stand.style.height=Math.max(246, scaleHeight-112)+'px';
+    }catch(e){}
+  }
+
+  window.scmBalanceEqualizeFrames=scmBalanceEqualizeFrames;
+  window.addEventListener('load',function(){setTimeout(scmBalanceEqualizeFrames,80);setTimeout(scmBalanceEqualizeFrames,450);});
+  window.addEventListener('resize',function(){setTimeout(scmBalanceEqualizeFrames,80);});
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(scmBalanceEqualizeFrames,120);
+    try{
+      var obs=new MutationObserver(function(){setTimeout(scmBalanceEqualizeFrames,40);});
+      obs.observe(document.body,{childList:true,subtree:true,attributes:true,characterData:false});
+    }catch(e){}
+  });
+  var oldLoadQuestion=window.loadQuestion;
+  if(typeof oldLoadQuestion==='function'){
+    window.loadQuestion=function(){
+      var r=oldLoadQuestion.apply(this,arguments);
+      setTimeout(scmBalanceEqualizeFrames,60);
+      return r;
+    };
+    try{loadQuestion=window.loadQuestion;}catch(e){}
+  }
+})();
+</script>
+
 </body>
 </html>
 
@@ -4704,7 +4778,81 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
     var w=window.open('','_blank');
     if(!w){alert('Please allow pop-ups to print this report.');return;}
     w.document.open();
-    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'
+
+<!-- SCM Balance equal-height practical hotfix: match main balance frame to right panels and extend scale stand -->
+<style id="scm-balance-equal-height-hotfix">
+@media screen and (min-width:761px){
+  body.sb-engine .stage{align-items:start!important;}
+  body.sb-engine .sbBoard{box-sizing:border-box!important;}
+  body.sb-engine .sbScale{transition:height .18s ease!important;}
+  body.sb-engine .sbStand{transition:height .18s ease!important;}
+}
+@media screen and (max-width:760px){
+  body.sb-engine .sbBoard,
+  body.sb-engine .sbScale,
+  body.sb-engine .sbStand{min-height:initial;}
+}
+</style>
+<script id="scm-balance-equal-height-hotfix-js">
+(function(){
+  function scmBalanceEqualizeFrames(){
+    try{
+      if(!document.body || !document.body.classList.contains('sb-engine')) return;
+      var stage=document.querySelector('body.sb-engine .stage');
+      var side=document.querySelector('body.sb-engine .side');
+      var board=document.querySelector('body.sb-engine .sbBoard');
+      var scale=document.querySelector('body.sb-engine .sbScale');
+      var stand=document.querySelector('body.sb-engine .sbStand');
+      if(!stage || !side || !board || !scale || !stand) return;
+
+      if(window.innerWidth<=760){
+        board.style.minHeight='';
+        scale.style.height='';
+        stand.style.height='';
+        return;
+      }
+
+      // The right column contains three frames. Use their combined real height as the target
+      // so the main balance frame ends at the same visual line.
+      var sideHeight=Math.ceil(side.getBoundingClientRect().height);
+      if(!sideHeight || sideHeight<520) return;
+
+      var boardHeight=Math.max(sideHeight, 680);
+      board.style.minHeight=boardHeight+'px';
+
+      // Give the gained height to the actual scale area, not to empty text space.
+      var scaleHeight=Math.max(355, Math.min(500, boardHeight-285));
+      scale.style.height=scaleHeight+'px';
+
+      // Longer vertical stand/lever support for a more realistic balance.
+      stand.style.height=Math.max(246, scaleHeight-112)+'px';
+    }catch(e){}
+  }
+
+  window.scmBalanceEqualizeFrames=scmBalanceEqualizeFrames;
+  window.addEventListener('load',function(){setTimeout(scmBalanceEqualizeFrames,80);setTimeout(scmBalanceEqualizeFrames,450);});
+  window.addEventListener('resize',function(){setTimeout(scmBalanceEqualizeFrames,80);});
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(scmBalanceEqualizeFrames,120);
+    try{
+      var obs=new MutationObserver(function(){setTimeout(scmBalanceEqualizeFrames,40);});
+      obs.observe(document.body,{childList:true,subtree:true,attributes:true,characterData:false});
+    }catch(e){}
+  });
+  var oldLoadQuestion=window.loadQuestion;
+  if(typeof oldLoadQuestion==='function'){
+    window.loadQuestion=function(){
+      var r=oldLoadQuestion.apply(this,arguments);
+      setTimeout(scmBalanceEqualizeFrames,60);
+      return r;
+    };
+    try{loadQuestion=window.loadQuestion;}catch(e){}
+  }
+})();
+</script>
+
+</body></html>');
     w.document.close();
     w.focus();
     setTimeout(function(){w.print();},350);
@@ -4826,7 +4974,81 @@ body.scm-role-unselected #liveHome .liveGrid{display:none!important}
   function printHtmlDocument(title,bodyHtml){
     var css='<style>body{font-family:Arial,system-ui,sans-serif;color:#142033;margin:18px}h1{text-align:center;color:#0f5b2e;margin:0 0 10px}.meta{text-align:center;font-weight:900;margin:6px 0 14px;color:#17324d}.summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}.summaryBox{background:#eef7ff;border:2px solid #c7ddff;border-radius:14px;padding:10px;text-align:center;font-weight:1000}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th{background:#203040;color:white;padding:8px}td{border-bottom:1px solid #dbe4ef;padding:7px;text-align:center}td:nth-child(2){text-align:left}.tieNote{font-size:12px;margin-top:8px;color:#334155;font-weight:900;background:#fff7cc;border:1px solid #f0d36d;border-radius:10px;padding:6px}@media print{@page{size:A4 landscape;margin:10mm}button{display:none!important}}</style>';
     var w=window.open('','_blank'); if(!w){alert('Please allow pop-ups to print this report.');return;}
-    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},350);
+    w.document.open();w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(title)+'</title>'+css+'</head><body>'+bodyHtml+'
+
+<!-- SCM Balance equal-height practical hotfix: match main balance frame to right panels and extend scale stand -->
+<style id="scm-balance-equal-height-hotfix">
+@media screen and (min-width:761px){
+  body.sb-engine .stage{align-items:start!important;}
+  body.sb-engine .sbBoard{box-sizing:border-box!important;}
+  body.sb-engine .sbScale{transition:height .18s ease!important;}
+  body.sb-engine .sbStand{transition:height .18s ease!important;}
+}
+@media screen and (max-width:760px){
+  body.sb-engine .sbBoard,
+  body.sb-engine .sbScale,
+  body.sb-engine .sbStand{min-height:initial;}
+}
+</style>
+<script id="scm-balance-equal-height-hotfix-js">
+(function(){
+  function scmBalanceEqualizeFrames(){
+    try{
+      if(!document.body || !document.body.classList.contains('sb-engine')) return;
+      var stage=document.querySelector('body.sb-engine .stage');
+      var side=document.querySelector('body.sb-engine .side');
+      var board=document.querySelector('body.sb-engine .sbBoard');
+      var scale=document.querySelector('body.sb-engine .sbScale');
+      var stand=document.querySelector('body.sb-engine .sbStand');
+      if(!stage || !side || !board || !scale || !stand) return;
+
+      if(window.innerWidth<=760){
+        board.style.minHeight='';
+        scale.style.height='';
+        stand.style.height='';
+        return;
+      }
+
+      // The right column contains three frames. Use their combined real height as the target
+      // so the main balance frame ends at the same visual line.
+      var sideHeight=Math.ceil(side.getBoundingClientRect().height);
+      if(!sideHeight || sideHeight<520) return;
+
+      var boardHeight=Math.max(sideHeight, 680);
+      board.style.minHeight=boardHeight+'px';
+
+      // Give the gained height to the actual scale area, not to empty text space.
+      var scaleHeight=Math.max(355, Math.min(500, boardHeight-285));
+      scale.style.height=scaleHeight+'px';
+
+      // Longer vertical stand/lever support for a more realistic balance.
+      stand.style.height=Math.max(246, scaleHeight-112)+'px';
+    }catch(e){}
+  }
+
+  window.scmBalanceEqualizeFrames=scmBalanceEqualizeFrames;
+  window.addEventListener('load',function(){setTimeout(scmBalanceEqualizeFrames,80);setTimeout(scmBalanceEqualizeFrames,450);});
+  window.addEventListener('resize',function(){setTimeout(scmBalanceEqualizeFrames,80);});
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(scmBalanceEqualizeFrames,120);
+    try{
+      var obs=new MutationObserver(function(){setTimeout(scmBalanceEqualizeFrames,40);});
+      obs.observe(document.body,{childList:true,subtree:true,attributes:true,characterData:false});
+    }catch(e){}
+  });
+  var oldLoadQuestion=window.loadQuestion;
+  if(typeof oldLoadQuestion==='function'){
+    window.loadQuestion=function(){
+      var r=oldLoadQuestion.apply(this,arguments);
+      setTimeout(scmBalanceEqualizeFrames,60);
+      return r;
+    };
+    try{loadQuestion=window.loadQuestion;}catch(e){}
+  }
+})();
+</script>
+
+</body></html>');w.document.close();w.focus();setTimeout(function(){w.print()},350);
   }
   window.printTeacherReport=function(){
     var card=by('teacherReportPrint'); if(!card)return alert('No report is open.');
