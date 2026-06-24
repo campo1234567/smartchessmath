@@ -36,11 +36,9 @@ a{color:inherit}
 .brandTitle{line-height:1}
 .brandTitle strong{display:block;font-size:26px;color:#06451d;letter-spacing:-.03em}
 .brandTitle span{display:block;font-size:13px;color:#f05a00;font-weight:900;letter-spacing:.12em;margin-top:3px;text-transform:uppercase}
-.menu{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.menu a{font-weight:900;text-decoration:none;color:#07351b;padding:9px 11px;border-radius:999px;font-size:15px;line-height:1;white-space:nowrap}
+.menu{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.menu a{font-weight:900;text-decoration:none;color:#07351b;padding:10px 12px;border-radius:999px}
 .menu a:hover{background:#eaf8e6}
-.menu a.missionLink{background:linear-gradient(180deg,#fff2a8,#ffd21f);color:#08285a;border:1px solid #efc928;box-shadow:0 5px 13px rgba(0,0,0,.10)}
-.menu a.dashboardLink{background:linear-gradient(180deg,#1fbc4d,#07852b);color:#fff;box-shadow:0 5px 0 #065d20,0 10px 18px rgba(0,0,0,.12)}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
   border:0;border-radius:14px;padding:14px 19px;text-decoration:none;font-weight:900;
@@ -133,7 +131,7 @@ h1 .gold{
   clip-path:ellipse(78% 100% at 50% 100%);z-index:1
 }
 
-.section{padding:24px 0}.sectionTitle{text-align:center;color:#06451d;font-size:38px;margin:0 0 8px;font-weight:900;letter-spacing:-.03em}.sectionTitle:after{content:"★";display:block;color:#f4c430;font-size:20px;line-height:1;margin-top:6px}.sectionSub{text-align:center;color:#163050;font-weight:800;max-width:720px;margin:0 auto 30px;line-height:1.55}
+.section{padding:24px 0}.sectionTitle{text-align:center;color:#06451d;font-size:38px;margin:0 0 8px;font-weight:900;letter-spacing:-.03em}.sectionTitle:after{content:"";display:none}.skillsLine{text-align:center;font-size:26px;font-weight:900;margin:6px 0 10px;color:#06451d;letter-spacing:6px}.skillsLine span{display:inline-block;cursor:help}.skillsLine .arrow{color:#f4a000;letter-spacing:0;margin:0 8px}.sectionSub{text-align:center;color:#163050;font-weight:800;max-width:720px;margin:0 auto 30px;line-height:1.55}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.program{background:#fff;border-radius:24px;padding:28px;box-shadow:0 18px 36px rgba(0,0,0,.11);border:1px solid #e2eddc;min-height:300px;display:flex;flex-direction:column;justify-content:space-between}.program .icon{font-size:62px}.program h3{font-size:24px;color:#0a2858;margin:16px 0 10px}.program p{font-size:16px;line-height:1.55;font-weight:800;color:#173050;margin:0 0 16px}.pills{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}.pill{border-radius:999px;background:#fff2c7;color:#d85c00;font-weight:900;padding:8px 13px}.pill:first-child{background:#dff6d8;color:#08792b}
 .grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:24px}
 .panel{background:#fff;border:1px solid #e2eddc;border-radius:24px;padding:26px;box-shadow:0 18px 36px rgba(0,0,0,.1)}.panel h3{font-size:28px;color:#0a2858;margin:0 0 10px}.roleGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.role{background:#fff;border:1px solid #e0ecda;border-radius:18px;text-align:center;padding:17px 8px;font-weight:900;box-shadow:0 8px 18px rgba(0,0,0,.06)}.roleIcon{font-size:34px;margin-bottom:6px}
@@ -204,20 +202,7 @@ h1 .gold{
 @media(max-width:900px){.heroSlider,.sliderTrack{height:360px;min-height:360px}.slide{background-size:cover;background-position:center}.slideArrow{display:none}.slideNav{bottom:10px}}
 @media(max-width:600px){.heroSlider,.sliderTrack{height:300px;min-height:300px}.slide{background-size:cover;background-position:center}.slideHotspot{display:none}}
 
-
-/* SCM skills strip */
-.sectionTitle:after{content:none!important;display:none!important}
-.skillsStrip{display:flex;align-items:center;justify-content:center;gap:12px;margin:10px auto 26px;font-size:31px;font-weight:900;color:#06451d;flex-wrap:wrap}
-.skillsStrip .skillsArrow{font-size:28px;color:#f59e0b;margin:0 4px}
-.skillsStrip span{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:linear-gradient(180deg,#fff,#f2ffe9);border:1px solid #dbeed2;box-shadow:0 7px 18px rgba(0,0,0,.08);cursor:help;transition:.18s}
-.skillsStrip span:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.12)}
-@media(max-width:600px){.skillsStrip{font-size:25px;gap:8px}.skillsStrip span{width:36px;height:36px}}
-
-/* Smart Balance program card icon */
-.balanceIcon{width:132px;height:98px;display:flex;align-items:center;justify-content:flex-start;margin:0 0 8px}
-.balanceIcon svg{width:132px;height:98px;display:block;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18))}
-.balanceIcon text{font-family:Arial,Helvetica,sans-serif;font-weight:1000}
-
+.balance-icon{font-size:90px;line-height:1;text-align:center;margin-bottom:14px}
 </style>
 
 </head>
@@ -233,9 +218,8 @@ h1 .gold{
       <a href="#programs">Programs</a>
       <a href="#championships">Championships</a>
       <a href="#workflow">Workflow</a>
-      <a class="missionLink" href="join-our-mission/index.html">🌍 Mission</a>
       <a href="#contact">Contact</a>
-      <a class="dashboardLink" href="dashboard.html">🎓 Dashboard</a>
+      <a class="btn dashboard" href="dashboard.html">🎓 Teacher Dashboard</a>
     </nav>
   </div>
 </header>
@@ -264,22 +248,19 @@ h1 .gold{
 
   <section id="programs" class="container section">
     <h2 class="sectionTitle">Educational Programs</h2>
-    <p class="sectionSub">Interactive chess-and-math programs designed for young learners, school pilots, competitions, and classroom practice.</p>
-    <div class="skillsStrip" aria-label="Smart Chess Math Skills">
-      <span title="Smart Chess Math Educational Programs">♞</span>
-      <span title="Smart Chess Math Educational Programs">♛</span>
-      <span title="Smart Chess Math Educational Programs">♜</span>
-      <span title="Smart Chess Math Educational Programs">♝</span>
-      <b class="skillsArrow">➜</b>
+    <div class="skillsLine" aria-label="Smart Chess Math skills">
+      <span title="Smart Chess Math Educational Programs">♞ ♛ ♜ ♝</span>
+      <span class="arrow">➜</span>
       <span title="Creative Thinking">💡</span>
       <span title="Strategic Thinking">🎯</span>
       <span title="Planning & Organization">📋</span>
       <span title="Pattern Recognition">🔍</span>
     </div>
+    <p class="sectionSub">Interactive chess-and-math programs designed for young learners, school pilots, competitions, and classroom practice.</p>
     <div class="cards">
       <article class="program">
         <div>
-          <div class="icon">♘</div>
+          <div class="icon">♞</div>
           <h3>Knight Number Quest</h3>
           <p>Knight movement, number targets, smart routes, time challenges, live class mode, and championship rankings.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Tournament Ready</span></div>
@@ -290,7 +271,7 @@ h1 .gold{
         <div>
           <div class="icon">♛</div>
           <h3>Queen Number Quest</h3>
-          <p>Master queen lines, collect exact target numbers, discover smart routes, improve speed, and compete in live school championships.</p>
+          <p>Queen lines, number targets, smart routes, quick practice mode, live class mode, championship reports, rankings, and certificates.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
         </div>
         <a class="btn orange" href="queen.html">Open Program →</a>
@@ -299,7 +280,7 @@ h1 .gold{
         <div>
           <div class="icon">♜</div>
           <h3>Rook Number Quest</h3>
-          <p>Master straight-line thinking with the rook. Move across ranks and files, collect exact target numbers, improve planning speed, and compete in live school championships.</p>
+          <p>Master rook movement through straight-line challenges. Collect exact target numbers, build planning skills, improve speed, and compete in live championships.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
         </div>
         <a class="btn orange" href="rook.html">Open Program →</a>
@@ -308,47 +289,10 @@ h1 .gold{
         <div>
           <div class="icon">♝</div>
           <h3>Bishop Number Quest</h3>
-          <p>Master diagonal thinking with the bishop. Follow legal diagonals, collect exact target numbers, recognize patterns, and compete in live school championships.</p>
+          <p>Build diagonal vision with the bishop. Find smart routes, collect exact target numbers, recognize patterns, and compete in live school championships.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
         </div>
         <a class="btn orange" href="bishop.html">Open Program →</a>
-      </article>
-      <article class="program">
-        <div>
-          <div class="balanceIcon" aria-hidden="true">
-            <svg viewBox="0 0 120 90" role="img" aria-label="Smart Balance icon" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <linearGradient id="sbGold" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stop-color="#fff18a"/>
-                  <stop offset=".42" stop-color="#ffc531"/>
-                  <stop offset="1" stop-color="#c87400"/>
-                </linearGradient>
-                <linearGradient id="sbGreen" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stop-color="#44d85b"/>
-                  <stop offset="1" stop-color="#0b8f2a"/>
-                </linearGradient>
-              </defs>
-              <line x1="22" y1="34" x2="98" y2="34" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
-              <line x1="60" y1="24" x2="60" y2="68" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
-              <circle cx="60" cy="34" r="9" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
-              <path d="M45 72h30" stroke="url(#sbGold)" stroke-width="8" stroke-linecap="round"/>
-              <path d="M37 72h46" stroke="#9b5d00" stroke-width="3" stroke-linecap="round" opacity=".45"/>
-              <line x1="27" y1="34" x2="16" y2="59" stroke="#b87300" stroke-width="2"/>
-              <line x1="27" y1="34" x2="39" y2="59" stroke="#b87300" stroke-width="2"/>
-              <path d="M9 59 Q27 74 45 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
-              <text x="19" y="58" font-size="21" fill="#0a2858">♛</text>
-              <text x="31" y="58" font-size="19" fill="#0a2858">♜</text>
-              <line x1="93" y1="34" x2="82" y2="59" stroke="#b87300" stroke-width="2"/>
-              <line x1="93" y1="34" x2="105" y2="59" stroke="#b87300" stroke-width="2"/>
-              <path d="M75 59 Q93 74 111 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
-              <text x="78" y="62" font-size="32" fill="url(#sbGreen)" stroke="#fff5a6" stroke-width="1">14</text>
-            </svg>
-          </div>
-          <h3>Smart Balance</h3>
-          <p>Build target numbers using chess piece values. Discover multiple solutions, strengthen combinatorial thinking, optimization, mathematical reasoning, and strategic planning.</p>
-          <div class="pills"><span class="pill">Age 7+</span><span class="pill">Practice + Tournament</span></div>
-        </div>
-        <a class="btn orange" href="balance.html">Open Program →</a>
       </article>
       <article class="program">
         <div>
@@ -364,7 +308,7 @@ h1 .gold{
           <div class="icon">🏰</div>
           <h3>Rescue the Princess</h3>
           <p>Story-based knight planning, problem solving, sequence thinking, mission play, and achievement certificate.</p>
-          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Adventure Mode</span></div>
+          <div class="pills"><span class="pill">Age 10+</span><span class="pill">Game Mode</span></div>
         </div>
         <a class="btn" href="#">Coming Soon ⏳</a>
       </article>
@@ -413,9 +357,8 @@ h1 .gold{
           <input name="school" placeholder="School / Organization" required>
           <input name="email" type="email" placeholder="Email" required>
           <textarea name="message" placeholder="Message"></textarea>
-          <input type="hidden" name="requestType" value="School Championship Request">
           <button class="btn" type="submit">Send Request →</button>
-          <div id="requestStatus" style="margin-top:14px;font-weight:900;color:#08792b;line-height:1.45"></div>
+          <div id="requestStatus" style="margin-top:12px;font-weight:900;color:#08792b"></div>
         </form>
       </div>
       <div class="contactBox">
@@ -438,28 +381,20 @@ h1 .gold{
 
 <script>
 (function(){
-  const CONTACT_ENDPOINT='/contact-api/message';
   const form=document.getElementById('schoolRequestForm');
   const status=document.getElementById('requestStatus');
   if(!form) return;
-  form.addEventListener('submit', async function(e){
+  form.addEventListener('submit', function(e){
     e.preventDefault();
-    const btn=form.querySelector('button[type="submit"]');
-    const original=btn ? btn.textContent : '';
-    if(status){status.style.color='#08792b';status.textContent='Sending your request...';}
-    if(btn){btn.disabled=true;btn.textContent='Sending...';}
-    try{
-      const data=Object.fromEntries(new FormData(form).entries());
-      const res=await fetch(CONTACT_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-      const out=await res.json().catch(()=>({}));
-      if(!res.ok || out.ok===false) throw new Error(out.error || 'Unable to send request.');
-      form.reset();
-      if(status){status.style.color='#08792b';status.textContent='✅ Thank you! Your request has been received successfully. Our team will contact you soon.';}
-    }catch(err){
-      if(status){status.style.color='#b42318';status.textContent='⚠️ We could not submit your request right now. Please try again after the contact Worker is configured.';}
-    }finally{
-      if(btn){btn.disabled=false;btn.textContent=original;}
-    }
+    const data=Object.fromEntries(new FormData(form).entries());
+    data.id='SCH-'+Date.now();
+    data.status='Pending';
+    data.createdAt=new Date().toISOString();
+    const requests=JSON.parse(localStorage.getItem('scm_school_requests')||'[]');
+    requests.unshift(data);
+    localStorage.setItem('scm_school_requests', JSON.stringify(requests));
+    status.textContent='Request saved locally. Open Teacher Dashboard to review it.';
+    form.reset();
   });
 })();
 </script>
