@@ -213,6 +213,11 @@ h1 .gold{
 .skillsStrip span:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.12)}
 @media(max-width:600px){.skillsStrip{font-size:25px;gap:8px}.skillsStrip span{width:36px;height:36px}}
 
+/* Smart Balance program card icon */
+.balanceIcon{width:86px;height:72px;display:flex;align-items:center;justify-content:center;margin:0 0 6px}
+.balanceIcon svg{width:86px;height:72px;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.15))}
+.balanceIcon text{font-family:Arial,Helvetica,sans-serif;font-weight:1000}
+
 </style>
 
 </head>
@@ -307,6 +312,43 @@ h1 .gold{
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
         </div>
         <a class="btn orange" href="bishop.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="balanceIcon" aria-hidden="true">
+            <svg viewBox="0 0 120 90" role="img" aria-label="Smart Balance icon">
+              <defs>
+                <linearGradient id="sbGold" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#fff18a"/>
+                  <stop offset=".42" stop-color="#ffc531"/>
+                  <stop offset="1" stop-color="#c87400"/>
+                </linearGradient>
+                <linearGradient id="sbGreen" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#44d85b"/>
+                  <stop offset="1" stop-color="#0b8f2a"/>
+                </linearGradient>
+              </defs>
+              <line x1="22" y1="34" x2="98" y2="34" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
+              <line x1="60" y1="24" x2="60" y2="68" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="60" cy="34" r="9" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
+              <path d="M45 72h30" stroke="url(#sbGold)" stroke-width="8" stroke-linecap="round"/>
+              <path d="M37 72h46" stroke="#9b5d00" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+              <line x1="27" y1="34" x2="16" y2="59" stroke="#b87300" stroke-width="2"/>
+              <line x1="27" y1="34" x2="39" y2="59" stroke="#b87300" stroke-width="2"/>
+              <path d="M9 59 Q27 74 45 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
+              <text x="19" y="58" font-size="21" fill="#0a2858">♛</text>
+              <text x="31" y="58" font-size="19" fill="#0a2858">♜</text>
+              <line x1="93" y1="34" x2="82" y2="59" stroke="#b87300" stroke-width="2"/>
+              <line x1="93" y1="34" x2="105" y2="59" stroke="#b87300" stroke-width="2"/>
+              <path d="M75 59 Q93 74 111 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
+              <text x="80" y="61" font-size="28" fill="url(#sbGreen)" stroke="#fff5a6" stroke-width="1">14</text>
+            </svg>
+          </div>
+          <h3>Smart Balance</h3>
+          <p>Build target numbers using chess piece values. Discover multiple solutions, strengthen combinatorial thinking, optimization, mathematical reasoning, and strategic planning.</p>
+          <div class="pills"><span class="pill">Age 7+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="balance.html">Open Program →</a>
       </article>
       <article class="program">
         <div>
