@@ -57,8 +57,35 @@
       <h2 style="font-size:28px;margin:0 0 8px;color:#0f5b2e">🏆 Rescue the Princess Championship</h2>
       <p style="font-size:17px;color:#334155;margin:6px 0 14px">Choose your role to enter the online championship.</p>
       <div class="introControls">
-        <button class="teacherBtn" onclick="scmOpenOnline()">👩‍🏫 Teacher / Admin</button>
-        <button onclick="scmOpenOnline()">🧒 Student</button>
+        <button class="teacherBtn" onclick="scmAskAdminPin()">👩‍🏫 Teacher / Admin</button>
+        <button onclick="scmOpenStudentOnly()">🧒 Student</button>
+      </div>
+    </div>
+
+    <div id="scmIntroAdminPanel" style="display:none;max-width:760px;margin:10px auto 0">
+      <div style="background:#eef7ff;border:2px solid #8abfff;border-radius:16px;padding:14px;text-align:left;color:#075985;font-weight:1000;margin-bottom:10px">
+        <h3 style="margin:0 0 8px;color:#075985">Admin Access</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button onclick="scmCreateRoomFromIntro()">Create New Championship</button>
+          <button onclick="scmOpenExistingFromIntro()">Open Existing Championship</button>
+        </div>
+        <div>Teacher: manage room. Supervisor: open any active championship and has full control.</div>
+        <div style="margin-top:8px">👩‍🏫 Teacher Mode: create or open your championship.</div>
+      </div>
+      <div style="background:rgba(255,255,255,.72);border-radius:16px;padding:14px;color:#10251a;font-weight:1000">
+        <div style="margin-bottom:8px">Championship Name is required. Organizer is optional. Room codes are short for children, such as A123.</div>
+        <h3 style="margin:8px 0">👩‍🏫 Teacher</h3>
+        <div class="introControls">
+          <label><b>Level:</b> <select id="scmIntroTeacherLevel"><option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option></select></label>
+          <label><b>Time:</b> <select id="scmIntroTeacherTime"><option value="180" selected>3 Minutes</option><option value="120">2 Minutes</option><option value="60">1 Minute</option></select></label>
+        </div>
+        <div style="background:rgba(255,255,255,.72);border-radius:14px;padding:12px;margin-top:10px">
+          <div style="margin-bottom:8px">🏆 Championship Settings</div>
+          <input id="scmIntroChampTitle" style="width:min(520px,95%);margin-bottom:8px" value="Level Championship" placeholder="Championship Name">
+          <br><input id="scmIntroOrganizer" style="width:min(340px,95%);margin-bottom:8px" placeholder="Organizer (Optional)">
+          <br><label>Round: <select id="scmIntroRound"><option value="1">Round 1 — Standard</option><option value="2">Round 2 — Fast</option><option value="3">Round 3 — Challenge</option></select></label>
+        </div>
+        <div class="introControls"><button class="teacherBtn" onclick="scmCreateRoomFromIntro()">Create Room</button></div>
       </div>
     </div>
 
@@ -658,6 +685,71 @@ buildBoard();draw();
   };
   window.scmOpenLeaderboard=function(){if(!onlineRoomCode){alert('No room code');return}window.open(API+'/api/leaderboard?room_code='+encodeURIComponent(onlineRoomCode),'_blank')};
   window.scmOpenFinalResults=function(){if(!onlineRoomCode){alert('No room code');return}window.open(API+'/api/final-results?room_code='+encodeURIComponent(onlineRoomCode),'_blank')};
+})();
+</script>
+
+<script>
+/* v4.7 Rescue portal PIN + Teacher/Admin gateway */
+(function(){
+  const ADMIN_PIN='2026';
+  function by(id){return document.getElementById(id)}
+  function setVal(id,v){const e=by(id); if(e) e.value=v}
+  window.scmAskAdminPin=function(){
+    const pin=prompt('Enter Teacher / Admin PIN');
+    if(pin===null) return;
+    if(String(pin).trim()!==ADMIN_PIN){ alert('Wrong PIN'); return; }
+    const panel=by('scmIntroAdminPanel');
+    if(panel) panel.style.display='block';
+  };
+  window.scmOpenStudentOnly=function(){
+    if(by('introOverlay')) by('introOverlay').style.display='none';
+    if(by('scmLiveOverlay')) by('scmLiveOverlay').style.display='flex';
+    ['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(id=>{const e=by(id); if(e) e.style.display=(id==='scmLiveHome'?'block':'none')});
+    const grid=document.querySelector('#scmLiveHome .scmLiveGrid');
+    if(grid){
+      const boxes=grid.querySelectorAll('.scmLiveBox');
+      if(boxes[0]) boxes[0].style.display='none';
+      if(boxes[1]) boxes[1].style.display='block';
+      grid.style.gridTemplateColumns='1fr';
+    }
+  };
+  window.scmOpenTeacherOnly=function(){
+    if(by('introOverlay')) by('introOverlay').style.display='none';
+    if(by('scmLiveOverlay')) by('scmLiveOverlay').style.display='flex';
+    ['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(id=>{const e=by(id); if(e) e.style.display=(id==='scmLiveHome'?'block':'none')});
+    const grid=document.querySelector('#scmLiveHome .scmLiveGrid');
+    if(grid){
+      const boxes=grid.querySelectorAll('.scmLiveBox');
+      if(boxes[0]) boxes[0].style.display='block';
+      if(boxes[1]) boxes[1].style.display='none';
+      grid.style.gridTemplateColumns='1fr';
+    }
+  };
+  window.scmCreateRoomFromIntro=function(){
+    const title=(by('scmIntroChampTitle')&&by('scmIntroChampTitle').value.trim())||'';
+    if(!title){ alert('Championship Name is required.'); return; }
+    setVal('scmChampTitle',title);
+    setVal('scmOrganizer',(by('scmIntroOrganizer')&&by('scmIntroOrganizer').value)||'');
+    setVal('scmRound',(by('scmIntroRound')&&by('scmIntroRound').value)||'1');
+    setVal('level',(by('scmIntroTeacherLevel')&&by('scmIntroTeacherLevel').value)||'1');
+    setVal('duration',(by('scmIntroTeacherTime')&&by('scmIntroTeacherTime').value)||'180');
+    if(by('introOverlay')) by('introOverlay').style.display='none';
+    if(by('scmLiveOverlay')) by('scmLiveOverlay').style.display='flex';
+    if(typeof scmCreateRoom==='function') scmCreateRoom();
+  };
+  window.scmOpenExistingFromIntro=function(){
+    const code=prompt('Enter existing room code');
+    if(!code) return;
+    if(by('introOverlay')) by('introOverlay').style.display='none';
+    if(by('scmLiveOverlay')) by('scmLiveOverlay').style.display='flex';
+    if(by('scmTeacherCode')) by('scmTeacherCode').textContent=String(code).trim().toUpperCase();
+    if(window.onlineRoomCode!==undefined) window.onlineRoomCode=String(code).trim().toUpperCase();
+    // The online bridge keeps these variables private, so we use the public refresh path if available.
+    try{ window.scmOpenOnline && window.scmOpenOnline(); }catch(e){}
+    const teacherCode=by('scmTeacherCode'); if(teacherCode) teacherCode.textContent=String(code).trim().toUpperCase();
+    ['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(id=>{const e=by(id); if(e) e.style.display=(id==='scmTeacherRoom'?'block':'none')});
+    alert('Opened teacher view for room '+String(code).trim().toUpperCase()+'. If students do not appear, create/open the room from the Worker-backed panel.');
+  };
 })();
 </script>
 </body>
