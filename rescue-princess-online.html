@@ -1542,3 +1542,177 @@ buildBoard();draw();
   document.addEventListener('DOMContentLoaded',fixText); setTimeout(fixText,200); setTimeout(fixText,800);
 })();
 </script>
+
+<!-- SCM Rescue PHASE 1 Master-Template Safety Patch — 2026-06-25
+     Goal: keep Knight online room/admin system, patch Rescue engine inputs only:
+     1) Round 1/2/3 use Level 1/2/3 map groups = 21 maps total.
+     2) Add 5-minute option for teacher and practice.
+     3) Keep scoring 30/29/28/27/20-26.
+     4) Do not change Worker endpoints. -->
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const n=v=>Number(v)||0;
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const t=await r.text();
+    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
+  }
+  function addOption(sel,value,text,beforeValue){
+    if(!sel || Array.from(sel.options).some(o=>String(o.value)===String(value))) return;
+    const opt=document.createElement('option'); opt.value=String(value); opt.textContent=text;
+    const before=beforeValue?Array.from(sel.options).find(o=>String(o.value)===String(beforeValue)):null;
+    if(before) sel.insertBefore(opt,before); else sel.appendChild(opt);
+  }
+  function patchTimeSelectors(){
+    ['duration','introDuration','scmIntroTeacherTime','scmTeacherRoundDuration'].forEach(id=>addOption($(id),'300','5 Minutes'));
+    const live=$('scmIntroTeacherTime'); if(live && !Array.from(live.options).some(o=>o.value==='300')) addOption(live,'300','5 Minutes');
+    const roundSel=$('scmTeacherRoundSelect');
+    if(roundSel){
+      const o1=roundSel.querySelector('option[value="1"]'); if(o1){o1.dataset.duration='300'; o1.textContent='Round 1 — Friendly 5 min';}
+      const o2=roundSel.querySelector('option[value="2"]'); if(o2){o2.dataset.duration='180'; o2.textContent='Round 2 — Standard 3 min';}
+      const o3=roundSel.querySelector('option[value="3"]'); if(o3){o3.dataset.duration='120'; o3.textContent='Round 3 — Challenge 2 min';}
+    }
+    const oldRound=$('scmRound');
+    if(oldRound){
+      const o1=oldRound.querySelector('option[value="1"]'); if(o1)o1.textContent='Round 1 — 5 min';
+      const o2=oldRound.querySelector('option[value="2"]'); if(o2)o2.textContent='Round 2 — 3 min';
+      const o3=oldRound.querySelector('option[value="3"]'); if(o3)o3.textContent='Round 3 — 2 min';
+    }
+  }
+  function roundDuration(r){r=n(r)||1; return r===1?300:(r===2?180:120)}
+  function roundLabel(r){r=n(r)||1; return r===1?'Round 1 — Friendly 5 min':(r===2?'Round 2 — Standard 3 min':'Round 3 — Challenge 2 min')}
+  function setGameForRound(r){
+    r=n(r)||1;
+    const level=Math.max(1,Math.min(3,r));
+    const dur=roundDuration(r);
+    if($('level')) $('level').value=String(level);
+    if($('duration')) $('duration').value=String(dur);
+    try{ currentLevel=level; selectedDuration=dur; remaining=dur; }catch(e){}
+    return {level,dur};
+  }
+  function badge(t){try{let b=$('scmOnlineBadge');if(!b){b=document.createElement('div');b.id='scmOnlineBadge';b.className='scmBadge';document.body.appendChild(b)}b.textContent=t}catch(e){}}
+
+  // Rescue maps already exist as levelMaps[1], levelMaps[2], levelMaps[3].
+  // This override makes online rounds choose from the correct 7-map group.
+  if(typeof window.pickDynamicMap==='function' || typeof pickDynamicMap==='function'){
+    try{
+      window.pickDynamicMap=function(level){
+        level=n(level)||1; level=Math.max(1,Math.min(3,level));
+        const list=(levelMaps[level]||levelMaps[1]||[]);
+        const idx=Math.floor(Math.random()*list.length);
+        currentMapNo=((level-1)*7)+idx+1; // 1-21 visible map numbering
+        return JSON.parse(JSON.stringify(list[idx]));
+      };
+    }catch(e){}
+  }
+
+  // Start Challenge: keep Worker API, but set round duration and level locally.
+  const previousStartRound=window.scmStartRound;
+  window.scmStartRound=async function(){
+    patchTimeSelectors();
+    const st=window.scmRescueState||{};
+    const code=st.room_code;
+    if(!code) return alert('No room.');
+    const r=n(($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||st.round||1)||1;
+    setGameForRound(r);
+    const data=await api('/api/start-challenge',{method:'POST',body:JSON.stringify({room_code:code,round_number:r})});
+    if(!data.ok) return alert(data.error||'Could not start round');
+    st.round=r; st.teacherCountdownRoundKey=r+':'+Date.now();
+    if($('scmCurrentRoundLabel')) $('scmCurrentRoundLabel').textContent='Current: '+roundLabel(r);
+    badge('Round '+r+' countdown started');
+    try{ if(typeof scmRefreshStudents==='function') scmRefreshStudents(); }catch(e){}
+    if(typeof scmShowStartCountdown==='function'){
+      scmShowStartCountdown({title:'Teacher Countdown',message:roundLabel(r)+' is starting'},()=>badge('Round '+r+' started'));
+    }
+  };
+
+  // Student polling: start only once, use round as level group and correct duration.
+  window.scmCheckRoomStatus=async function(){
+    const st=window.scmRescueState||{}, code=st.room_code;
+    if(!code||st.role!=='student') return;
+    const data=await api('/api/room-status?room_code='+encodeURIComponent(code));
+    if(!data.ok||!data.championship) return;
+    const ch=data.championship;
+    const rn=n(ch.current_round||0);
+    const started=n(ch.challenge_started)===1;
+    const finished=n(ch.challenge_finished)===1;
+    const roundKey=rn+':'+(ch.challenge_started_at||ch.updated_at||'started');
+    if(started&&!finished&&rn>0){
+      const isRunning=(typeof running!=='undefined' && running===true);
+      if(!isRunning && st.lastStartedRoundKey!==roundKey && !st.countdownPending){
+        st.lastStartedRoundKey=roundKey;
+        st.countdownPending=true;
+        st.round=rn;
+        setGameForRound(rn);
+        if($('scmStudentStatus')) $('scmStudentStatus').innerHTML='Get ready… '+roundLabel(rn)+' will start now.';
+        badge('Round '+rn+' countdown');
+        const startNow=function(){
+          st.countdownPending=false;
+          setGameForRound(rn);
+          if($('scmLiveOverlay')) $('scmLiveOverlay').style.display='none';
+          badge('Online Round '+rn+' started');
+          if(typeof startGame==='function') startGame();
+        };
+        if(typeof scmShowStartCountdown==='function') scmShowStartCountdown({title:'Get Ready!',message:roundLabel(rn)+' will start now'},startNow);
+        else startNow();
+      }
+    }else if($('scmStudentStatus')){
+      $('scmStudentStatus').innerHTML='Waiting for teacher to start...';
+    }
+  };
+
+  // Fix save-result metadata: online result carries actual round group, map 1-21, and /8 solved.
+  function solvedRescue(){
+    try{return Math.min(7,n(captures))+Math.min(1,n(goalIndex));}catch(e){return 0}
+  }
+  function currentStars(){try{return n(stars)}catch(e){return 0}}
+  function usedTime(success){try{const dur=n(selectedDuration)||roundDuration((window.scmRescueState||{}).round); const rem=n(remaining); return success?Math.max(1,dur-rem):dur;}catch(e){return 0}}
+  const priorFinish=window.finish;
+  window.finish=function(success,reason){
+    const out=priorFinish.apply(this,arguments);
+    setTimeout(async()=>{
+      const st=window.scmRescueState||{};
+      if(st.role!=='student'||!st.student_id||!st.championship_id||!st.room_code) return;
+      const rn=n(st.round)||1;
+      const used=usedTime(!!success);
+      const status=success?'Finished ✅':'Time Over ⏰';
+      try{
+        await api('/api/save-result',{method:'POST',body:JSON.stringify({
+          student_id:st.student_id, championship_id:st.championship_id,
+          score:currentStars(), points:currentStars(), stars:currentStars(),
+          solved_questions:solvedRescue(), total_time:used, max_streak:solvedRescue(),
+          round_number:rn, mode:'Rescue the Princess', level:'Round '+rn+' / Level '+Math.min(3,rn),
+          metrics:{room_code:st.room_code,status,duration:(typeof selectedDuration!=='undefined'?selectedDuration:roundDuration(rn)),round_number:rn,map:(typeof currentMapNo!=='undefined'?currentMapNo:null),moves:(typeof moves!=='undefined'?moves:null),captures:(typeof captures!=='undefined'?captures:null),path:(typeof history!=='undefined'&&Array.isArray(history)?history.map(h=>h.from+'-'+h.to).join(' '):'')}
+        })});
+        badge('Result saved online');
+      }catch(e){console.warn('Rescue save failed',e); badge('Online save failed')}
+    },350);
+    return out;
+  };
+
+  // Report text: make Championship Details a real scientific summary where possible, not only a small alert.
+  window.scmChampionshipDetails=async function(){
+    const st=window.scmRescueState||{}; const code=st.room_code||(($('scmTeacherCode')&&$('scmTeacherCode').textContent)||'').trim();
+    if(!code) return alert('No room code');
+    try{
+      const [students, finalData]=await Promise.all([
+        api('/api/room-students?room_code='+encodeURIComponent(code)),
+        api('/api/final-results?room_code='+encodeURIComponent(code))
+      ]);
+      if(typeof ensureReport==='function') ensureReport();
+      let overlay=$('scmReportOverlay');
+      if(!$('scmReportBody')){alert('Program: Rescue the Princess\nRoom: '+code+'\nScoring: 30 Gold, 29 Silver, 28 Bronze, 27 Finish, 20–26 Time Over');return;}
+      const rows=(finalData.final_results||finalData.results||[]);
+      const champion=rows[0]?rows[0].student_name:'-';
+      $('scmReportTitle').textContent='Rescue the Princess — Championship Details';
+      $('scmReportBody').innerHTML='<div class="scmReportSummary"><div class="scmReportBox">🎮 Program<br><b>Rescue the Princess</b></div><div class="scmReportBox">🏠 Room<br><b>'+code+'</b></div><div class="scmReportBox">👥 Students<br><b>'+((students.students||[]).length)+'</b></div><div class="scmReportBox">🏆 Champion<br><b>'+champion+'</b></div></div><div class="scmPathBox"><b>Scientific Ranking:</b> Total Stars → Total Solved → Total Time Used.<br><b>Round Maps:</b> Round 1 uses maps 1–7, Round 2 uses maps 8–14, Round 3 uses maps 15–21.<br><b>Scoring:</b> 30 Gold, 29 Silver, 28 Bronze, 27 Finish, 20–26 Time Over.</div>';
+      if(overlay) overlay.style.display='flex';
+    }catch(e){alert('Program: Rescue the Princess\nRoom: '+code+'\nScoring: 30 Gold, 29 Silver, 28 Bronze, 27 Finish, 20–26 Time Over')}
+  };
+
+  document.addEventListener('DOMContentLoaded',patchTimeSelectors);
+  setTimeout(patchTimeSelectors,200); setTimeout(patchTimeSelectors,1000);
+})();
+</script>
