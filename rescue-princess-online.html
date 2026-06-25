@@ -1811,3 +1811,127 @@ buildBoard();draw();
   setTimeout(()=>{document.querySelectorAll('h2,h3,.title').forEach(el=>{if(/Knight Number Quest/i.test(el.textContent||''))el.textContent=el.textContent.replace(/Knight Number Quest/g,'Rescue the Princess')})},300);
 })();
 </script>
+
+<!-- SCM Rescue PHASE3 Focused Fix: time NaN, print results, compact certificate/teacher buttons -->
+<style>
+/* Compact student certificate without removing teacher tools */
+.certControls{margin:0 0 6px!important;gap:8px!important}
+.certControls input{padding:7px 10px!important;font-size:14px!important;min-width:190px!important;max-width:240px!important}
+.certificate{width:min(780px,100%)!important;padding:16px 22px!important;border-width:6px!important;border-radius:24px!important;margin:8px auto!important}
+.certHeader{padding-bottom:7px!important;margin-bottom:8px!important}
+.certLogo{font-size:42px!important}.certSeal{width:66px!important;height:66px!important;font-size:28px!important}
+.certProgram .name{font-size:22px!important}.certProgram .sub{font-size:13px!important}.certTitle{font-size:24px!important;margin:5px 0!important}
+.studentName{font-size:26px!important;margin:4px 0!important}.certText{font-size:13.5px!important;line-height:1.25!important;margin:5px auto!important}
+.certStats{gap:7px!important;margin:8px auto!important;max-width:700px!important}.certStat{padding:6px!important;border-radius:14px!important}.certStat b{font-size:20px!important}
+.certLevel{font-size:18px!important;margin:5px 0!important}.presentedBlock{margin-top:8px!important}.presentedName{font-size:18px!important}.presentedRole{font-size:12px!important}
+.printActions button.teacherBtn{font-size:12px!important;padding:7px 10px!important;transform:scale(.92);transform-origin:center;border-radius:12px!important}
+.printActions button:not(.teacherBtn){font-size:15px!important;padding:9px 13px!important}
+@media(max-width:700px){.certStats{grid-template-columns:repeat(2,1fr)!important}.certificate{padding:12px 10px!important}.certControls input{min-width:160px!important}}
+</style>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const num=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
+  const roundDuration=r=>num(r)===1?300:(num(r)===2?180:120);
+  const roundLabel=r=>num(r)===1?'Round 1 — Friendly 5 min':(num(r)===2?'Round 2 — Standard 3 min':'Round 3 — Challenge 2 min');
+  async function api(path,opts){const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}}
+  function ensureOption(sel,value,text){
+    if(!sel) return;
+    if(!Array.from(sel.options).some(o=>String(o.value)===String(value))){
+      const opt=document.createElement('option'); opt.value=String(value); opt.textContent=text; sel.appendChild(opt);
+    }
+  }
+  function patchTimeOptions(){
+    ['duration','introDuration','scmIntroTeacherTime','scmTeacherRoundDuration'].forEach(id=>{
+      const sel=$(id); if(!sel) return;
+      ensureOption(sel,'300','5 Minutes'); ensureOption(sel,'180','3 Minutes'); ensureOption(sel,'120','2 Minutes'); ensureOption(sel,'60','1 Minute');
+    });
+    const rs=$('scmTeacherRoundSelect');
+    if(rs){
+      const o1=rs.querySelector('option[value="1"]'); if(o1){o1.dataset.duration='300'; o1.textContent='Round 1 — Friendly 5 min'}
+      const o2=rs.querySelector('option[value="2"]'); if(o2){o2.dataset.duration='180'; o2.textContent='Round 2 — Standard 3 min'}
+      const o3=rs.querySelector('option[value="3"]'); if(o3){o3.dataset.duration='120'; o3.textContent='Round 3 — Challenge 2 min'}
+    }
+  }
+  function setGameForRoundFinal(r){
+    patchTimeOptions();
+    r=num(r)||1; const dur=roundDuration(r); const lvl=Math.max(1,Math.min(3,r));
+    if($('level')) $('level').value=String(lvl);
+    if($('duration')) {$('duration').value=String(dur); if($('duration').value!==String(dur)){ensureOption($('duration'),String(dur),dur>=60?(dur/60)+' Minutes':dur+' sec'); $('duration').value=String(dur)}}
+    try{window.currentLevel=lvl; currentLevel=lvl;}catch(e){}
+    try{window.selectedDuration=dur; selectedDuration=dur;}catch(e){}
+    try{window.remaining=dur; remaining=dur;}catch(e){}
+    if($('time')) $('time').textContent=String(Math.floor(dur/60)).padStart(2,'0')+':'+String(dur%60).padStart(2,'0');
+    return {level:lvl,dur};
+  }
+  window.scmRescueApplyRoundPreset=function(){
+    patchTimeOptions();
+    const sel=$('scmTeacherRoundSelect'), dur=$('scmTeacherRoundDuration');
+    if(sel&&dur){ const d=sel.selectedOptions[0]&&sel.selectedOptions[0].dataset.duration || String(roundDuration(sel.value)); dur.value=d; }
+  };
+  const oldStartGame=window.startGame;
+  if(typeof oldStartGame==='function' && !window.__scmPhase3StartGameFixed){
+    window.startGame=function(){
+      patchTimeOptions();
+      const st=window.scmRescueState||{}; const r=num(st.round)||num($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||num($('level')&&$('level').value)||1;
+      const dsel=$('duration');
+      if(!dsel || !Number.isFinite(Number(dsel.value)) || Number(dsel.value)<=0) setGameForRoundFinal(r);
+      else { try{selectedDuration=Number(dsel.value); remaining=Number(dsel.value);}catch(e){} }
+      return oldStartGame.apply(this,arguments);
+    };
+    window.__scmPhase3StartGameFixed=true;
+  }
+  const oldCheck=window.scmCheckRoomStatus;
+  window.scmCheckRoomStatus=async function(){
+    const st=window.scmRescueState||{};
+    if(st.role==='student'&&st.room_code){
+      try{
+        const data=await api('/api/room-status?room_code='+encodeURIComponent(st.room_code));
+        const ch=data.championship||{}; const rn=num(ch.current_round||0);
+        const started=num(ch.challenge_started)===1, finished=num(ch.challenge_finished)===1;
+        if(started&&!finished&&rn>0){ setGameForRoundFinal(rn); }
+      }catch(e){}
+    }
+    return oldCheck&&oldCheck.apply(this,arguments);
+  };
+  const oldStartRound=window.scmStartRound;
+  window.scmStartRound=async function(){
+    patchTimeOptions();
+    const r=num($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||num((window.scmRescueState||{}).round)||1;
+    setGameForRoundFinal(r);
+    return oldStartRound&&oldStartRound.apply(this,arguments);
+  };
+  const oldFinish=window.finish;
+  if(typeof oldFinish==='function' && !window.__scmPhase3FinishGuard){
+    window.finish=function(success,reason){
+      const st=window.scmRescueState||{}; const rn=num(st.round)||num($('level')&&$('level').value)||1; const dur=roundDuration(rn);
+      try{ if(!Number.isFinite(Number(selectedDuration))||Number(selectedDuration)<=0) selectedDuration=dur; }catch(e){}
+      try{ if(!Number.isFinite(Number(remaining))||Number(remaining)<0) remaining=0; }catch(e){}
+      return oldFinish.apply(this,arguments);
+    };
+    window.__scmPhase3FinishGuard=true;
+  }
+  function patchTeacherPrintButton(){
+    document.querySelectorAll('#scmTeacherRoom button').forEach(btn=>{
+      if(/Print Results/i.test(btn.textContent||'')){
+        btn.onclick=function(){ if(typeof window.scmChampionshipDetails==='function') window.scmChampionshipDetails(); else window.print(); };
+        btn.title='Open Championship Details, then use Print / Save PDF';
+      }
+    });
+  }
+  const oldFixRoom=window.scmFinalFixTeacherRoom;
+  if(typeof oldFixRoom==='function' && !window.__scmPhase3RoomPatch){
+    window.scmFinalFixTeacherRoom=function(){ const out=oldFixRoom.apply(this,arguments); patchTimeOptions(); window.scmRescueApplyRoundPreset(); patchTeacherPrintButton(); return out; };
+    window.__scmPhase3RoomPatch=true;
+  }
+  const oldRefresh=window.scmRefreshStudents;
+  if(typeof oldRefresh==='function' && !window.__scmPhase3RefreshPatch){
+    window.scmRefreshStudents=async function(){ const out=await oldRefresh.apply(this,arguments); patchTimeOptions(); patchTeacherPrintButton(); return out; };
+    window.__scmPhase3RefreshPatch=true;
+  }
+  document.addEventListener('DOMContentLoaded',()=>{patchTimeOptions();patchTeacherPrintButton();});
+  setTimeout(()=>{patchTimeOptions();patchTeacherPrintButton();},300);
+  setTimeout(()=>{patchTimeOptions();patchTeacherPrintButton();},1200);
+})();
+</script>
