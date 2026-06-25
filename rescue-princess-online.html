@@ -876,5 +876,169 @@ buildBoard();draw();
 })();
 </script>
 
+
+
+<!-- SCM Rescue Princess Final Room/Timer Patch v2 -->
+<style>
+/* Make Rescue teacher room match the Knight room layout and remove duplicated legacy rows */
+#scmTeacherRoom .scmTeacherManagerBadge{display:inline-block;margin:6px auto 14px;padding:8px 18px;border-radius:999px;font-weight:1000;background:#e0f2fe;color:#075985;border:2px solid #93c5fd}
+#scmTeacherRoom .scmRoundTools{max-width:980px;margin:14px auto;padding:14px;border:3px solid rgba(255,255,255,.92);border-radius:20px;background:rgba(255,255,255,.66);font-weight:1000;color:#142033}
+#scmTeacherRoom .scmSavedLine{font-size:13px;margin:5px 0 9px;color:#17324d;font-weight:1000}
+#scmTeacherRoom .scmTeacherActions{display:flex;justify-content:center;align-items:center;gap:9px;flex-wrap:wrap;margin:8px 0}
+#scmTeacherRoom .scmTeacherActions label{display:inline-flex;align-items:center;gap:6px;font-weight:1000}
+#scmTeacherRoom .scmTeacherActions select{border:2px solid #9bc8ef;border-radius:12px;padding:9px 12px;font-weight:1000;background:white;color:#142033}
+#scmTeacherRoom .scmGreenBtn{background:linear-gradient(180deg,#63e6be,#12b886)!important;color:#10251a!important;box-shadow:0 4px 0 #087f5b!important}
+#scmTeacherRoom .scmBlueBtn{background:linear-gradient(180deg,#38bdf8,#0284c7)!important;color:#fff!important;box-shadow:0 4px 0 #075985!important}
+#scmTeacherRoom .scmOrangeBtn{background:linear-gradient(180deg,#ffbd4d,#f58220)!important;color:#fff!important;box-shadow:0 4px 0 #bf5f00!important}
+#scmTeacherRoom .scmSmallBtn{font-size:14px!important;padding:8px 11px!important;border-radius:13px!important}
+#scmTeacherRoom .scmBoard{width:100%;border-collapse:separate;border-spacing:0 7px;margin-top:10px;font-weight:900}
+#scmTeacherRoom .scmBoard th{background:#203040!important;color:white!important;padding:8px!important}
+#scmTeacherRoom .scmBoard td{background:rgba(255,255,255,.94)!important;padding:8px!important;color:#142033!important;font-weight:900!important}
+#scmTeacherRoom .scmStudentId{display:inline-block;background:#eef7ff;border:2px solid #9bc8ef;color:#17324d;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:1000}
+@media(max-width:760px){#scmTeacherRoom .scmRoundTools{padding:10px}#scmTeacherRoom .scmTeacherActions{gap:6px}#scmTeacherRoom .scmSmallBtn{font-size:12px!important;padding:7px 8px!important}}
+</style>
+<script>
+/* Final rescue patch: one teacher room, correct round selectors, no repeated auto-start. */
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const clean=v=>String(v||'').trim();
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmt=s=>{s=Number(s)||0;return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+  const roundDuration=r=>Number(r)===1?180:(Number(r)===2?120:60);
+  const roundLabel=r=>Number(r)===1?'Round 1 — Standard':(Number(r)===2?'Round 2 — Fast':'Round 3 — Challenge');
+  async function api(path,opts){const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));const txt=await r.text();try{return JSON.parse(txt)}catch(e){return {ok:false,error:txt||'Bad response'}}}
+  function show(id){['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(x=>{const e=$(x); if(e)e.style.display=(x===id?'block':'none')})}
+  function badge(t){let b=$('scmOnlineBadge');if(!b){b=document.createElement('div');b.id='scmOnlineBadge';b.className='scmBadge';document.body.appendChild(b)}b.textContent=t||'Online Ready'}
+
+  // Expose real global let values to older bridge code that checked window.running/window.selectedDuration.
+  ['running','selectedDuration','remaining','stars','currentLevel','currentMapNo','moves','captures','history','goalIndex'].forEach(name=>{
+    try{ if(!Object.getOwnPropertyDescriptor(window,name)){ Object.defineProperty(window,name,{configurable:true,get:function(){try{return eval(name)}catch(e){return undefined}},set:function(v){try{eval(name+' = v')}catch(e){}}}); } }catch(e){}
+  });
+
+  // Stop speech flooding if a polling bug or repeated move event occurs.
+  if(typeof window.speak==='function' && !window.__scmSpeakThrottled){
+    const originalSpeak=window.speak; let lastText='', lastAt=0;
+    window.speak=function(text){const now=Date.now(), t=String(text||'').replace(/\s+/g,' ').trim(); if(t===lastText && now-lastAt<1400)return; if(now-lastAt<420)return; lastText=t; lastAt=now; return originalSpeak.call(this,text)};
+    window.__scmSpeakThrottled=true;
+  }
+
+  window.scmRescueState=window.scmRescueState||{role:null,room_code:null,student_id:null,championship_id:null,round:1,lastStartedRoundKey:null,poll:null};
+
+  function hydrateRows(students,leaderboard){
+    const scores={}; (leaderboard||[]).forEach(r=>{scores[String(r.student_id)]=r});
+    if(!students||!students.length)return '<tr><td colspan="8">Waiting for students...</td></tr>';
+    return students.map((s,i)=>{const sc=scores[String(s.id)]||{}; let st='Joined';
+      if(sc.student_id){ const mj=String(sc.metrics_json||''); st=mj.includes('Time Over')?'Time Over ⏰':'Finished ✅'; }
+      return `<tr><td>${i+1}</td><td>${esc(s.student_name||'Student')}</td><td><span class="scmStudentId">SCM-${String(s.id||'').padStart(4,'0')}</span></td><td>${esc(s.school_name||'-')}</td><td>${esc(st)}</td><td>${Number(sc.stars||0)}/30</td><td>${Number(sc.solved_questions||0)}/8</td><td>${sc.total_time==null?'-':fmt(sc.total_time)}</td></tr>`
+    }).join('')
+  }
+
+  window.scmFinalFixTeacherRoom=function(){
+    const room=$('scmTeacherRoom'); if(!room) return;
+    const codeVal=clean(($('scmTeacherCode')&&$('scmTeacherCode').textContent)||window.scmRescueState.room_code||'----')||'----';
+    room.innerHTML=`
+      <div class="scmTeacherManagerBadge">👩‍🏫 TEACHER MODE — Room Manager</div>
+      <h3>Teacher Room</h3>
+      <div>Room Code</div>
+      <div class="scmRoomCode" id="scmTeacherCode">${esc(codeVal)}</div>
+      <div class="scmRoundTools" id="scmRescueRoundTools">
+        <div><b id="scmCurrentRoundLabel">Round not started</b></div>
+        <div id="scmSavedRoundsLine" class="scmSavedLine">No saved rounds yet</div>
+        <div class="scmTeacherActions">
+          <label>Next Round:
+            <select id="scmTeacherRoundSelect" onchange="scmRescueApplyRoundPreset()">
+              <option value="1" data-duration="180">Round 1 — Standard</option>
+              <option value="2" data-duration="120">Round 2 — Fast</option>
+              <option value="3" data-duration="60">Round 3 — Challenge</option>
+            </select>
+          </label>
+          <label>Time:
+            <select id="scmTeacherRoundDuration">
+              <option value="180" selected>3 Minutes</option>
+              <option value="120">2 Minutes</option>
+              <option value="60">1 Minute</option>
+            </select>
+          </label>
+        </div>
+        <div class="scmTeacherActions">
+          <button class="scmGreenBtn scmSmallBtn" onclick="scmSaveRoundResults()">💾 Save Round Results</button>
+          <button class="scmGreenBtn scmSmallBtn" onclick="scmOpenLeaderboard()">🖨️ Current Round Report</button>
+          <button class="scmGreenBtn scmSmallBtn" onclick="scmOpenFinalResults()">🏆 Calculate Final Ranking</button>
+          <button class="scmOrangeBtn scmSmallBtn" onclick="document.getElementById('scmLiveOverlay').style.display='none'">Back to Dashboard</button>
+        </div>
+        <div class="scmTeacherActions">
+          <button class="scmGreenBtn scmSmallBtn" onclick="scmParticipantsArchive()">👥 Participants Archive</button>
+          <button class="scmOrangeBtn scmSmallBtn" onclick="scmTopPlayers()">🏅 Top Players</button>
+          <button class="scmBlueBtn scmSmallBtn" onclick="scmSendMessagePrompt()">📢 Send Message</button>
+          <button class="scmGreenBtn scmSmallBtn" onclick="scmChampionshipDetails()">📊 Championship Details</button>
+        </div>
+      </div>
+      <div class="scmTeacherActions">
+        <button class="scmOrangeBtn" onclick="scmStartRound()">🚀 Start Challenge</button>
+        <button class="scmGreenBtn" onclick="window.print()">🖨️ Print Results</button>
+        <button onclick="document.getElementById('scmLiveOverlay').style.display='none'">Close</button>
+      </div>
+      <table class="scmBoard"><thead><tr><th>#</th><th>Student</th><th>Player ID</th><th>School</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time Used</th></tr></thead><tbody id="scmTeacherStudents"><tr><td colspan="8">Waiting for students...</td></tr></tbody></table>`;
+    const sel=$('scmTeacherRoundSelect'); if(sel) sel.value=String(window.scmRescueState.round||1); window.scmRescueApplyRoundPreset();
+  };
+
+  window.scmRescueApplyRoundPreset=function(){const sel=$('scmTeacherRoundSelect'), dur=$('scmTeacherRoundDuration'); if(sel&&dur)dur.value=sel.selectedOptions[0].dataset.duration||'180'};
+
+  window.scmOpenOnline=function(){ if($('introOverlay'))$('introOverlay').style.display='none'; if($('scmLiveOverlay'))$('scmLiveOverlay').style.display='flex'; show('scmLiveHome'); badge('Online API Ready') };
+
+  window.scmCreateRoom=async function(){
+    const payload={championship_name:clean($('scmChampTitle')&&$('scmChampTitle').value)||'Rescue the Princess Championship',program_name:'Rescue the Princess',rounds:3,ranking_rule:'STARS_SOLVED_TIME',organizer_name:clean($('scmOrganizer')&&$('scmOrganizer').value),status:'Active'};
+    const data=await api('/api/create-championship',{method:'POST',body:JSON.stringify(payload)}); if(!data.ok)return alert(data.error||'Could not create room');
+    Object.assign(window.scmRescueState,{role:'teacher',room_code:data.room_code,championship_id:data.championship_id,round:1,lastStartedRoundKey:null});
+    window.scmFinalFixTeacherRoom(); if($('scmTeacherCode'))$('scmTeacherCode').textContent=data.room_code; show('scmTeacherRoom'); badge('Online Room: '+data.room_code); await scmRefreshStudents();
+    if(window.scmRescueState.poll)clearInterval(window.scmRescueState.poll); window.scmRescueState.poll=setInterval(()=>{if(window.scmRescueState.role==='teacher')scmRefreshStudents()},2000);
+  };
+
+  window.scmRefreshStudents=async function(){
+    const code=window.scmRescueState.room_code || clean($('scmTeacherCode')&&$('scmTeacherCode').textContent); if(!code)return;
+    const [st,lb,rs]=await Promise.all([api('/api/room-students?room_code='+encodeURIComponent(code)),api('/api/leaderboard?room_code='+encodeURIComponent(code)),api('/api/room-status?room_code='+encodeURIComponent(code))]);
+    if(rs.ok&&rs.championship){const rn=Number(rs.championship.current_round||0); if($('scmCurrentRoundLabel'))$('scmCurrentRoundLabel').textContent=rn?('Current: '+roundLabel(rn)):'Round not started'; window.scmRescueState.round=rn||window.scmRescueState.round||1;}
+    if(st.ok&&$('scmTeacherStudents'))$('scmTeacherStudents').innerHTML=hydrateRows(st.students||[],lb.leaderboard||[]);
+  };
+
+  window.scmJoinRoom=async function(){
+    const code=clean($('scmJoinCode')&&$('scmJoinCode').value).toUpperCase(), name=clean($('scmStudentName')&&$('scmStudentName').value); if(!code||!name)return alert('Enter student name and room code.');
+    const data=await api('/api/join-room',{method:'POST',body:JSON.stringify({room_code:code,student_name:name,age:clean($('scmAge')&&$('scmAge').value)||null,grade:clean($('scmGrade')&&$('scmGrade').value),school_name:clean($('scmSchool')&&$('scmSchool').value)})}); if(!data.ok)return alert(data.error||'Room not found');
+    Object.assign(window.scmRescueState,{role:'student',room_code:code,student_id:data.student_id,championship_id:data.championship_id,lastStartedRoundKey:null});
+    if($('scmStudentCode'))$('scmStudentCode').textContent=code; if($('scmStudentStatus'))$('scmStudentStatus').innerHTML='Joined as <b>'+esc(name)+'</b>. Waiting for teacher to start...'; show('scmStudentRoom'); badge('Joined Online Room: '+code);
+    if(window.scmRescueState.poll)clearInterval(window.scmRescueState.poll); window.scmRescueState.poll=setInterval(()=>{if(window.scmRescueState.role==='student')scmCheckRoomStatus()},1500); scmCheckRoomStatus();
+  };
+
+  window.scmStartRound=async function(){
+    const code=window.scmRescueState.room_code; if(!code)return alert('No room.'); const r=Number(($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||1); const dur=roundDuration(r); if($('duration'))$('duration').value=String(dur);
+    const data=await api('/api/start-challenge',{method:'POST',body:JSON.stringify({room_code:code,round_number:r})}); if(!data.ok)return alert(data.error||'Could not start round');
+    window.scmRescueState.round=r; if($('scmCurrentRoundLabel'))$('scmCurrentRoundLabel').textContent='Current: '+roundLabel(r); badge('Round '+r+' started'); scmRefreshStudents();
+  };
+
+  window.scmCheckRoomStatus=async function(){
+    const st=window.scmRescueState, code=st.room_code; if(!code||st.role!=='student')return; const data=await api('/api/room-status?room_code='+encodeURIComponent(code)); if(!data.ok||!data.championship)return;
+    const ch=data.championship, rn=Number(ch.current_round||0), started=Number(ch.challenge_started||0)===1, finished=Number(ch.challenge_finished||0)===1; const roundKey=rn+':'+(ch.challenge_started_at||ch.updated_at||'');
+    if(started&&!finished&&rn>0){
+      // Critical guard: start the game once only. The old bridge used window.running, which was undefined for let running.
+      const isRunning=(typeof running!=='undefined' && running===true);
+      if(!isRunning && st.lastStartedRoundKey!==roundKey){
+        st.lastStartedRoundKey=roundKey; st.round=rn; const dur=roundDuration(rn); if($('duration'))$('duration').value=String(dur); if($('scmLiveOverlay'))$('scmLiveOverlay').style.display='none'; badge('Online Round '+rn+' started'); startGame();
+      }
+    } else if($('scmStudentStatus')) $('scmStudentStatus').innerHTML='Waiting for teacher to start...';
+  };
+
+  window.scmSaveRoundResults=async function(){const code=window.scmRescueState.room_code; if(!code)return alert('No room.'); const rn=window.scmRescueState.round||Number($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||1; const data=await api('/api/save-round',{method:'POST',body:JSON.stringify({room_code:code,round_number:rn})}); if(!data.ok)return alert(data.error||'Save round is not available in the current Worker. Results are still saved through leaderboard.'); alert('Round results saved: '+roundLabel(rn)); scmRefreshStudents()};
+  window.scmOpenLeaderboard=function(){const code=window.scmRescueState.room_code; if(!code)return alert('No room code'); const rn=window.scmRescueState.round||1; window.open(API+'/api/leaderboard?room_code='+encodeURIComponent(code)+'&round_number='+encodeURIComponent(rn),'_blank')};
+  window.scmOpenFinalResults=function(){const code=window.scmRescueState.room_code; if(!code)return alert('No room code'); window.open(API+'/api/final-results?room_code='+encodeURIComponent(code),'_blank')};
+  window.scmParticipantsArchive=function(){const code=window.scmRescueState.room_code; if(!code)return alert('No room code'); window.open(API+'/api/participants-archive?room_code='+encodeURIComponent(code),'_blank')};
+  window.scmTopPlayers=function(){const code=window.scmRescueState.room_code; if(!code)return alert('No room code'); window.open(API+'/api/top-players?room_code='+encodeURIComponent(code)+'&limit=10','_blank')};
+  window.scmSendMessagePrompt=async function(){const code=window.scmRescueState.room_code; if(!code)return alert('No room code'); const message=prompt('Write message to students','Round will start soon.'); if(!message)return; const data=await api('/api/send-message',{method:'POST',body:JSON.stringify({room_code:code,message})}); alert(data.ok?'Message sent.':(data.error||'Message failed.'))};
+  window.scmChampionshipDetails=function(){const st=window.scmRescueState; alert('Program: Rescue the Princess\nRoom: '+(st.room_code||'-')+'\nCurrent Round: '+(st.round||'-')+'\nScoring: 30 Gold, 29 Silver, 28 Bronze, 27 Finish, 20–26 Time Over')};
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(window.scmFinalFixTeacherRoom,150));
+})();
+</script>
+
 </body>
 </html>
