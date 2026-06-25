@@ -1716,3 +1716,98 @@ buildBoard();draw();
   setTimeout(patchTimeSelectors,200); setTimeout(patchTimeSelectors,1000);
 })();
 </script>
+
+<!-- SCM Rescue PHASE2 Final Clean Patch: Knight student portal behavior + de-duplicated reports/final ranking -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const clean=s=>String(s||'').replace(/\s+/g,' ').trim();
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const num=v=>Number(v)||0;
+  const fmt=s=>{s=num(s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+  const roundLabel=r=>num(r)===1?'Round 1 — Friendly 5 min':(num(r)===2?'Round 2 — Standard 3 min':'Round 3 — Challenge 2 min');
+  async function api(path,opts){const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}}
+  function code(){return (window.scmRescueState&&window.scmRescueState.room_code)||clean(($('scmTeacherCode')&&$('scmTeacherCode').textContent)||($('scmStudentCode')&&$('scmStudentCode').textContent)||'')}
+  function ensureReport(){let o=$('scmReportOverlay');if(o)return o;document.body.insertAdjacentHTML('beforeend',`<div class="scmReportOverlay" id="scmReportOverlay"><div class="scmReportCard" id="scmReportPrint"><h2 id="scmReportTitle">Report</h2><div id="scmReportBody"></div><div class="scmReportActions"><button class="scmGreenBtn" onclick="scmPrintReport()">🖨️ Print / Save PDF</button><button onclick="document.getElementById('scmReportOverlay').style.display='none'">Close</button></div></div></div>`);return $('scmReportOverlay')}
+  function parseMetrics(row){try{const raw=row&&(row.metrics_json||row.metrics||'');return typeof raw==='string'?JSON.parse(raw||'{}'):(raw||{})}catch(e){return {}}}
+  function statusOf(row){if(!row)return 'Waiting';const m=parseMetrics(row);return String(m.status||row.status||'Finished ✅')}
+  function compare(a,b){let c=num(b.stars)-num(a.stars);if(c)return c;c=num(b.solved_questions)-num(a.solved_questions);if(c)return c;return num(a.total_time)-num(b.total_time)}
+  function rankRows(rows){const arr=(rows||[]).slice().sort(compare);let prev=null,rank=0;arr.forEach((r,i)=>{const same=prev&&num(r.stars)===num(prev.stars)&&num(r.solved_questions)===num(prev.solved_questions)&&num(r.total_time)===num(prev.total_time);if(!same)rank=i+1;r.__rank=rank;prev=r});return arr}
+  function medalByRank(rank,tie){if(rank===1)return tie?'Gold (Tie)':'Gold';if(rank===2)return tie?'Silver (Tie)':'Silver';if(rank===3)return tie?'Bronze (Tie)':'Bronze';return 'Finish'}
+  async function loadStudents(c){const a=await api('/api/room-students?room_code='+encodeURIComponent(c));return a.students||[]}
+  async function loadRound(c,r){const a=await api('/api/leaderboard?room_code='+encodeURIComponent(c)+'&round_number='+encodeURIComponent(r));return dedupeRound(a.leaderboard||[])}
+  function dedupeRound(rows){
+    const map=new Map();
+    (rows||[]).forEach(row=>{
+      const id=String(row.student_id||row.id||''); if(!id)return;
+      const old=map.get(id);
+      if(!old){map.set(id,row);return;}
+      const m=parseMetrics(row), om=parseMetrics(old);
+      const rt=Date.parse(m.saved_at||row.created_at||row.updated_at||0)||0;
+      const ot=Date.parse(om.saved_at||old.created_at||old.updated_at||0)||0;
+      if(rt>ot || (rt===ot && compare(row,old)<0)) map.set(id,row);
+    });
+    return Array.from(map.values());
+  }
+  async function loadAll(c){const [students,r1,r2,r3]=await Promise.all([loadStudents(c),loadRound(c,1),loadRound(c,2),loadRound(c,3)]);return {students,rounds:{1:r1,2:r2,3:r3}}}
+  function studentId(s){return String(s.id||s.student_id||'')}
+  function findScore(roundRows,sid){return (roundRows||[]).find(r=>String(r.student_id||r.id||'')===String(sid))||null}
+  function finalRowsFrom(all){
+    const rows=[];
+    (all.students||[]).forEach(s=>{
+      const sid=studentId(s); let stars=0, solved=0, time=0, played=0;
+      [1,2,3].forEach(r=>{const rec=findScore(all.rounds[r],sid); if(rec){played++; stars+=num(rec.stars||rec.score); solved+=num(rec.solved_questions||rec.solved); time+=num(rec.total_time||rec.time_used)}});
+      if(played) rows.push({student_id:sid,student_name:s.student_name||s.name||'Student',age:s.age,grade:s.grade,school_name:s.school_name||s.school,stars,solved_questions:solved,total_time:time,played});
+    });
+    const ranked=rankRows(rows);ranked.forEach(r=>{const tie=ranked.filter(x=>x.__rank===r.__rank).length>1;r.medal=medalByRank(r.__rank,tie)});return ranked;
+  }
+  function scoreCell(rec){return rec?`${num(rec.stars||rec.score)}/30<br><small>${num(rec.solved_questions||rec.solved)}/8 • ${fmt(rec.total_time||rec.time_used)}</small>`:'-'}
+
+  // Student button: like Knight template, fields stay clean. Resume alone restores saved data.
+  window.scmOpenStudentOnly=function(){
+    if($('introOverlay')) $('introOverlay').style.display='none';
+    if($('scmLiveOverlay')) $('scmLiveOverlay').style.display='flex';
+    ['scmStudentName','scmJoinCode','scmAge','scmGrade','scmSchool'].forEach(id=>{if($(id)) $(id).value=''});
+    const home=$('scmLiveHome'); if(home){home.classList.add('scmStudentOnly');home.classList.remove('scmTeacherOnly')}
+    ['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(id=>{const e=$(id);if(e)e.style.display=(id==='scmLiveHome'?'block':'none')});
+    const grid=document.querySelector('#scmLiveHome .scmLiveGrid'); if(grid) grid.style.gridTemplateColumns='1fr';
+    const teacherBox=document.querySelector('#scmLiveHome .scmLiveBox:first-child'); if(teacherBox) teacherBox.style.display='none';
+    const studentBox=document.querySelector('#scmLiveHome .scmLiveBox:nth-child(2)'); if(studentBox) studentBox.style.display='block';
+  };
+
+  // Stop duplicate D1 save cascades: run existing end UI with role blocked, then save once.
+  const uiFinish=window.finish;
+  window.finish=function(success,reason){
+    const st=window.scmRescueState||{}; const oldRole=st.role; st.role='student_ui_only';
+    const out=uiFinish.apply(this,arguments); st.role=oldRole;
+    setTimeout(async()=>{
+      if(oldRole!=='student'||!st.student_id||!st.championship_id||!st.room_code) return;
+      const solved=Math.min(7,num(typeof captures!=='undefined'?captures:0))+Math.min(1,num(typeof goalIndex!=='undefined'?goalIndex:0));
+      const used=success?Math.max(1,num(typeof selectedDuration!=='undefined'?selectedDuration:0)-num(typeof remaining!=='undefined'?remaining:0)):num(typeof selectedDuration!=='undefined'?selectedDuration:0);
+      const star=num(typeof stars!=='undefined'?stars:0); const rn=num(st.round)||1;
+      await api('/api/save-result',{method:'POST',body:JSON.stringify({student_id:st.student_id,championship_id:st.championship_id,score:star,points:star,stars:star,solved_questions:solved,total_time:used,max_streak:solved,round_number:rn,mode:'Rescue the Princess',level:'Round '+rn,metrics:{room_code:st.room_code,status:success?'Finished ✅':'Time Over ⏰',duration:typeof selectedDuration!=='undefined'?selectedDuration:null,round_number:rn,map:typeof currentMapNo!=='undefined'?currentMapNo:null,moves:typeof moves!=='undefined'?moves:null,captures:typeof captures!=='undefined'?captures:null,path:(typeof history!=='undefined'&&Array.isArray(history))?history.map(h=>h.from+'-'+h.to).join(' '):'',saved_at:new Date().toISOString()}})});
+    },500);
+    return out;
+  };
+
+  window.scmOpenFinalResults=async function(){
+    const c=code(); if(!c)return alert('No room code'); const all=await loadAll(c); const rows=finalRowsFrom(all); ensureReport();
+    $('scmReportTitle').textContent='Rescue the Princess — Final Ranking';
+    $('scmReportBody').innerHTML=`<div class="scmReportSummary"><div class="scmReportBox">👥 Players<br><b>${rows.length}</b></div><div class="scmReportBox">🥇 Champion<br><b>${esc((rows[0]&&rows[0].student_name)||'-')}</b></div><div class="scmReportBox">🎮 Program<br><b>Rescue the Princess</b></div><div class="scmReportBox">🏠 Room<br><b>${esc(c)}</b></div></div><table class="scmReportTable"><thead><tr><th>Rank</th><th>Student</th><th>ID</th><th>Total Stars</th><th>Total Solved</th><th>Total Time</th><th>Medal</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.__rank}</td><td class="scmClickStudent" onclick="scmShowStudentDetails('${r.student_id}')">${esc(r.student_name)}</td><td>SCM-${String(r.student_id).padStart(4,'0')}</td><td>${num(r.stars)}/90</td><td>${num(r.solved_questions)}/24</td><td>${fmt(r.total_time)}</td><td class="scmFinalMedal">${esc(r.medal)}</td></tr>`).join('')||'<tr><td colspan="7">No final results yet.</td></tr>'}</tbody></table><div class="scmPathBox">Final Ranking Rule: Total Stars → Total Solved → Total Time Used.</div>`;
+    $('scmReportOverlay').style.display='flex';
+  };
+
+  window.scmChampionshipDetails=async function(){
+    const c=code(); if(!c)return alert('No room code'); const all=await loadAll(c); const rows=finalRowsFrom(all); ensureReport();
+    $('scmReportTitle').textContent='Rescue the Princess — Championship Details';
+    const savedRounds=[1,2,3].filter(r=>(all.rounds[r]||[]).length).length;
+    $('scmReportBody').innerHTML=`<div class="scmReportSummary"><div class="scmReportBox">👥 Players<br><b>${all.students.length}</b></div><div class="scmReportBox">🔁 Rounds Saved<br><b>${savedRounds}</b></div><div class="scmReportBox">🏆 Champion<br><b>${esc((rows[0]&&rows[0].student_name)||'-')}</b></div><div class="scmReportBox">📅 Date<br><b>${new Date().toLocaleDateString()}</b></div></div><div style="font-weight:1000;margin:8px 0">Level Championship &nbsp; Room: ${esc(c)}</div><table class="scmReportTable"><thead><tr><th>Final Rank</th><th>Student</th><th>Age</th><th>Class</th><th>School</th><th>Round 1<br><small>Maps 1–7</small></th><th>Round 2<br><small>Maps 8–14</small></th><th>Round 3<br><small>Maps 15–21</small></th><th>Total Stars</th><th>Total Solved</th><th>Total Time</th></tr></thead><tbody>${rows.map(r=>{const s=(all.students||[]).find(x=>studentId(x)===String(r.student_id))||{};return `<tr><td>${r.__rank}</td><td class="scmClickStudent" onclick="scmShowStudentDetails('${r.student_id}')">${esc(r.student_name)}</td><td>${esc(s.age||r.age||'-')}</td><td>${esc(s.grade||r.grade||'-')}</td><td>${esc(s.school_name||r.school_name||'-')}</td><td>${scoreCell(findScore(all.rounds[1],r.student_id))}</td><td>${scoreCell(findScore(all.rounds[2],r.student_id))}</td><td>${scoreCell(findScore(all.rounds[3],r.student_id))}</td><td>${num(r.stars)}</td><td>${num(r.solved_questions)}</td><td>${fmt(r.total_time)}</td></tr>`}).join('')||'<tr><td colspan="11">No saved results yet.</td></tr>'}</tbody></table><div class="scmPathBox"><b>Scientific Ranking:</b> Total Stars → Total Solved → Total Time Used.<br><b>Scoring:</b> 30 Gold, 29 Silver, 28 Bronze, 27 Finish, 20–26 Time Over.</div>`;
+    $('scmReportOverlay').style.display='flex';
+  };
+
+  window.scmTopPlayers=async function(){const c=code();if(!c)return alert('No room code');const rows=finalRowsFrom(await loadAll(c)).slice(0,10);ensureReport();$('scmReportTitle').textContent='Rescue the Princess — Top Players';$('scmReportBody').innerHTML=`<table class="scmReportTable"><thead><tr><th>Rank</th><th>Student</th><th>ID</th><th>Total Stars</th><th>Total Solved</th><th>Total Time</th><th>Medal</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.__rank}</td><td class="scmClickStudent" onclick="scmShowStudentDetails('${r.student_id}')">${esc(r.student_name)}</td><td>SCM-${String(r.student_id).padStart(4,'0')}</td><td>${num(r.stars)}/90</td><td>${num(r.solved_questions)}/24</td><td>${fmt(r.total_time)}</td><td>${esc(r.medal)}</td></tr>`).join('')||'<tr><td colspan="7">No saved results yet.</td></tr>'}</tbody></table>`;$('scmReportOverlay').style.display='flex'};
+
+  setTimeout(()=>{document.querySelectorAll('h2,h3,.title').forEach(el=>{if(/Knight Number Quest/i.test(el.textContent||''))el.textContent=el.textContent.replace(/Knight Number Quest/g,'Rescue the Princess')})},300);
+})();
+</script>
