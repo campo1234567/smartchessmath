@@ -1124,6 +1124,131 @@ buildBoard();draw();
 })();
 </script>
 
+
+
+<!-- SCM Rescue PHASE5: freeze-safe mission finish + reliable online save -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const num=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
+  const fmt=s=>{s=Math.max(0,num(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+  const roundDuration=r=>num(r)===1?300:(num(r)===2?180:120);
+  const safeText=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function currentRound(){
+    try{return num((window.scmRescueState||{}).round)||num($('level')&&$('level').value)||1}catch(e){return 1}
+  }
+  function timeUsedSeconds(success){
+    const rn=currentRound();
+    const dur=num(typeof selectedDuration!=='undefined'?selectedDuration:0)||roundDuration(rn);
+    let byCounter=0;
+    try{byCounter=dur-num(remaining)}catch(e){byCounter=0}
+    let byClock=0;
+    const start=num(window.__scmRescueGameStartMs);
+    if(start>0) byClock=Math.round((Date.now()-start)/1000);
+    let used=Math.max(byCounter,byClock,0);
+    if(success) used=Math.max(1,used);
+    else used=Math.max(used,dur);
+    return Math.min(dur,used);
+  }
+  function solvedUnits(){
+    let c=0,g=0;
+    try{c=Math.min(7,num(captures))}catch(e){}
+    try{g=Math.min(1,num(goalIndex))}catch(e){}
+    return Math.max(0,Math.min(8,c+g));
+  }
+  function scoreValue(success){
+    try{ if(typeof tournamentScore==='function') return num(tournamentScore(success)); }catch(e){}
+    if(success){
+      const m=num(typeof moves!=='undefined'?moves:99);
+      if(m<=10)return 30; if(m<=12)return 29; if(m<=15)return 28; return 27;
+    }
+    const s=solvedUnits(); return s<=0?20:Math.min(26,20+Math.min(6,s-1));
+  }
+  function medalName(score,level){
+    if(score===30)return level===3?'Gold++ Knight':'Gold Knight';
+    if(score===29)return 'Silver Knight';
+    if(score===28)return 'Bronze Knight';
+    if(score===27)return 'Finish Knight';
+    return 'Time Over';
+  }
+  function medalIconByName(m){
+    return /Gold\+\+/.test(m)?'🏆':/Gold/.test(m)?'🥇':/Silver/.test(m)?'🥈':/Bronze/.test(m)?'🥉':'⭐';
+  }
+  async function saveOnlineResult(success,score,used){
+    const st=window.scmRescueState||{};
+    if(st.role!=='student'||!st.student_id||!st.championship_id||!st.room_code)return;
+    const rn=currentRound();
+    const ctrl=new AbortController();
+    const to=setTimeout(()=>ctrl.abort(),5500);
+    try{
+      await fetch(API+'/api/save-result',{
+        method:'POST',signal:ctrl.signal,headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          student_id:st.student_id,
+          championship_id:st.championship_id,
+          score:score,points:score,stars:score,
+          solved_questions:solvedUnits(),total_time:used,max_streak:solvedUnits(),
+          round_number:rn,mode:'Rescue the Princess',level:'Round '+rn,
+          metrics:{
+            room_code:st.room_code,status:success?'Finished ✅':'Time Over ⏰',
+            duration:roundDuration(rn),round_number:rn,
+            map:typeof currentMapNo!=='undefined'?currentMapNo:null,
+            moves:typeof moves!=='undefined'?moves:null,
+            captures:typeof captures!=='undefined'?captures:null,
+            path:(typeof history!=='undefined'&&Array.isArray(history))?history.map(h=>h.from+'-'+h.to).join(' '):'',
+            saved_at:new Date().toISOString(),time_source:'phase5_safe_finish'
+          }
+        })
+      });
+    }catch(e){console.warn('PHASE5 save skipped/failed',e)}
+    finally{clearTimeout(to)}
+  }
+  function renderResult(success,reason,score,used,medal){
+    const overlay=$('overlay'), finalTitle=$('finalTitle'), finalText=$('finalText');
+    if(!overlay||!finalTitle||!finalText)return;
+    finalTitle.textContent=success?'🎉 Mission Complete!':'Attempt Ended';
+    const student=(window.scmRescueState&&window.scmRescueState.student_name)||'';
+    const school=(window.scmRescueState&&window.scmRescueState.school_name)||'';
+    if(!success){
+      finalText.innerHTML=`<p>${safeText(reason||'Keep trying.')}</p><div class="printActions"><button onclick="startGame()">🔄 Try Again</button><button class="teacherBtn" onclick="showTeacherReport&&showTeacherReport()">📊 Teacher Analysis</button></div>`;
+      overlay.style.display='flex';
+      return;
+    }
+    const comment=score===30?'🏰👸 Excellent! You rescued the Princess with a perfect knight route.':score===29?'🏰👸 Very good! Strong route and smart rescue.':score===28?'🏰👸 Well done! You rescued the Princess successfully.':'🏰👸 Mission finished. Keep practicing for a shorter route.';
+    finalText.innerHTML=`
+      <div class="certControls"><input id="studentName" placeholder="Student Name" value="${safeText(student)}" oninput="updateCertificateFields&&updateCertificateFields()"><input id="schoolName" placeholder="School Name" value="${safeText(school)}" oninput="updateCertificateFields&&updateCertificateFields()"></div>
+      <div class="certificate" id="certificatePrint">
+        <div class="certHeader"><div class="certLogo">🏰</div><div class="certProgram"><div class="name">Princess Rescue Certificate</div><div class="sub">Knight Strategy • Logical Thinking • Educational Chess</div></div><div class="certSeal">${medalIconByName(medal)}</div></div>
+        <div class="certTitle">CERTIFICATE OF ACHIEVEMENT</div>
+        <div class="certText">This certificate is proudly awarded to</div>
+        <div class="studentName" id="certStudent">${safeText(student)||'Student Name'}</div>
+        <div class="certText">for successfully completing <b>Rescue the Princess</b> and demonstrating knight movement, planning, and problem-solving skills.</div>
+        <div class="certStats"><div class="certStat">⭐ Stars<br><b>${score}/30</b></div><div class="certStat">♟️ Pawns Captured<br><b>${num(typeof captures!=='undefined'?captures:0)}</b></div><div class="certStat">♘ Moves Used<br><b>${num(typeof moves!=='undefined'?moves:0)}</b></div><div class="certStat">⏱ Time Used<br><b>${used}s</b></div><div class="certStat">🏫 School<br><b id="certSchool">${safeText(school)||'School Name'}</b></div></div>
+        <div class="certLevel">${medalIconByName(medal)} ${safeText(medal)}</div>
+        <div class="certText">${comment}</div>
+        <div class="certText">📅 Date: <b>${new Date().toLocaleDateString()}</b></div>
+        <div class="presentedBlock"><div class="certText">Presented By</div><div class="presentedName">Eng. Salman Ahmed Salman</div><div class="presentedRole">Head of Schools & eSports Committee<br>Arab Chess Federation – Author of Math & Chess</div></div>
+      </div>
+      <div class="printActions"><button onclick="window.print()">🖨️ Print Certificate / Save as PDF</button><button onclick="startGame()">🔄 Play Again</button><button class="teacherBtn" style="font-size:12px;padding:7px 12px" onclick="showTeacherReport&&showTeacherReport()">📊 Teacher Analysis</button><button class="teacherBtn" style="font-size:12px;padding:7px 12px" onclick="exportTeacherReport&&exportTeacherReport()">📥 Export Teacher Report</button></div>`;
+    overlay.style.display='flex';
+  }
+  window.finish=function(success,reason){
+    if(window.__scmFinishBusy)return;
+    window.__scmFinishBusy=true;
+    try{running=false}catch(e){}
+    try{if(timer)clearInterval(timer);timer=null}catch(e){}
+    const level=currentRound();
+    const used=timeUsedSeconds(!!success);
+    const score=scoreValue(!!success);
+    const medal=medalName(score,level);
+    try{lastSuccess=!!success;stars=score;lastMedal=medal}catch(e){}
+    setTimeout(()=>{try{renderResult(!!success,reason,score,used,medal)}catch(e){console.error(e)}},20);
+    setTimeout(()=>{saveOnlineResult(!!success,score,used)},120);
+  };
+})();
+</script>
+
 </body>
 </html>
 
