@@ -2283,3 +2283,133 @@ buildBoard();draw();
 
 
 
+
+
+<!-- SCM Rescue FINAL Admin + Selected Saved Round Report Patch — 2026-06-25 -->
+<style>
+.scmAdminExtraBtns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:flex-start}
+.scmAdminExtraBtns button{display:block;margin:0!important}
+.scmAdminPurple{background:linear-gradient(180deg,#8b5cf6,#6d28d9)!important;color:white!important}
+.scmAdminTeal{background:linear-gradient(180deg,#14b8a6,#0f766e)!important;color:white!important}
+</style>
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+  const n=v=>Number(v)||0;
+  const fmt=sec=>{sec=n(sec);return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')};
+  const roundLabel=r=>n(r)===1?'Round 1 — Standard':(n(r)===2?'Round 2 — Fast':'Round 3 — Challenge');
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const t=await r.text();
+    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
+  }
+  function getCode(){
+    const st=window.scmRescueState||{};
+    return String(st.room_code || (($('scmTeacherCode')&&$('scmTeacherCode').textContent)||'') || (($('scmStudentCode')&&$('scmStudentCode').textContent)||'')).trim().toUpperCase();
+  }
+  function selectedRound(){
+    const sel=$('scmTeacherRoundSelect') || $('scmRound') || $('scmIntroRound');
+    return sel&&sel.value ? (n(sel.value)||1) : (n((window.scmRescueState||{}).round)||1);
+  }
+  function metrics(row){
+    try{const raw=row&&(row.metrics_json||row.metrics||'');return typeof raw==='string'?JSON.parse(raw||'{}'):(raw||{});}catch(e){return {}}
+  }
+  function statusOf(row){const m=metrics(row);return m.status||row.status||'Finished ✅'}
+  function rankRows(rows){
+    const arr=(rows||[]).slice().sort((a,b)=>{
+      let c=n(b.stars||b.score)-n(a.stars||a.score); if(c) return c;
+      c=n(b.solved_questions||b.solved)-n(a.solved_questions||a.solved); if(c) return c;
+      c=n(a.total_time||a.time_used||a.time)-n(b.total_time||b.time_used||b.time); if(c) return c;
+      return String(a.student_name||a.name||'').localeCompare(String(b.student_name||b.name||''));
+    });
+    let prev=null,rank=0;
+    arr.forEach((r,i)=>{const same=prev&&n(r.stars||r.score)===n(prev.stars||prev.score)&&n(r.solved_questions||r.solved)===n(prev.solved_questions||prev.solved)&&n(r.total_time||r.time_used||r.time)===n(prev.total_time||prev.time_used||prev.time); if(!same) rank=i+1; r.__rank=rank; prev=r;});
+    return arr;
+  }
+  function medal(rank,tie){if(rank===1)return tie?'Gold (Tie)':'Gold'; if(rank===2)return tie?'Silver (Tie)':'Silver'; if(rank===3)return tie?'Bronze (Tie)':'Bronze'; return 'Finish'}
+  function ensureReport(){
+    if($('scmReportOverlay')) return $('scmReportOverlay');
+    document.body.insertAdjacentHTML('beforeend',`<div class="scmReportOverlay" id="scmReportOverlay"><div class="scmReportCard" id="scmReportPrint"><h2 id="scmReportTitle">Report</h2><div id="scmReportBody"></div><div class="scmReportActions"><button class="scmGreenBtn" onclick="scmPrintReport()">🖨️ Print / Save PDF</button><button onclick="document.getElementById('scmReportOverlay').style.display='none'">Close</button></div></div></div>`);
+    return $('scmReportOverlay');
+  }
+  if(typeof window.scmPrintReport!=='function'){
+    window.scmPrintReport=function(){document.body.classList.add('scm-print-report');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('scm-print-report'),500)},80)};
+  }
+  async function loadStudents(code){const s=await api('/api/room-students?room_code='+encodeURIComponent(code));return s.students||[]}
+  async function loadLeaderboard(code,rn){const lb=await api('/api/leaderboard?room_code='+encodeURIComponent(code)+'&round_number='+encodeURIComponent(rn));return lb.leaderboard||lb.results||[]}
+  function studentFor(students,row){const id=String(row.student_id||row.id||'');return (students||[]).find(s=>String(s.id||s.student_id||'')===id)||{}}
+
+  // 1) This is the final override: Current Round Report follows the dropdown, not the latest/current round.
+  window.scmOpenLeaderboard=async function(){
+    const code=getCode(); if(!code) return alert('No room code');
+    const rn=selectedRound();
+    ensureReport();
+    $('scmReportTitle').textContent='Rescue the Princess — Current Round Report';
+    $('scmReportBody').innerHTML='<div class="scmReportBox">Loading '+esc(roundLabel(rn))+'...</div>';
+    $('scmReportOverlay').style.display='flex';
+    const [students,rows]=await Promise.all([loadStudents(code),loadLeaderboard(code,rn)]);
+    const ranked=rankRows(rows);
+    const finished=ranked.length;
+    const avg=finished?(ranked.reduce((a,r)=>a+n(r.stars||r.score),0)/finished).toFixed(1):'0.0';
+    const leader=ranked.filter(r=>r.__rank===1).map(r=>r.student_name||r.name).join(' & ')||'-';
+    $('scmReportBody').innerHTML=`<div class="scmReportSummary"><div class="scmReportBox">👥 Registered<br><b>${students.length}</b></div><div class="scmReportBox">✅ Finished<br><b>${finished}</b></div><div class="scmReportBox">⭐ Average<br><b>${avg}/30</b></div><div class="scmReportBox">🏆 Leader<br><b>${esc(leader)}</b></div></div><div><b>Room:</b> ${esc(code)} &nbsp; <b>${esc(roundLabel(rn))}</b> &nbsp; <b>Program:</b> Rescue the Princess</div><table class="scmReportTable"><thead><tr><th>Rank</th><th>Student</th><th>ID</th><th>Age</th><th>Class</th><th>School</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time</th><th>Medal</th></tr></thead><tbody>${ranked.map(r=>{const s=studentFor(students,r);const tie=ranked.filter(x=>x.__rank===r.__rank).length>1;const sid=r.student_id||r.id||s.id||'';return `<tr><td>${r.__rank}${tie?' (Tie)':''}</td><td class="scmClickStudent" onclick="scmShowStudentDetails('${sid}')">${esc(r.student_name||r.name||s.student_name||s.name||'Student')}</td><td>SCM-${String(sid).padStart(4,'0')}</td><td>${esc(r.age||s.age||'-')}</td><td>${esc(r.grade||s.grade||'-')}</td><td>${esc(r.school_name||s.school_name||s.school||'-')}</td><td>${esc(statusOf(r))}</td><td>${n(r.stars||r.score)}/30</td><td>${n(r.solved_questions||r.solved)}/8</td><td>${fmt(r.total_time||r.time_used||r.time)}</td><td>${medal(r.__rank,tie)}</td></tr>`}).join('')||'<tr><td colspan="11">No saved results for this selected round yet.</td></tr>'}</tbody></table><div class="scmPathBox">Report Round: <b>${esc(roundLabel(rn))}</b><br>Ranking Rule: Stars → Solved → Time Used. Students share the same rank only if all three values are equal.</div>`;
+  };
+  window.showTeacherReport=window.scmOpenLeaderboard;
+
+  // 2) PIN final override: accept 2026 and Knight admin PIN 2115; keep the admin/supervisor panel visible.
+  window.scmAskAdminPin=function(){
+    const pin=prompt('Enter Teacher / Admin PIN');
+    if(pin===null) return;
+    const p=String(pin).trim();
+    if(p!=='2026' && p!=='2115'){alert('Wrong PIN');return;}
+    const panel=$('scmIntroAdminPanel');
+    if(panel){panel.style.display='block'; addAdminButtons();}
+  };
+
+  // 3) Open existing room like the Knight system: set public room state, show teacher room, then refresh.
+  window.scmOpenExistingFromIntro=async function(){
+    const code=prompt('Enter existing room code');
+    if(!code) return;
+    const c=String(code).trim().toUpperCase();
+    window.scmRescueState=window.scmRescueState||{};
+    Object.assign(window.scmRescueState,{room_code:c,role:'teacher',admin:true});
+    if($('scmTeacherCode')) $('scmTeacherCode').textContent=c;
+    if($('introOverlay')) $('introOverlay').style.display='none';
+    if($('scmLiveOverlay')) $('scmLiveOverlay').style.display='flex';
+    ['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(id=>{const e=$(id);if(e)e.style.display=(id==='scmTeacherRoom'?'block':'none')});
+    try{ await scmRefreshStudents(); }catch(e){ console.warn(e); }
+  };
+
+  function addAdminButtons(){
+    const panel=$('scmIntroAdminPanel'); if(!panel || $('scmAdminExtraBtns')) return;
+    const holder=document.createElement('div'); holder.id='scmAdminExtraBtns'; holder.className='scmAdminExtraBtns';
+    holder.innerHTML='<button class="scmAdminPurple" onclick="scmActiveChampionships()">🏆 Active Championships</button><button class="scmAdminTeal" onclick="scmArchivedChampionships()">🗄️ Archived Championships</button>';
+    const first=panel.querySelector('div'); (first||panel).appendChild(holder);
+  }
+  async function showChampionshipList(title,endpoint){
+    ensureReport(); $('scmReportTitle').textContent=title; $('scmReportBody').innerHTML='<div class="scmReportBox">Loading...</div>'; $('scmReportOverlay').style.display='flex';
+    let data=await api(endpoint);
+    let list=data.championships||data.rooms||data.items||data.results||[];
+    if(!Array.isArray(list)) list=[];
+    $('scmReportBody').innerHTML=`<table class="scmReportTable"><thead><tr><th>Room</th><th>Championship</th><th>Status</th><th>Round</th><th>Action</th></tr></thead><tbody>${list.map(ch=>{const code=ch.room_code||ch.code||ch.room||'';return `<tr><td>${esc(code)}</td><td>${esc(ch.championship_name||ch.title||ch.name||'-')}</td><td>${esc(ch.status||'-')}</td><td>${esc(ch.current_round||'-')}</td><td><button class="scmGreenBtn" onclick="scmOpenAdminRoom('${esc(code)}')">Open</button></td></tr>`}).join('')||'<tr><td colspan="5">No records found from this endpoint.</td></tr>'}</tbody></table>`;
+  }
+  window.scmOpenAdminRoom=async function(code){
+    if(!code) return;
+    window.scmRescueState=window.scmRescueState||{};
+    Object.assign(window.scmRescueState,{room_code:String(code).trim().toUpperCase(),role:'teacher',admin:true});
+    if($('scmTeacherCode')) $('scmTeacherCode').textContent=window.scmRescueState.room_code;
+    if($('scmReportOverlay')) $('scmReportOverlay').style.display='none';
+    if($('introOverlay')) $('introOverlay').style.display='none';
+    if($('scmLiveOverlay')) $('scmLiveOverlay').style.display='flex';
+    ['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(id=>{const e=$(id);if(e)e.style.display=(id==='scmTeacherRoom'?'block':'none')});
+    try{await scmRefreshStudents()}catch(e){console.warn(e)}
+  };
+  window.scmActiveChampionships=function(){showChampionshipList('Rescue the Princess — Active Championships','/api/active-championships?program_name='+encodeURIComponent('Rescue the Princess'))};
+  window.scmArchivedChampionships=function(){showChampionshipList('Rescue the Princess — Archived Championships','/api/archived-championships?program_name='+encodeURIComponent('Rescue the Princess'))};
+
+  document.addEventListener('DOMContentLoaded',addAdminButtons);
+  setTimeout(addAdminButtons,300);
+})();
+</script>
