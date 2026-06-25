@@ -1935,3 +1935,110 @@ buildBoard();draw();
   setTimeout(()=>{patchTimeOptions();patchTeacherPrintButton();},1200);
 })();
 </script>
+
+
+<!-- SCM Rescue PHASE4: stable online timer + real Time Used save -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const n=v=>{const x=Number(v);return Number.isFinite(x)?x:0};
+  const fmt=s=>{s=n(s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+  const roundDuration=r=>n(r)===1?300:(n(r)===2?180:120);
+  const roundLabel=r=>n(r)===1?'Round 1 — Friendly 5 min':(n(r)===2?'Round 2 — Standard 3 min':'Round 3 — Challenge 2 min');
+  async function api(path,opts){const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}}
+  function ensureOption(sel,value,text){if(!sel)return;if(!Array.from(sel.options).some(o=>String(o.value)===String(value))){const o=document.createElement('option');o.value=String(value);o.textContent=text;sel.appendChild(o)}}
+  function patchOptions(){
+    ['duration','introDuration','scmIntroTeacherTime','scmTeacherRoundDuration'].forEach(id=>{const s=$(id);if(!s)return;ensureOption(s,'300','5 Minutes');ensureOption(s,'180','3 Minutes');ensureOption(s,'120','2 Minutes');ensureOption(s,'60','1 Minute')});
+    const rs=$('scmTeacherRoundSelect');
+    if(rs){
+      const o1=rs.querySelector('option[value="1"]'); if(o1){o1.dataset.duration='300';o1.textContent='Round 1 — Friendly 5 min'}
+      const o2=rs.querySelector('option[value="2"]'); if(o2){o2.dataset.duration='180';o2.textContent='Round 2 — Standard 3 min'}
+      const o3=rs.querySelector('option[value="3"]'); if(o3){o3.dataset.duration='120';o3.textContent='Round 3 — Challenge 2 min'}
+    }
+  }
+  function applyRound(r,resetClock){
+    patchOptions(); r=n(r)||1; const dur=roundDuration(r), lvl=Math.max(1,Math.min(3,r));
+    if($('level')) $('level').value=String(lvl);
+    if($('duration')){ensureOption($('duration'),String(dur),(dur/60)+' Minutes');$('duration').value=String(dur)}
+    try{currentLevel=lvl;selectedDuration=dur;if(resetClock){remaining=dur;elapsed=0}}catch(e){}
+    if(resetClock&&$('time')) $('time').textContent=fmt(dur);
+    return {lvl,dur};
+  }
+  window.scmRescueApplyRoundPreset=function(){
+    patchOptions(); const s=$('scmTeacherRoundSelect'), d=$('scmTeacherRoundDuration');
+    if(s&&d){const val=s.selectedOptions[0]?.dataset.duration||String(roundDuration(s.value));d.value=val}
+  };
+  function realUsedSeconds(success){
+    const rn=n((window.scmRescueState||{}).round)||n($('level')&&$('level').value)||1;
+    const dur=n(typeof selectedDuration!=='undefined'?selectedDuration:0)||roundDuration(rn);
+    let used=0;
+    try{used=dur-n(remaining)}catch(e){used=0}
+    const ts=n(window.__scmRescueGameStartMs);
+    if(ts){const byClock=Math.round((Date.now()-ts)/1000); if(byClock>used) used=byClock;}
+    used=Math.max(success?1:dur, Math.min(dur, used||0));
+    return used;
+  }
+  // Fix Start Game: set duration once, then let the game timer run. Do not reset it from polling.
+  const baseStartGame=window.startGame;
+  if(typeof baseStartGame==='function'){
+    window.startGame=function(){
+      patchOptions(); const st=window.scmRescueState||{}; const rn=n(st.round)||n($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||n($('level')&&$('level').value)||1;
+      applyRound(rn,true);
+      window.__scmRescueGameStartMs=Date.now();
+      return baseStartGame.apply(this,arguments);
+    };
+  }
+  // Fix student polling: never call applyRound(...true) while the student is already playing.
+  window.scmCheckRoomStatus=async function(){
+    const st=window.scmRescueState||{}; if(st.role!=='student'||!st.room_code)return;
+    const data=await api('/api/room-status?room_code='+encodeURIComponent(st.room_code));
+    if(!data.ok||!data.championship)return;
+    const ch=data.championship, rn=n(ch.current_round||0), started=n(ch.challenge_started)===1, finished=n(ch.challenge_finished)===1;
+    const isRunning=(typeof running!=='undefined'&&running===true);
+    if(started&&!finished&&rn>0){
+      if(isRunning) return; // critical: do not reset remaining every poll
+      const key=rn+':'+(ch.challenge_started_at||ch.updated_at||'started');
+      if(st.lastStartedRoundKey===key||st.countdownPending)return;
+      st.round=rn; st.lastStartedRoundKey=key; st.countdownPending=true; applyRound(rn,true);
+      if($('scmStudentStatus')) $('scmStudentStatus').innerHTML='Get ready… '+roundLabel(rn)+' will start now.';
+      const begin=()=>{st.countdownPending=false;applyRound(rn,true);if($('scmLiveOverlay'))$('scmLiveOverlay').style.display='none';window.__scmRescueGameStartMs=Date.now();if(typeof startGame==='function')startGame();};
+      if(typeof scmShowStartCountdown==='function')scmShowStartCountdown({title:'Get Ready!',message:roundLabel(rn)+' will start now'},begin); else begin();
+    }else if($('scmStudentStatus')) $('scmStudentStatus').innerHTML='Waiting for teacher to start...';
+  };
+  // Fix teacher start: selected round controls duration; student will receive same round and duration.
+  const oldStartRound=window.scmStartRound;
+  if(typeof oldStartRound==='function'){
+    window.scmStartRound=async function(){patchOptions();const r=n($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||n((window.scmRescueState||{}).round)||1;applyRound(r,true);return oldStartRound.apply(this,arguments)};
+  }
+  // Final save override: block older save cascades, then save once with real Time Used.
+  const uiFinish=window.finish;
+  if(typeof uiFinish==='function'){
+    window.finish=function(success,reason){
+      const st=window.scmRescueState||{}, oldRole=st.role; st.role='student_ui_only';
+      const out=uiFinish.apply(this,arguments); st.role=oldRole;
+      setTimeout(async()=>{
+        if(oldRole!=='student'||!st.student_id||!st.championship_id||!st.room_code)return;
+        const rn=n(st.round)||n($('level')&&$('level').value)||1;
+        const star=n(typeof stars!=='undefined'?stars:0);
+        const solved=Math.min(7,n(typeof captures!=='undefined'?captures:0))+Math.min(1,n(typeof goalIndex!=='undefined'?goalIndex:0));
+        const used=realUsedSeconds(!!success);
+        try{await api('/api/save-result',{method:'POST',body:JSON.stringify({
+          student_id:st.student_id,championship_id:st.championship_id,score:star,points:star,stars:star,solved_questions:solved,total_time:used,max_streak:solved,round_number:rn,mode:'Rescue the Princess',level:'Round '+rn,
+          metrics:{room_code:st.room_code,status:success?'Finished ✅':'Time Over ⏰',duration:roundDuration(rn),round_number:rn,map:typeof currentMapNo!=='undefined'?currentMapNo:null,moves:typeof moves!=='undefined'?moves:null,captures:typeof captures!=='undefined'?captures:null,path:(typeof history!=='undefined'&&Array.isArray(history))?history.map(h=>h.from+'-'+h.to).join(' '):'',saved_at:new Date().toISOString(),time_source:'client_clock_phase4'}
+        })})}catch(e){console.warn('PHASE4 save failed',e)}
+      },650);
+      return out;
+    };
+  }
+  // Certificate visible time correction after finish UI is built.
+  const mo=new MutationObserver(()=>{
+    const cert=document.getElementById('certificatePrint'); if(!cert)return;
+    const used=realUsedSeconds(true);
+    cert.querySelectorAll('.certStat').forEach(box=>{if(/Time Used/i.test(box.textContent||'')){const b=box.querySelector('b'); if(b)b.textContent=used+'s';}});
+  });
+  try{mo.observe(document.body,{childList:true,subtree:true})}catch(e){}
+  document.addEventListener('DOMContentLoaded',()=>{patchOptions();window.scmRescueApplyRoundPreset&&window.scmRescueApplyRoundPreset()});
+  setTimeout(()=>{patchOptions();window.scmRescueApplyRoundPreset&&window.scmRescueApplyRoundPreset()},300);
+})();
+</script>
