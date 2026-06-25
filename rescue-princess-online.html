@@ -1388,3 +1388,112 @@ buildBoard();draw();
   };
 })();
 </script>
+
+<!-- SCM Rescue FINAL STRICT Knight-System Entry/Resume/Messages Patch — 2026-06-25 -->
+<style>
+#scmRescueMsgBanner{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:2147483646;background:#fff7c2;border:3px solid #facc15;color:#17324d;border-radius:18px;padding:14px 22px;box-shadow:0 10px 25px rgba(0,0,0,.24);font-size:20px;font-weight:1000;max-width:min(860px,92vw);text-align:center;display:none;line-height:1.35}
+#scmRescueMsgModal{position:fixed;inset:0;background:rgba(15,23,42,.62);z-index:2147483645;display:none;align-items:center;justify-content:center;padding:16px}
+#scmRescueMsgCard{background:#fff;color:#17324d;border-radius:22px;border:4px solid #38bdf8;box-shadow:0 18px 50px rgba(0,0,0,.38);width:min(650px,94vw);padding:20px;text-align:left;font-weight:900}
+#scmRescueMsgCard h3{text-align:center;color:#075985;margin:0 0 10px}#scmRescueMsgText{width:100%;box-sizing:border-box;border:2px solid #93c5fd;border-radius:14px;padding:12px;font-size:17px;font-weight:800;min-height:84px;color:#17324d}.scmRescuePresets{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.scmRescuePresets button{border:0;border-radius:12px;background:#e0f2fe!important;color:#075985!important;font-weight:1000;padding:8px 10px;cursor:pointer;box-shadow:none!important}.scmRescueMsgActions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.scmRescueMsgActions button{border:0;border-radius:12px;font-weight:1000;padding:10px 16px;cursor:pointer}
+.scmStudentWaitCard{border:3px solid #a8ff4a;border-radius:20px;background:rgba(255,255,255,.62);padding:14px;margin:10px auto;max-width:900px;font-weight:1000}.scmStudentWaitCard .line{margin:5px 0}.scmRoundPill{display:inline-block;background:#0f7a3e;color:white;border-radius:999px;padding:5px 12px;font-size:15px;margin-left:8px}.scmStudentInstruction{background:#fff8d8;border:2px solid #f0d36d;border-radius:14px;padding:10px 12px;margin:12px auto;max-width:860px;color:#17324d;font-weight:1000;text-align:left}
+</style>
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const PRESETS=['The challenge will start in 1 minute.','Round 2 will start in 1 minute.','Round 3 will start in 2 minutes.','Please wait for the teacher.','Results are being prepared.','Congratulations to all participants.'];
+  const $=id=>document.getElementById(id);
+  const clean=s=>String(s||'').replace(/\s+/g,' ').trim();
+  const norm=s=>clean(s).toUpperCase();
+  const esc=s=>String(s==null?'':s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));
+  const fmtId=id=>'SCM-'+String(id||'').replace(/^D1-/,'').padStart(4,'0');
+  async function api(path,opts){const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));const t=await r.text();try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}}
+  function roundLabel(r){r=Number(r)||1;return r===1?'Round 1 — Standard':(r===2?'Round 2 — Fast':'Round 3 — Challenge')}
+  function roundDuration(r){r=Number(r)||1;return r===1?180:(r===2?120:60)}
+  function badge(t){try{let b=$('scmOnlineBadge');if(!b){b=document.createElement('div');b.id='scmOnlineBadge';b.className='scmBadge';document.body.appendChild(b)}b.textContent=t||'Online Ready'}catch(e){}}
+  function show(id){['scmLiveHome','scmTeacherRoom','scmStudentRoom'].forEach(x=>{const e=$(x);if(e)e.style.display=(x===id?'block':'none')})}
+  function saveResumeInfo(code,name,age,grade,school,studentId,championshipId){try{localStorage.setItem('scm_rescue_resume',JSON.stringify({code,name,age,grade,school,student_id:studentId,championship_id:championshipId,ts:Date.now()}))}catch(e){}}
+  function loadResumeInfo(){try{return JSON.parse(localStorage.getItem('scm_rescue_resume')||'null')}catch(e){return null}}
+  function setFields(info){if(!info)return; if($('scmJoinCode'))$('scmJoinCode').value=info.code||''; if($('scmStudentName'))$('scmStudentName').value=info.name||''; if($('scmAge'))$('scmAge').value=info.age||''; if($('scmGrade'))$('scmGrade').value=info.grade||''; if($('scmSchool'))$('scmSchool').value=info.school||'';}
+  function getFieldData(){return {code:norm($('scmJoinCode')&&$('scmJoinCode').value),name:clean($('scmStudentName')&&$('scmStudentName').value),age:clean($('scmAge')&&$('scmAge').value),grade:clean($('scmGrade')&&$('scmGrade').value),school:clean($('scmSchool')&&$('scmSchool').value)}}
+  async function findExistingStudent(code,name,school){
+    const [students,status]=await Promise.all([api('/api/room-students?room_code='+encodeURIComponent(code)),api('/api/room-status?room_code='+encodeURIComponent(code))]);
+    const list=students.students||[];
+    const n=clean(name).toLowerCase(), s=clean(school).toLowerCase();
+    let rec=list.find(x=>clean(x.student_name||x.name).toLowerCase()===n && (!s || clean(x.school_name||x.school).toLowerCase()===s));
+    if(!rec) rec=list.find(x=>clean(x.student_name||x.name).toLowerCase()===n);
+    if(!rec) return null;
+    return {student_id:rec.id||rec.student_id,championship_id:(status.championship&&status.championship.id)||(status.championship&&status.championship.championship_id)||rec.championship_id,championship_name:(status.championship&&status.championship.championship_name)||'Level Championship',age:rec.age||'',grade:rec.grade||'',school_name:rec.school_name||rec.school||''};
+  }
+  function renderWaitingRoom(opts){
+    opts=opts||{}; const code=opts.code||''; const name=opts.name||'Student'; const sid=opts.student_id; const school=opts.school||''; const champ=opts.championship_name||'Level Championship'; const round=opts.round||((window.scmRescueState&&window.scmRescueState.round)||1);
+    if($('scmStudentCode')) $('scmStudentCode').textContent=code;
+    const room=$('scmStudentRoom');
+    if(room){
+      const h3=room.querySelector('h3'); if(h3) h3.innerHTML='Waiting Room — <span style="color:#0f5b2e">Your Waiting Room</span>';
+      let card=$('scmStudentWaitCard');
+      if(!card){card=document.createElement('div');card.id='scmStudentWaitCard';card.className='scmStudentWaitCard';room.insertBefore(card,room.firstChild)}
+      card.innerHTML='<div class="line">Championship: '+esc(champ)+'</div><div class="line">Room Code: <b>'+esc(code)+'</b> <span class="scmRoundPill">Round '+esc(round||'-')+'</span></div><div class="line">Player: '+esc(name)+' '+(sid?'<span class="scmStudentId">'+fmtId(sid)+'</span>':'')+'</div><div class="line">School / Academy: '+esc(school||'-')+'</div><div class="scmStudentInstruction">After each round you return here. Wait for the teacher to start the next round.</div>';
+    }
+    if($('scmStudentStatus')) $('scmStudentStatus').innerHTML='Welcome <b>'+esc(name)+'</b> '+(sid?'<span class="scmStudentId">'+fmtId(sid)+'</span>':'')+'<br>Waiting for teacher to start the championship...';
+    show('scmStudentRoom');
+  }
+  function enterStudentSession(d,source){
+    window.scmRescueState=window.scmRescueState||{};
+    Object.assign(window.scmRescueState,{role:'student',room_code:d.code,student_id:d.student_id,championship_id:d.championship_id,round:d.round||1,lastStartedRoundKey:null,countdownPending:false});
+    saveResumeInfo(d.code,d.name,d.age||'',d.grade||'',d.school||'',d.student_id,d.championship_id);
+    renderWaitingRoom(d);
+    badge((source||'Joined')+' Online Room: '+d.code);
+    if(window.scmRescueState.poll) clearInterval(window.scmRescueState.poll);
+    window.scmRescueState.poll=setInterval(()=>{if(window.scmRescueState.role==='student'&&typeof scmCheckRoomStatus==='function')scmCheckRoomStatus(); scmPollClassMessage();},1500);
+    try{scmCheckRoomStatus()}catch(e){}
+  }
+  window.scmJoinRoom=async function(){
+    const f=getFieldData(); if(!f.code||!f.name){alert('Enter student name and room code.');return}
+    const payload={room_code:f.code,student_name:f.name,age:f.age?Number(f.age):null,grade:f.grade,school_name:f.school};
+    let data=await api('/api/join-room',{method:'POST',body:JSON.stringify(payload)});
+    if(!data.ok){
+      const msg=String(data.error||'');
+      if(/already|exist|duplicate|name/i.test(msg)){
+        const existing=await findExistingStudent(f.code,f.name,f.school);
+        if(existing){
+          return enterStudentSession({code:f.code,name:f.name,student_id:existing.student_id,championship_id:existing.championship_id,championship_name:existing.championship_name,age:f.age||existing.age,grade:f.grade||existing.grade,school:f.school||existing.school_name,round:1},'Resumed');
+        }
+      }
+      alert(data.error||'Room not found');return;
+    }
+    enterStudentSession({code:f.code,name:f.name,student_id:data.student_id,championship_id:data.championship_id,championship_name:data.championship_name||'Level Championship',age:f.age,grade:f.grade,school:f.school,round:1},'Joined');
+  };
+  window.scmResumePlayer=async function(){
+    const saved=loadResumeInfo(); if(saved) setFields(saved);
+    const f=getFieldData();
+    if(f.code&&f.name){
+      const existing=await findExistingStudent(f.code,f.name,f.school);
+      if(existing) return enterStudentSession({code:f.code,name:f.name,student_id:existing.student_id,championship_id:existing.championship_id,championship_name:existing.championship_name,age:f.age||existing.age,grade:f.grade||existing.grade,school:f.school||existing.school_name,round:1},'Resumed');
+    }
+    const playerId=prompt('Enter Player ID, for example SCM-0315'); if(!playerId)return;
+    const data=await api('/api/resume-player',{method:'POST',body:JSON.stringify({player_id:playerId})});
+    if(!data.ok){alert(data.error||'Player ID not found.');return}
+    const code=norm(data.room_code||f.code); const name=data.student_name||f.name||'Student';
+    enterStudentSession({code,name,student_id:data.student_id,championship_id:data.championship_id,championship_name:data.championship_name||'Level Championship',age:data.age||f.age,grade:data.grade||f.grade,school:data.school_name||f.school,round:data.current_round||1},'Resumed');
+  };
+  window.scmOpenStudentOnly=function(){
+    if($('introOverlay')) $('introOverlay').style.display='none'; if($('scmLiveOverlay')) $('scmLiveOverlay').style.display='flex';
+    const home=$('scmLiveHome'); if(home){home.classList.add('scmStudentOnly'); home.classList.remove('scmTeacherOnly')}
+    show('scmLiveHome'); const box=document.querySelector('#scmLiveHome .scmLiveBox:nth-child(2)'); if(box) box.style.display='block';
+    const teacherBox=document.querySelector('#scmLiveHome .scmLiveBox:first-child'); if(teacherBox) teacherBox.style.display='none';
+    const saved=loadResumeInfo(); if(saved) setFields(saved);
+  };
+  function banner(msg){let b=$('scmRescueMsgBanner');if(!b){b=document.createElement('div');b.id='scmRescueMsgBanner';document.body.appendChild(b)}b.textContent='📢 '+msg;b.style.display='block';clearTimeout(window.__scmRescueMsgTimer);window.__scmRescueMsgTimer=setTimeout(()=>{b.style.display='none'},12000)}
+  function ensureMsgModal(){let m=$('scmRescueMsgModal'); if(m)return m; m=document.createElement('div'); m.id='scmRescueMsgModal'; m.innerHTML='<div id="scmRescueMsgCard"><h3>📢 Send Message</h3><textarea id="scmRescueMsgText" maxlength="240" placeholder="The challenge will start in 1 minute."></textarea><div class="scmRescuePresets">'+PRESETS.map(p=>'<button type="button" data-msg="'+esc(p)+'">'+esc(p)+'</button>').join('')+'</div><div class="scmRescueMsgActions"><button type="button" id="scmRescueMsgCancel">Cancel</button><button type="button" id="scmRescueMsgSend" style="background:#0284c7;color:#fff">Send</button></div></div>'; document.body.appendChild(m); m.onclick=e=>{if(e.target===m)m.style.display='none'}; m.querySelectorAll('.scmRescuePresets button').forEach(b=>b.onclick=()=>{$('scmRescueMsgText').value=b.getAttribute('data-msg')||''}); $('scmRescueMsgCancel').onclick=()=>m.style.display='none'; $('scmRescueMsgSend').onclick=sendMessage; return m;}
+  function activeCode(){return (window.scmRescueState&&window.scmRescueState.room_code)||norm($('scmTeacherCode')&&$('scmTeacherCode').textContent)||norm($('scmStudentCode')&&$('scmStudentCode').textContent)}
+  window.scmSendMessagePrompt=function(){const code=activeCode(); if(!code)return alert('No room code'); const m=ensureMsgModal(); const t=$('scmRescueMsgText'); if(t&&!t.value)t.value='The challenge will start in 1 minute.'; m.style.display='flex'; setTimeout(()=>{try{t.focus();t.select()}catch(e){}},50)};
+  async function sendMessage(){const code=activeCode(); const msg=clean($('scmRescueMsgText')&&$('scmRescueMsgText').value); if(!code)return alert('No room code'); if(!msg)return alert('Please write a message.'); const res=await api('/api/send-message',{method:'POST',body:JSON.stringify({room_code:code,message:msg})}); if(!res.ok)return alert(res.error||'Message failed.'); sessionStorage.setItem('scm_seen_msg_'+code,String(res.sent_at||Date.now())+'|'+msg); $('scmRescueMsgModal').style.display='none'; banner(msg)}
+  window.scmPollClassMessage=async function(){const code=activeCode(); if(!code)return; try{const data=await api('/api/class-message?room_code='+encodeURIComponent(code)); if(!data.ok||!data.message||!data.sent_at)return; const key=String(data.sent_at)+'|'+String(data.message), store='scm_seen_msg_'+code, seen=sessionStorage.getItem(store); if(!seen){sessionStorage.setItem(store,key);return} if(seen!==key){sessionStorage.setItem(store,key);banner(data.message)}}catch(e){}};
+  setInterval(()=>{try{scmPollClassMessage()}catch(e){}},2500);
+  function fixText(){
+    document.querySelectorAll('h2').forEach(h=>{if(/Knight Number Quest/i.test(h.textContent||'')){h.textContent=h.textContent.replace(/Knight Number Quest/g,'Rescue the Princess')}});
+    document.querySelectorAll('p,div,h3').forEach(el=>{if(el.childNodes.length===1&&/Knight Number Quest Championship/i.test(el.textContent||'')){el.textContent=el.textContent.replace(/Knight Number Quest Championship/g,'Rescue the Princess Championship')}});
+  }
+  document.addEventListener('DOMContentLoaded',fixText); setTimeout(fixText,200); setTimeout(fixText,800);
+})();
+</script>
