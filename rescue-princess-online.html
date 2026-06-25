@@ -1042,3 +1042,159 @@ buildBoard();draw();
 
 </body>
 </html>
+
+<!-- SCM Rescue FINAL D1 Save/Status Patch — 2026-06-25 -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]));
+  const n=v=>Number(v)||0;
+  const fmt=sec=>{sec=n(sec);return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')};
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const txt=await r.text();
+    try{return JSON.parse(txt)}catch(e){return {ok:false,error:txt||'Bad response'}}
+  }
+  function roundLabel(r){r=n(r)||1;return r===1?'Round 1 — Standard':(r===2?'Round 2 — Fast':'Round 3 — Challenge')}
+  function roundDuration(r){r=n(r)||1;return r===1?180:(r===2?120:60)}
+  function solvedRescue(){
+    // Rescue has 7 pawns + princess = 8 solved units.
+    const c=(typeof captures!=='undefined')?n(captures):0;
+    const g=(typeof goalIndex!=='undefined')?n(goalIndex):0;
+    return Math.min(7,c)+Math.min(1,g);
+  }
+  function currentStars(){return (typeof stars!=='undefined')?n(stars):0}
+  function currentUsed(success){
+    const dur=(typeof selectedDuration!=='undefined')?n(selectedDuration):180;
+    const rem=(typeof remaining!=='undefined')?n(remaining):0;
+    return success?Math.max(1,dur-rem):dur;
+  }
+  function readMetricsStatus(row){
+    const raw=row && (row.metrics_json || row.metrics || '');
+    try{
+      const obj=typeof raw==='string'?JSON.parse(raw):raw;
+      return String((obj&&obj.status)||'');
+    }catch(e){ return String(raw||''); }
+  }
+  function statusFromLeaderboard(sc, roomStarted){
+    if(sc && (sc.student_id || sc.id || sc.stars!=null || sc.solved_questions!=null)){
+      const ms=readMetricsStatus(sc);
+      if(ms.toLowerCase().includes('time')) return 'Time Over ⏰';
+      return 'Finished ✅';
+    }
+    return roomStarted ? 'Playing' : 'Waiting';
+  }
+  function findStudentScore(student, leaderboard){
+    const sid=String(student.id||student.student_id||'');
+    return (leaderboard||[]).find(r=>String(r.student_id||r.id||'')===sid) || null;
+  }
+  function hydrateRowsFixed(students, leaderboard, roomStarted){
+    if(!students||!students.length)return '<tr><td colspan="8">Waiting for students...</td></tr>';
+    return students.map((s,i)=>{
+      const sc=findStudentScore(s,leaderboard);
+      const status=statusFromLeaderboard(sc,roomStarted);
+      const starsVal=sc?Number(sc.stars||sc.score||0):0;
+      const solvedVal=sc?Number(sc.solved_questions||sc.solved||0):0;
+      const timeVal=sc?(sc.total_time!=null?sc.total_time:sc.time_used):null;
+      return `<tr><td>${i+1}</td><td>${esc(s.student_name||s.name||'Student')}</td><td><span class="scmStudentId">SCM-${String(s.id||s.student_id||'').padStart(4,'0')}</span></td><td>${esc(s.school_name||s.school||'-')}</td><td>${esc(status)}</td><td>${starsVal}/30</td><td>${solvedVal}/8</td><td>${timeVal==null?'-':fmt(timeVal)}</td></tr>`;
+    }).join('');
+  }
+  function badge(t){let b=$('scmOnlineBadge');if(!b){b=document.createElement('div');b.id='scmOnlineBadge';b.className='scmBadge';document.body.appendChild(b)}b.textContent=t||'Online Ready'}
+
+  window.scmRefreshStudents=async function(){
+    const st=window.scmRescueState||{};
+    const code=st.room_code || (($('scmTeacherCode')&&$('scmTeacherCode').textContent)||'').trim();
+    if(!code)return;
+    const [students, status]=await Promise.all([
+      api('/api/room-students?room_code='+encodeURIComponent(code)),
+      api('/api/room-status?room_code='+encodeURIComponent(code))
+    ]);
+    let rn=st.round||1, roomStarted=false;
+    if(status.ok&&status.championship){
+      rn=Number(status.championship.current_round||rn)||rn;
+      roomStarted=Number(status.championship.challenge_started||0)===1 && Number(status.championship.challenge_finished||0)!==1;
+      st.round=rn;
+      if($('scmCurrentRoundLabel')) $('scmCurrentRoundLabel').textContent=rn?('Current: '+roundLabel(rn)):'Round not started';
+    }
+    const leaderboard=await api('/api/leaderboard?room_code='+encodeURIComponent(code)+'&round_number='+encodeURIComponent(rn));
+    if(students.ok&&$('scmTeacherStudents')) $('scmTeacherStudents').innerHTML=hydrateRowsFixed(students.students||[],leaderboard.leaderboard||[],roomStarted);
+  };
+
+  async function saveRescueResultFixed(success){
+    const st=window.scmRescueState||{};
+    if(!st.student_id||!st.championship_id||!st.room_code) return;
+    const rn=Number(st.round||1)||1;
+    const used=currentUsed(success);
+    const status=success?'Finished ✅':'Time Over ⏰';
+    const payload={
+      student_id:st.student_id,
+      championship_id:st.championship_id,
+      score:currentStars(),
+      points:currentStars(),
+      stars:currentStars(),
+      solved_questions:solvedRescue(),
+      total_time:used,
+      max_streak:solvedRescue(),
+      round_number:rn,
+      mode:'Rescue the Princess',
+      level:'Level '+((typeof currentLevel!=='undefined')?(currentLevel||1):1),
+      metrics:{
+        room_code:st.room_code,
+        status,
+        duration:(typeof selectedDuration!=='undefined')?selectedDuration:roundDuration(rn),
+        round_number:rn,
+        map:(typeof currentMapNo!=='undefined')?currentMapNo:null,
+        moves:(typeof moves!=='undefined')?moves:null,
+        captures:(typeof captures!=='undefined')?captures:null,
+        path:(typeof history!=='undefined'&&Array.isArray(history))?history.map(h=>h.from+'-'+h.to).join(' '):''
+      }
+    };
+    const out=await api('/api/save-result',{method:'POST',body:JSON.stringify(payload)});
+    if(!out.ok) throw new Error(out.error||'save-result failed');
+    badge('Result saved online');
+    return out;
+  }
+
+  // Override finish one final time: keep the game ending UI, then send the correct D1 result using lexical game variables.
+  const previousFinish=window.finish;
+  window.finish=function(success,reason){
+    const out=previousFinish.apply(this,arguments);
+    setTimeout(()=>{
+      const st=window.scmRescueState||{};
+      if(st.role==='student') saveRescueResultFixed(!!success).catch(e=>{console.warn('Rescue D1 save failed:',e);badge('Online save failed')});
+    },350);
+    return out;
+  };
+
+  window.scmSaveRoundResults=async function(){
+    const st=window.scmRescueState||{};
+    const code=st.room_code;
+    if(!code)return alert('No room.');
+    const rn=Number(st.round||($('scmTeacherRoundSelect')&&$('scmTeacherRoundSelect').value)||1)||1;
+    // Refresh leaderboard first. If no student has submitted, do not pretend the round was saved.
+    const lb=await api('/api/leaderboard?room_code='+encodeURIComponent(code)+'&round_number='+encodeURIComponent(rn));
+    if(!lb.ok)return alert(lb.error||'Could not read leaderboard before saving.');
+    if(!(lb.leaderboard||[]).length)return alert('No finished results found for '+roundLabel(rn)+'. Wait for students to finish, then save the round.');
+    const data=await api('/api/save-round',{method:'POST',body:JSON.stringify({room_code:code,round_number:rn})});
+    if(!data.ok)return alert(data.error||'Save Round failed. The result exists in leaderboard, but the Worker did not save the official round.');
+    alert('Round results saved: '+roundLabel(rn));
+    scmRefreshStudents();
+  };
+
+  window.scmOpenLeaderboard=function(){
+    const st=window.scmRescueState||{};
+    const code=st.room_code;
+    if(!code)return alert('No room code');
+    const rn=Number(st.round||1)||1;
+    window.open(API+'/api/leaderboard?room_code='+encodeURIComponent(code)+'&round_number='+encodeURIComponent(rn),'_blank');
+  };
+
+  // Student status text should say Waiting, not Joined, after registration.
+  const oldJoin=window.scmJoinRoom;
+  window.scmJoinRoom=async function(){
+    await oldJoin.apply(this,arguments);
+    if($('scmStudentStatus')) $('scmStudentStatus').innerHTML='Waiting for the teacher to start...';
+  };
+})();
+</script>
