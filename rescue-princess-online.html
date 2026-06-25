@@ -45,6 +45,58 @@
 @media(max-width:1040px){.stage{gap:10px}.side{gap:8px}.panel{padding:10px}.mission.compactMission{font-size:22px}.scorebox{grid-template-columns:repeat(4,1fr)}.mini{padding:6px;font-size:13px}.mini b{font-size:19px}.actions{margin-top:7px}.status{min-height:36px;font-size:16px}}
 @media(max-width:700px){.subtitle{display:none}.title{font-size:24px;margin-top:2px}.top{gap:5px}.card,.control{font-size:12px;padding:6px 7px}.stage{gap:6px}.side{gap:6px}.panel{border-width:3px;padding:8px}.badge{font-size:14px;padding:6px 14px;margin-bottom:5px}.mission.compactMission{font-size:18px}.missionSteps{gap:4px;margin:5px 0}.stepChip{font-size:12px;padding:4px 7px}.compactRules{grid-template-columns:1fr 1fr;gap:4px}.compactRules .rule{font-size:12px;padding:5px}.scorebox{grid-template-columns:repeat(2,1fr);gap:5px;margin-top:7px}.mini{font-size:12px;padding:5px}.mini b{font-size:17px}.status{font-size:14px;line-height:1.25}.actions button{font-size:12px;padding:6px 7px}.side .panel:nth-last-child(1){display:none}}
 
+
+
+/* === Smart Chess Math Child-Safe UI Polish v1 === */
+.scorebox{gap:10px!important;margin-top:10px!important}
+.mini{
+  min-height:74px!important;
+  padding:7px 8px!important;
+  border-radius:18px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:center!important;
+  text-align:center!important;
+  color:#07351f!important;
+  border:3px solid rgba(255,255,255,.85)!important;
+  box-shadow:0 5px 0 rgba(0,0,0,.16), inset 0 0 14px rgba(255,255,255,.35)!important;
+}
+.mini:nth-child(1){background:linear-gradient(180deg,#dbf3ff,#93d8ff)!important}
+.mini:nth-child(2){background:linear-gradient(180deg,#fff0d8,#ffbd76)!important}
+.mini:nth-child(3){background:linear-gradient(180deg,#fff7b0,#ffd34f)!important}
+.mini:nth-child(4){background:linear-gradient(180deg,#dcffd9,#8ee98a)!important}
+.mini b{display:block!important;font-size:clamp(24px,3vw,34px)!important;line-height:1!important;margin-top:4px!important;color:#064e2b!important;text-shadow:0 2px 0 rgba(255,255,255,.55)!important}
+.actions{gap:10px!important;margin-top:10px!important}
+.actions button{
+  min-width:116px!important;
+  min-height:46px!important;
+  padding:8px 12px!important;
+  border-radius:16px!important;
+  font-size:15px!important;
+}
+.status{
+  margin:10px auto 0!important;
+  padding:9px 12px!important;
+  min-height:44px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  background:linear-gradient(180deg,rgba(202,255,156,.94),rgba(105,210,89,.92))!important;
+  color:#07351f!important;
+  border:3px solid rgba(255,255,255,.72)!important;
+  border-radius:18px!important;
+  box-shadow:0 4px 0 rgba(0,0,0,.16)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.5)!important;
+}
+@media(max-width:700px){
+  .mini{min-height:58px!important;padding:5px!important;border-radius:14px!important;font-size:12px!important}
+  .mini b{font-size:22px!important}
+  .actions{gap:6px!important}
+  .actions button{min-width:72px!important;min-height:38px!important;font-size:12px!important;padding:6px 7px!important}
+  .status{font-size:13px!important;min-height:36px!important;padding:7px!important;border-radius:14px!important}
+}
+/* === end child-safe polish === */
 </style>
 </head>
 <body>
@@ -153,7 +205,7 @@
     </div>
   </div>
 </div>
-<div class="container"><h1 class="title">🏰 Rescue the Princess — Knight Strategy</h1><div class="subtitle">A chess-thinking challenge: plan the route, capture wisely, collect stars, and rescue the kingdom.</div><div class="top"><div class="card">⏰ Time: <span id="time">01:00</span></div><div class="card">♟️ Captured: <span id="captured">0</span></div><div class="card">♟ Pawns Left: <span id="left">0</span></div><div class="card">♘ Moves: <span id="moves">0</span></div><div class="card">⭐ Stars: <span id="stars">0</span></div><div class="card">🎲 Map: <span id="mapNo">-</span></div><div class="card">💥 Attempts: <span id="tries">2</span></div></div><div class="top"><div class="control">🎮 Level:<select id="level"><option value="1">Level 1 — Rescue the Princess</option><option value="2">Level 2 — Advanced Rescue</option><option value="3">Level 3 — Royal Rescue ++</option></select></div><div class="control">⏳ Time:<select id="duration"><option value="30">30 sec</option><option value="60" selected>60 sec</option><option value="90">90 sec</option><option value="180">180 sec</option></select></div><button onclick="startGame()">▶ Start</button><button class="teacherBtn" onclick="toggleTeacher()">📊 Teacher Analysis</button><button class="teacherBtn" onclick="scmOpenOnline()">🏫 Live Class</button></div><div class="stage"><div class="boardWrap"><div class="ranks" id="ranks"></div><div class="board" id="board"></div><div class="files" id="files"></div></div><div class="side"><div class="panel"><div class="badge">Mission</div><div class="mission compactMission" id="mission">Press Start</div><div class="rules" id="rules"></div><div class="scorebox"><div class="mini">Current Square<b id="pos">-</b></div><div class="mini">Repeated Squares<b id="repeats">0</b></div><div class="mini">Gold Target<b id="best">-</b></div><div class="mini">Efficiency<b id="eff">-</b></div></div><div class="actions"><button onclick="showMoves()">Show Legal Moves</button><button onclick="resetMission()">Try Again</button><button class="helpSmall" onclick="showMissionHelp()">❔ Help</button><button onclick="speakMission()">🔊 Hear</button></div><div class="status" id="status">Choose a level and press Start.</div></div><div class="panel" id="teacherPanel" style="display:none"><div class="badge">Teacher Analysis</div><table class="analysisTable"><tr><td>Moves Path</td><td id="aPath">-</td></tr><tr><td>Moves Used</td><td id="aMoves">0</td></tr><tr><td>Repeated Squares</td><td id="aRepeats">0</td></tr><tr><td>Captures</td><td id="aCaptures">0</td></tr><tr><td>Time Used</td><td id="aTime">0s</td></tr><tr><td>Efficiency</td><td id="aEfficiency">-</td></tr></table><div class="actions"><button class="teacherBtn" onclick="exportTeacherReport()">📥 Export Teacher Report</button></div></div><div class="panel compactHelp" style="text-align:left;font-size:15px;line-height:1.35;font-weight:900"><b>Quick Rule</b><br>♘ L-move • ♟ capture • ☠/🦹/🐉 avoid • 🪙 removes 3 obstacles • ♟ no adjacent pawns.</div></div></div><div class="footer-credit">© Eng. Salman Ahmed Salman</div></div>
+<div class="container"><h1 class="title">🏰 Rescue the Princess — Knight Strategy</h1><div class="subtitle">A chess-thinking challenge: plan the route, capture wisely, collect stars, and rescue the kingdom.</div><div class="top"><div class="card">⏰ Time: <span id="time">01:00</span></div><div class="card">♟️ Captured: <span id="captured">0</span></div><div class="card">♟ Pawns Left: <span id="left">0</span></div><div class="card">♘ Moves: <span id="moves">0</span></div><div class="card">⭐ Stars: <span id="stars">0</span></div><div class="card">🎲 Map: <span id="mapNo">-</span></div><div class="card">💥 Attempts: <span id="tries">2</span></div></div><div class="top"><div class="control">🎮 Level:<select id="level"><option value="1">Level 1 — Rescue the Princess</option><option value="2">Level 2 — Advanced Rescue</option><option value="3">Level 3 — Royal Rescue ++</option></select></div><div class="control">⏳ Time:<select id="duration"><option value="30">30 sec</option><option value="60" selected>60 sec</option><option value="90">90 sec</option><option value="180">180 sec</option></select></div><button onclick="startGame()">▶ Start</button><button class="teacherBtn" onclick="toggleTeacher()">📊 Teacher Analysis</button><button class="teacherBtn" onclick="scmOpenOnline()">🏫 Live Class</button></div><div class="stage"><div class="boardWrap"><div class="ranks" id="ranks"></div><div class="board" id="board"></div><div class="files" id="files"></div></div><div class="side"><div class="panel"><div class="badge">Mission</div><div class="mission compactMission" id="mission">Press Start</div><div class="rules" id="rules"></div><div class="scorebox"><div class="mini">📍 Current Square<b id="pos">-</b></div><div class="mini">🔁 Repeated<b id="repeats">0</b></div><div class="mini">🏆 Gold Target<b id="best">-</b></div><div class="mini">⚡ Efficiency<b id="eff">-</b></div></div><div class="actions"><button onclick="showMoves()">♘ Moves</button><button onclick="resetMission()">🔄 Again</button><button class="helpSmall" onclick="showMissionHelp()">❓ Help</button><button onclick="speakMission()">🔊 Hear</button></div><div class="status" id="status">👸 Choose a level and press Start.</div></div><div class="panel" id="teacherPanel" style="display:none"><div class="badge">Teacher Analysis</div><table class="analysisTable"><tr><td>Moves Path</td><td id="aPath">-</td></tr><tr><td>Moves Used</td><td id="aMoves">0</td></tr><tr><td>Repeated Squares</td><td id="aRepeats">0</td></tr><tr><td>Captures</td><td id="aCaptures">0</td></tr><tr><td>Time Used</td><td id="aTime">0s</td></tr><tr><td>Efficiency</td><td id="aEfficiency">-</td></tr></table><div class="actions"><button class="teacherBtn" onclick="exportTeacherReport()">📥 Export Teacher Report</button></div></div><div class="panel compactHelp" style="text-align:left;font-size:15px;line-height:1.35;font-weight:900"><b>Quick Rule</b><br>♘ L-move • ♟ capture • ☠/🦹/🐉 avoid • 🪙 removes 3 obstacles • ♟ no adjacent pawns.</div></div></div><div class="footer-credit">© Eng. Salman Ahmed Salman</div></div>
 <script>
 const files=['a','b','c','d','e','f','g','h'],board=document.getElementById('board');let squares={},allNames=[],running=false,timer=null,remaining=60,selectedDuration=60,currentLevel=1,tries=2,knightPos='b1',startPos='b1',pawns=new Set(),barriers=new Set(),goals=[],goalIndex=0,moves=0,captures=0,history=[],visited={},legalVisible=false,elapsed=0,lastSuccess=false,lastMedal='Bronze Knight',stars=0,bonusStars=0,currentMapNo=1,treasureSq=null,keySq=null,dragonSqs=new Set(),dynamicBandits=new Set(),banditTriggered=false,dragonTriggered=false,collapseTriggered=false,lastSafeSq=null,treasureSqs=new Set(),openGateSqs=new Set(),closedGateSqs=new Set();
 const princessGateSquares=['c3','c5','d2','d6','f2','f6','g3','g5'];
@@ -364,7 +416,7 @@ function loadLevel(){
   const gateRuleText=currentLevel===2?'4 of 8 Princess gates are blocked. Treasure opens 3.':currentLevel===3?'5 of 8 Princess gates are blocked. Treasure opens 3.':'Find the best knight route.';
   document.getElementById('mission').innerHTML=L.mission+'<div class="missionSteps"><span class="stepChip active">🎲 New map</span><span class="stepChip">⭐ Stars</span><span class="stepChip">⏱ Time</span></div>';
   document.getElementById('rules').innerHTML=currentLevel===1?'<div class="rule">🥇 Gold Target = '+levelData[currentLevel].best+' moves</div><div class="rule">🥈 Silver = Gold + up to 5 moves</div><div class="rule">🥉 Bronze = Complete the mission</div>':currentLevel===2?'<div class="rule">♘ Princess Gates: C3 C5 D2 D6 F2 F6 G3 G5</div><div class="rule">🚧 '+gateRuleText+'</div>':'<div class="rule">♟ 7 → 👸 → 👑 → 🏰</div><div class="rule">🚧 '+gateRuleText+'</div>';
-  document.getElementById('status').innerHTML='Mission started. Think before moving the knight.';
+  document.getElementById('status').innerHTML='👸 Capture 7 pawns first!';
   draw();speakMission();
 }
 function startFromIntro(){document.getElementById('level').value=document.getElementById('introLevel').value;document.getElementById('duration').value=document.getElementById('introDuration').value;document.getElementById('introOverlay').style.display='none';setTimeout(startGame,250)}
@@ -431,7 +483,7 @@ function moveKnight(dest){
       }
     }
   }else if(!lastSuccess){
-    document.getElementById('status').innerHTML='Good move. Plan the next knight jump.'
+    document.getElementById('status').innerHTML='⭐ Great jump! Keep going.'
   }
   draw()
 }
@@ -477,15 +529,20 @@ function exportTeacherReport(){const success=lastSuccess?'yes':'no';const head=[
 function arrify(v){ return v==null ? [] : (Array.isArray(v) ? v : [v]); }
 function isPawnRankAllowed(n){ const r=parseInt(String(n)[1],10); return r>1 && r<8; }
 function tournamentScore(success){
+  // Rescue the Princess official tournament scoring:
+  // 30 = Gold, 29 = Silver, 28 = Bronze, 27 = Finish, 26–20 = Time Over.
   if(success){
     if(moves<=10) return 30;
     if(moves<=12) return 29;
     if(moves<=15) return 28;
     return 27;
   }
+
+  // Time Over: keep the score inside 20–26 according to progress.
+  // Progress units: 7 pawns + 1 princess goal = 8 possible units.
   const solved = Math.min(7, captures) + Math.min(1, goalIndex);
-  if(solved<=0) return 0;
-  return Math.min(26, 19 + solved);
+  if(solved<=0) return 20;
+  return Math.min(26, 20 + Math.min(6, solved - 1));
 }
 function calcStars(success){ return tournamentScore(success); }
 function medal(){
@@ -526,8 +583,8 @@ function loadLevel(){
   banditTriggered=false;dragonTriggered=false;collapseTriggered=false;lastSafeSq=knightPos;tries=2;
   const treasureInfo = treasureSqs.size ? ` Treasure: ${[...treasureSqs].join(', ').toUpperCase()} removes 3 random obstacles.` : '';
   document.getElementById('mission').innerHTML=(M.mission||L.mission)+`<div class="missionSteps"><span class="stepChip active">🎲 Map ${currentMapNo}</span><span class="stepChip">⭐ Tournament Stars</span><span class="stepChip">⏱ Time</span></div>`;
-  document.getElementById('rules').innerHTML=`<div class="rule">🥇 8–10 moves = 30 Stars</div><div class="rule">🥈 11–12 = 29 • 🥉 13–15 = 28 • Finish = 27</div><div class="rule">☠ Skulls • 🦹 Bandits • 🐉 Dragons are blocked. 🗝️ ${treasureInfo}</div>`;
-  document.getElementById('status').innerHTML='Mission started. Capture all 7 pawns first, then rescue the Princess.';
+  document.getElementById('rules').innerHTML=`<div class="rule">🥇 8–10 moves = 30 Stars</div><div class="rule">🥈 11–12 = 29 • 🥉 13–15 = 28 • Finish = 27</div><div class="rule">⭐ 26–20 = Time Over progress score</div><div class="rule">☠ Skulls • 🦹 Bandits • 🐉 Dragons are blocked. 🗝️ ${treasureInfo}</div>`;
+  document.getElementById('status').innerHTML='👸 Capture 7 pawns first!';
   draw();speakMission();
 }
 function knightMoves(s){
@@ -551,7 +608,7 @@ function openThreeGateObstacles(){
     showSpark(o.s,'✨');
   });
   if(picked.length){
-    document.getElementById('status').innerHTML='🗝️ Treasure found! Three random obstacles disappeared.';
+    document.getElementById('status').innerHTML='🪙 Treasure! 3 obstacles gone!';
     speak('Treasure found. Three obstacles disappeared.');
   }
 }
@@ -578,7 +635,7 @@ function draw(){
 function moveKnight(dest){
   if(!running)return;
   if(!knightMoves(knightPos).includes(dest)){
-    document.getElementById('status').innerHTML='❌ Illegal knight move or blocked square. Plan another L-shaped move.';
+    document.getElementById('status').innerHTML='❌ Blocked! Try another L-jump.';
     speak('Illegal move. Try another square.');
     tries--; if(tries<=0)finish(false,'No attempts left. Study the knight route and try again.'); updateStats(); return;
   }
@@ -587,24 +644,24 @@ function moveKnight(dest){
   history.push({from,to:dest,time:selectedDuration-remaining});
   visited[dest]=(visited[dest]||0)+1;
   if(treasureSqs.has(dest)){treasureSqs.delete(dest);treasureSq=[...treasureSqs][0]||null;showSpark(dest,'🪙');useMagicKey();}
-  if(pawns.has(dest)){pawns.delete(dest);captures++;showSpark(dest,'⭐');speak('Pawn captured');}
+  if(pawns.has(dest)){pawns.delete(dest);captures++;showSpark(dest,'⭐');speak('Pawn captured');document.getElementById('status').innerHTML = pawns.size>0 ? ('⭐ Great! ♟ '+captures+'/7') : '👸 Now save the Princess!';}
   let g=goals[goalIndex];
   if(g&&dest===g.sq){
     if(pawns.size>0){
-      document.getElementById('status').innerHTML='👸 The Princess is waiting, but you must capture all 7 pawns first.';
+      document.getElementById('status').innerHTML='👸 First: capture all 7 pawns!';
       speak('Capture all seven pawns first, then rescue the princess.');
     }else{
       showSpark(dest,'👸'); goalIndex++;
       if(goalIndex>=goals.length)checkVictory();
     }
-  }else if(!lastSuccess){
-    document.getElementById('status').innerHTML='Good move. Plan the next knight jump.';
+  }else if(!lastSuccess && !pawns.has(dest)){
+    if(!document.getElementById('status').innerHTML.includes('Great! ♟') && !document.getElementById('status').innerHTML.includes('Now save')) document.getElementById('status').innerHTML='⭐ Great jump! Keep going.';
   }
   draw();
 }
 function checkVictory(){
   if(pawns.size===0) finish(true);
-  else{goalIndex=Math.max(0,goalIndex-1);document.getElementById('status').innerHTML='Capture all pawns first, then rescue the Princess.';speak('Capture all pawns first.');}
+  else{goalIndex=Math.max(0,goalIndex-1);document.getElementById('status').innerHTML='♟ First pawns, then Princess!';speak('Capture all pawns first.');}
 }
 function buildTeacherReportHTML(){
   updateStats();
