@@ -1235,6 +1235,106 @@ buildBoard();draw();
 })();
 </script>
 
+
+
+<!-- SCM Rescue FINAL SELECTED ROUND REPORT + PIN FIX — 2026-06-25 -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s==null?'':s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+  const n=v=>Number(v)||0;
+  const fmt=sec=>{sec=n(sec);return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')};
+  const roundLabel=r=>n(r)===1?'Round 1 — Friendly 5 min':(n(r)===2?'Round 2 — Standard 3 min':'Round 3 — Challenge 2 min');
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const t=await r.text();
+    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
+  }
+  function roomCode(){
+    const st=window.scmRescueState||{};
+    return st.room_code || (($('scmTeacherCode')&&$('scmTeacherCode').textContent)||'').trim() || (($('scmStudentCode')&&$('scmStudentCode').textContent)||'').trim();
+  }
+  function selectedReportRound(){
+    const sel=$('scmTeacherRoundSelect');
+    if(sel && sel.value) return n(sel.value)||1;
+    const alt=$('scmRound');
+    if(alt && alt.value) return n(alt.value)||1;
+    return n((window.scmRescueState||{}).round)||1;
+  }
+  function statusOf(row){
+    try{
+      const raw=row&&(row.metrics_json||row.metrics||'');
+      const m=typeof raw==='string'?JSON.parse(raw||'{}'):(raw||{});
+      if(m&&m.status) return String(m.status);
+    }catch(e){}
+    return row?'Finished ✅':'Waiting';
+  }
+  function rankRows(rows){
+    const arr=(rows||[]).slice().sort((a,b)=>{
+      let c=n(b.stars||b.score)-n(a.stars||a.score); if(c) return c;
+      c=n(b.solved_questions||b.solved)-n(a.solved_questions||a.solved); if(c) return c;
+      c=n(a.total_time||a.time)-n(b.total_time||b.time); if(c) return c;
+      return String(a.student_name||'').localeCompare(String(b.student_name||''));
+    });
+    let prev=null,rank=0;
+    arr.forEach((r,i)=>{
+      const same=prev && n(r.stars||r.score)===n(prev.stars||prev.score) && n(r.solved_questions||r.solved)===n(prev.solved_questions||prev.solved) && n(r.total_time||r.time)===n(prev.total_time||prev.time);
+      if(!same) rank=i+1;
+      r.__rank=rank;
+      prev=r;
+    });
+    return arr;
+  }
+  function medal(rank,tie){
+    if(rank===1) return tie?'Gold (Tie)':'Gold';
+    if(rank===2) return tie?'Silver (Tie)':'Silver';
+    if(rank===3) return tie?'Bronze (Tie)':'Bronze';
+    return 'Finish';
+  }
+  function ensureReport(){
+    let o=$('scmReportOverlay');
+    if(o) return o;
+    document.body.insertAdjacentHTML('beforeend',`<div class="scmReportOverlay" id="scmReportOverlay"><div class="scmReportCard" id="scmReportPrint"><h2 id="scmReportTitle">Report</h2><div id="scmReportBody"></div><div class="scmReportActions"><button class="scmGreenBtn" onclick="scmPrintReport()">🖨️ Print / Save PDF</button><button onclick="document.getElementById('scmReportOverlay').style.display='none'">Close</button></div></div></div>`);
+    return $('scmReportOverlay');
+  }
+  if(typeof window.scmPrintReport!=='function'){
+    window.scmPrintReport=function(){document.body.classList.add('scm-print-report');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('scm-print-report'),500)},80)};
+  }
+
+  // Admin compatibility: accept the Rescue PIN and the Knight admin PIN.
+  window.scmAskAdminPin=function(){
+    const pin=prompt('Enter Teacher / Admin PIN');
+    if(pin===null) return;
+    const p=String(pin).trim();
+    if(p!=='2026' && p!=='2115'){alert('Wrong PIN');return;}
+    const panel=$('scmIntroAdminPanel');
+    if(panel) panel.style.display='block';
+  };
+
+  // Critical fix: Current Round Report must follow the dropdown selection,
+  // not the last active/current round stored in the room status.
+  window.scmOpenLeaderboard=async function(){
+    const code=roomCode();
+    if(!code) return alert('No room code');
+    const rn=selectedReportRound();
+    ensureReport();
+    $('scmReportTitle').textContent='Rescue the Princess — Current Round Report';
+    $('scmReportBody').innerHTML='<div class="scmReportBox">Loading '+esc(roundLabel(rn))+'...</div>';
+    $('scmReportOverlay').style.display='flex';
+    const [studentsRes, lbRes]=await Promise.all([
+      api('/api/room-students?room_code='+encodeURIComponent(code)),
+      api('/api/leaderboard?room_code='+encodeURIComponent(code)+'&round_number='+encodeURIComponent(rn))
+    ]);
+    const students=studentsRes.students||[];
+    const ranked=rankRows(lbRes.leaderboard||[]);
+    const finished=ranked.length;
+    const avg=finished?(ranked.reduce((a,x)=>a+n(x.stars||x.score),0)/finished).toFixed(1):'0.0';
+    const leader=ranked.filter(x=>x.__rank===1).map(x=>x.student_name).join(' & ')||'-';
+    $('scmReportBody').innerHTML=`<div class="scmReportSummary"><div class="scmReportBox">👥 Registered<br><b>${students.length}</b></div><div class="scmReportBox">✅ Finished<br><b>${finished}</b></div><div class="scmReportBox">⭐ Average<br><b>${avg}/30</b></div><div class="scmReportBox">🏆 Leader<br><b>${esc(leader)}</b></div></div><div><b>Room:</b> ${esc(code)} &nbsp; <b>${esc(roundLabel(rn))}</b> &nbsp; <b>Program:</b> Rescue the Princess</div><table class="scmReportTable"><thead><tr><th>Rank</th><th>Student</th><th>ID</th><th>Age</th><th>Class</th><th>School</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time</th><th>Medal</th></tr></thead><tbody>${ranked.map(x=>{const tie=ranked.filter(y=>y.__rank===x.__rank).length>1;return `<tr><td>${x.__rank}${tie?' (Tie)':''}</td><td class="scmClickStudent" onclick="scmShowStudentDetails('${x.student_id}')">${esc(x.student_name)}</td><td>SCM-${String(x.student_id||'').padStart(4,'0')}</td><td>${esc(x.age||'-')}</td><td>${esc(x.grade||'-')}</td><td>${esc(x.school_name||'-')}</td><td>${esc(statusOf(x))}</td><td>${n(x.stars||x.score)}/30</td><td>${n(x.solved_questions||x.solved)}/8</td><td>${fmt(x.total_time||x.time)}</td><td>${medal(x.__rank,tie)}</td></tr>`}).join('')||'<tr><td colspan="11">No results saved for this selected round.</td></tr>'}</tbody></table><div class="scmPathBox">Ranking Rule: Stars → Solved → Time Used. This report is for the round selected in the dropdown.</div>`;
+  };
+})();
+</script>
 </body>
 </html>
 
