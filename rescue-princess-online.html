@@ -1144,6 +1144,97 @@ buildBoard();draw();
 
 
 
+
+
+<!-- SCM Rescue PATCH: Current Round Report follows selected round only — 2026-06-25 -->
+<script>
+(function(){
+  const API='https://smartchessmath-api.campo1234567.workers.dev';
+  const $=id=>document.getElementById(id);
+  const n=v=>Number(v)||0;
+  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt=s=>{s=n(s);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+  async function api(path,opts){
+    const r=await fetch(API+path,Object.assign({headers:{'Content-Type':'application/json'}},opts||{}));
+    const t=await r.text();
+    try{return JSON.parse(t)}catch(e){return {ok:false,error:t||'Bad response'}}
+  }
+  function roomCode(){
+    const st=window.scmRescueState||{};
+    return st.room_code || (($('scmTeacherCode')&&$('scmTeacherCode').textContent)||'').trim() || (($('scmStudentCode')&&$('scmStudentCode').textContent)||'').trim();
+  }
+  function selectedReportRound(){
+    const sel=$('scmTeacherRoundSelect');
+    if(sel && sel.value) return n(sel.value)||1;
+    return n((window.scmRescueState||{}).round)||1;
+  }
+  function selectedRoundLabel(r){
+    const sel=$('scmTeacherRoundSelect');
+    if(sel && sel.value && n(sel.value)===n(r)) return sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : ('Round '+r);
+    return n(r)===1?'Round 1 — Friendly 5 min':(n(r)===2?'Round 2 — Standard 3 min':'Round 3 — Challenge 2 min');
+  }
+  function ensureReport(){
+    let o=$('scmReportOverlay');
+    if(o) return o;
+    document.body.insertAdjacentHTML('beforeend',`<div class="scmReportOverlay" id="scmReportOverlay"><div class="scmReportCard" id="scmReportPrint"><h2 id="scmReportTitle">Report</h2><div id="scmReportBody"></div><div class="scmReportActions"><button class="scmGreenBtn" onclick="scmPrintReport()">🖨️ Print / Save PDF</button><button onclick="document.getElementById('scmReportOverlay').style.display='none'">Close</button></div></div></div>`);
+    return $('scmReportOverlay');
+  }
+  function parseMetrics(row){
+    try{const raw=row&&(row.metrics_json||row.metrics||'');return typeof raw==='string'?JSON.parse(raw||'{}'):(raw||{})}catch(e){return {}}
+  }
+  function statusOf(row){
+    if(!row) return 'Waiting';
+    const m=parseMetrics(row);
+    return String(m.status||row.status||'Finished ✅');
+  }
+  function compare(a,b){
+    let c=n(b.stars||b.score)-n(a.stars||a.score); if(c)return c;
+    c=n(b.solved_questions||b.solved)-n(a.solved_questions||a.solved); if(c)return c;
+    return n(a.total_time||a.time_used)-n(b.total_time||b.time_used);
+  }
+  function rankRows(rows){
+    const arr=(rows||[]).slice().sort(compare);
+    let prev=null,rank=0;
+    arr.forEach((r,i)=>{const same=prev&&n(r.stars||r.score)===n(prev.stars||prev.score)&&n(r.solved_questions||r.solved)===n(prev.solved_questions||prev.solved)&&n(r.total_time||r.time_used)===n(prev.total_time||prev.time_used);if(!same)rank=i+1;r.__rank=rank;prev=r});
+    return arr;
+  }
+  function medalByRank(rank,tie){if(rank===1)return tie?'Gold (Tie)':'Gold';if(rank===2)return tie?'Silver (Tie)':'Silver';if(rank===3)return tie?'Bronze (Tie)':'Bronze';return 'Finish'}
+  function dedupeRound(rows){
+    const map=new Map();
+    (rows||[]).forEach(row=>{
+      const id=String(row.student_id||row.id||''); if(!id)return;
+      const old=map.get(id);
+      if(!old){map.set(id,row);return;}
+      const m=parseMetrics(row), om=parseMetrics(old);
+      const rt=Date.parse(m.saved_at||row.created_at||row.updated_at||0)||0;
+      const ot=Date.parse(om.saved_at||old.created_at||old.updated_at||0)||0;
+      if(rt>ot || (rt===ot && compare(row,old)<0)) map.set(id,row);
+    });
+    return Array.from(map.values());
+  }
+  window.scmOpenLeaderboard=async function(){
+    const code=roomCode();
+    if(!code) return alert('No room code');
+    const rn=selectedReportRound();
+    const label=selectedRoundLabel(rn);
+    const [studentsData, lbData]=await Promise.all([
+      api('/api/room-students?room_code='+encodeURIComponent(code)),
+      api('/api/leaderboard?room_code='+encodeURIComponent(code)+'&round_number='+encodeURIComponent(rn))
+    ]);
+    if(lbData && lbData.ok===false && lbData.error) return alert(lbData.error);
+    ensureReport();
+    const students=studentsData.students||[];
+    const ranked=rankRows(dedupeRound(lbData.leaderboard||[]));
+    const finished=ranked.length;
+    const avg=finished?(ranked.reduce((a,r)=>a+n(r.stars||r.score),0)/finished).toFixed(1):'0.0';
+    const leader=ranked.filter(r=>r.__rank===1).map(r=>r.student_name).join(' & ')||'-';
+    $('scmReportTitle').textContent='Rescue the Princess — Current Round Report';
+    $('scmReportBody').innerHTML=`<div class="scmReportSummary"><div class="scmReportBox">👥 Registered<br><b>${students.length}</b></div><div class="scmReportBox">✅ Finished<br><b>${finished}</b></div><div class="scmReportBox">⭐ Average<br><b>${avg}/30</b></div><div class="scmReportBox">🏆 Leader<br><b>${esc(leader)}</b></div></div><div><b>Room:</b> ${esc(code)} &nbsp; <b>${esc(label)}</b> &nbsp; <b>Program:</b> Rescue the Princess</div><table class="scmReportTable"><thead><tr><th>Rank</th><th>Student</th><th>ID</th><th>Age</th><th>Class</th><th>School</th><th>Status</th><th>Stars</th><th>Solved</th><th>Time</th><th>Medal</th></tr></thead><tbody>${ranked.map(r=>{const tie=ranked.filter(x=>x.__rank===r.__rank).length>1;return `<tr><td>${r.__rank}${tie?' (Tie)':''}</td><td class="scmClickStudent" onclick="scmShowStudentDetails('${r.student_id}')">${esc(r.student_name)}</td><td>SCM-${String(r.student_id||'').padStart(4,'0')}</td><td>${esc(r.age||'-')}</td><td>${esc(r.grade||'-')}</td><td>${esc(r.school_name||'-')}</td><td>${esc(statusOf(r))}</td><td>${n(r.stars||r.score)}/30</td><td>${n(r.solved_questions||r.solved)}/8</td><td>${fmt(r.total_time||r.time_used)}</td><td>${medalByRank(r.__rank,tie)}</td></tr>`}).join('')||'<tr><td colspan="11">No results saved for this selected round yet.</td></tr>'}</tbody></table><div class="scmPathBox">Report Round: <b>${esc(label)}</b><br>Ranking Rule: Stars → Solved → Time Used. Students share the same rank only if all three values are equal.</div>`;
+    $('scmReportOverlay').style.display='flex';
+  };
+})();
+</script>
+
 </body>
 </html>
 
