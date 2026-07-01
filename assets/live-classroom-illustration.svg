@@ -1,0 +1,44 @@
+<svg width="1100" height="650" viewBox="0 0 1100 650" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#eef7ff"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+    <linearGradient id="blue" x1="0" x2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient>
+  </defs>
+  <rect width="1100" height="650" rx="36" fill="url(#bg)"/>
+  <rect x="350" y="55" width="520" height="330" rx="22" fill="#07152f"/>
+  <rect x="375" y="85" width="360" height="270" rx="14" fill="#fff"/>
+  <text x="397" y="119" font-family="Arial" font-weight="900" font-size="20" fill="#0b2d5f">Knight Number Quest LIVE</text>
+  <rect x="398" y="142" width="250" height="190" rx="8" fill="#dbeafe" stroke="#0b5c38" stroke-width="4"/>
+  <g>
+    <script type="application/ecmascript"><![CDATA[]]></script>
+  </g>
+  <g>
+    <rect x="398" y="142" width="31.25" height="23.75" fill="#dbeafe"/><rect x="429.25" y="142" width="31.25" height="23.75" fill="#3b82f6"/>
+    <rect x="460.5" y="142" width="31.25" height="23.75" fill="#dbeafe"/><rect x="491.75" y="142" width="31.25" height="23.75" fill="#3b82f6"/>
+    <rect x="523" y="142" width="31.25" height="23.75" fill="#dbeafe"/><rect x="554.25" y="142" width="31.25" height="23.75" fill="#3b82f6"/>
+    <rect x="585.5" y="142" width="31.25" height="23.75" fill="#dbeafe"/><rect x="616.75" y="142" width="31.25" height="23.75" fill="#3b82f6"/>
+  </g>
+  <text x="512" y="255" font-family="Arial" font-size="58" fill="#0ea5e9" stroke="#fff" stroke-width="3">♞</text>
+  <circle cx="452" cy="200" r="18" fill="#f59e0b" stroke="#fff59d" stroke-width="5"/><text x="452" y="207" text-anchor="middle" font-family="Arial" font-size="22" font-weight="900" fill="#fff">8</text>
+  <circle cx="610" cy="292" r="18" fill="#f59e0b" stroke="#fff59d" stroke-width="5"/><text x="610" y="299" text-anchor="middle" font-family="Arial" font-size="22" font-weight="900" fill="#fff">7</text>
+  <rect x="755" y="118" width="86" height="54" rx="12" fill="#f8fbff"/><text x="798" y="139" text-anchor="middle" font-family="Arial" font-size="13" font-weight="900" fill="#0b2d5f">Target</text><text x="798" y="162" text-anchor="middle" font-family="Arial" font-size="24" font-weight="900" fill="#2563eb">15</text>
+  <rect x="755" y="190" width="86" height="54" rx="12" fill="#f8fbff"/><text x="798" y="212" text-anchor="middle" font-family="Arial" font-size="13" font-weight="900" fill="#0b2d5f">Stars</text><text x="798" y="235" text-anchor="middle" font-family="Arial" font-size="20" font-weight="900" fill="#16a34a">24/30</text>
+  <rect x="755" y="262" width="86" height="54" rx="12" fill="#f8fbff"/><text x="798" y="284" text-anchor="middle" font-family="Arial" font-size="13" font-weight="900" fill="#0b2d5f">Time</text><text x="798" y="307" text-anchor="middle" font-family="Arial" font-size="20" font-weight="900" fill="#f97316">02:35</text>
+  <circle cx="270" cy="230" r="52" fill="#0b2d5f"/><rect x="244" y="282" width="52" height="116" rx="20" fill="#0b2d5f"/><path d="M206 326c50-20 99-20 150 0" stroke="#0b2d5f" stroke-width="18" fill="none" stroke-linecap="round"/>
+  <text x="220" y="225" font-family="Arial" font-size="22" fill="#fff">Teacher</text>
+  <g>
+    <rect x="110" y="455" width="170" height="95" rx="14" fill="#fff" stroke="#bfdbfe"/>
+    <rect x="130" y="475" width="130" height="62" rx="8" fill="url(#blue)"/>
+    <text x="195" y="515" text-anchor="middle" font-size="24" font-family="Arial" fill="#fff">Mary</text>
+    <rect x="330" y="455" width="170" height="95" rx="14" fill="#fff" stroke="#bfdbfe"/>
+    <rect x="350" y="475" width="130" height="62" rx="8" fill="url(#blue)"/>
+    <text x="415" y="515" text-anchor="middle" font-size="24" font-family="Arial" fill="#fff">John</text>
+    <rect x="550" y="455" width="170" height="95" rx="14" fill="#fff" stroke="#bfdbfe"/>
+    <rect x="570" y="475" width="130" height="62" rx="8" fill="url(#blue)"/>
+    <text x="635" y="515" text-anchor="middle" font-size="24" font-family="Arial" fill="#fff">Saleh</text>
+    <rect x="770" y="455" width="170" height="95" rx="14" fill="#fff" stroke="#bfdbfe"/>
+    <rect x="790" y="475" width="130" height="62" rx="8" fill="url(#blue)"/>
+    <text x="855" y="515" text-anchor="middle" font-size="24" font-family="Arial" fill="#fff">Yusuf</text>
+  </g>
+  <text x="74" y="70" font-family="Arial" font-size="36" font-weight="900" fill="#07152f">Live Classroom</text>
+  <text x="74" y="108" font-family="Arial" font-size="20" font-weight="700" fill="#0b2d5f">Teacher explains. Students follow, solve, and compete in real time.</text>
+</svg>
