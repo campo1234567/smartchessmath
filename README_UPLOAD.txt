@@ -1,20 +1,24 @@
-# SmartChessMath Site Update V2
+SmartChessMath Live V1.0 — Visual Platform Page Update
 
-Files included:
+Upload these files to the MAIN WEBSITE repository/folder: smartchessmath
+Do NOT upload them to smartchessmath-live Worker repository.
+
+Files:
 - index.html
 - smartchessmath-live.html
-- site.css
-- assets/smart-chess-math-logo.svg
-- assets/live-classroom-illustration.svg
-- assets/platform-leap-card.svg
+- assets/scm-live-card.png
+- assets/scm-live-hero.png
+- assets/scm-live-overview.png
+- assets/scm-live-classroom.png
 
-What changed in V2:
-- Added a strong promotional feature card to the main index page.
-- Title: The 21st Century Learning Leap.
-- The card includes a visual image, short attractive explanation, and two buttons:
-  Open Platform Page
-  Enter Program
+What changed:
+1. The main homepage keeps its original design.
+2. A single SmartChessMath Live card was added inside Educational Programs.
+3. The homepage card button is: 🚀 SmartChessMath Live
+4. The button opens: smartchessmath-live.html
+5. The platform page contains multiple medium, equal-size visual sections.
+6. The final login buttons open:
+   https://smartchessmath-live.campo1234567.workers.dev/
 
-Upload:
-Upload all contents to the root of smartchessmath.com.
-Backup your current index.html before replacing it.
+Suggested Git commit message:
+Add SmartChessMath Live visual platform page

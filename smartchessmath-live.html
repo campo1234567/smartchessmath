@@ -1,127 +1,122 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SmartChessMath Live V1.0 — Interactive Educational Platform</title>
-  <meta name="description" content="SmartChessMath Live V1.0 is a live interactive educational platform for schools with classroom activities, student participation, rankings, reports, and certificates.">
-  <link rel="stylesheet" href="site.css">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartChessMath Live V1.0 — The 21st Century Learning Leap</title>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<style>
+:root{--navy:#08285a;--green:#0b8f2a;--green2:#18a84b;--gold:#ffd21f;--orange:#ff8a0b;--soft:#f5fff0;--ink:#0a2342;--line:#d9e9d6;--blue:#0e63d8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f8fff5 0%,#eefbe8 52%,#f9fff7 100%)}
+a{color:inherit}.container{max-width:1240px;margin:0 auto;padding:0 24px}.header{position:sticky;top:0;z-index:100;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.90));backdrop-filter:blur(14px);border-bottom:1px solid rgba(8,40,90,.08)}
+.nav{min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:900}.brand img{width:72px;height:72px;border-radius:50%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.12))}.brandTitle strong{display:block;font-size:26px;color:#06451d;letter-spacing:-.03em}.brandTitle span{display:block;font-size:13px;color:#f05a00;font-weight:900;letter-spacing:.12em;margin-top:3px;text-transform:uppercase}.menu{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.menu a{font-weight:900;text-decoration:none;color:#07351b;padding:9px 11px;border-radius:999px;font-size:15px;line-height:1;white-space:nowrap}.menu a:hover{background:#eaf8e6}.menu a.login{background:linear-gradient(180deg,#1fbc4d,#07852b);color:#fff;box-shadow:0 5px 0 #065d20,0 10px 18px rgba(0,0,0,.12)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:16px;padding:15px 22px;text-decoration:none;font-weight:900;color:#fff;background:linear-gradient(180deg,#1fbc4d,#07852b);box-shadow:0 6px 0 #065d20,0 12px 26px rgba(0,0,0,.16);cursor:pointer}.btn.orange{background:linear-gradient(180deg,#ffc338,#ff850b);box-shadow:0 6px 0 #c76400,0 12px 26px rgba(0,0,0,.16)}.btn.blue{background:linear-gradient(180deg,#2679ff,#0a54d6);box-shadow:0 6px 0 #063c9b,0 12px 26px rgba(0,0,0,.16)}
+.hero{padding:34px 0 22px}.heroCard{background:#fff;border:1px solid #d9e9ff;border-radius:34px;padding:18px;box-shadow:0 24px 60px rgba(8,40,90,.12);overflow:hidden}.heroCard img{display:block;width:100%;max-height:680px;object-fit:cover;object-position:center;border-radius:26px}.headline{text-align:center;padding:30px 0 14px}.badge{display:inline-flex;align-items:center;gap:9px;border-radius:999px;background:#08285a;color:#fff;font-weight:900;padding:10px 16px;margin-bottom:16px}.headline h1{font-size:clamp(38px,5vw,68px);line-height:1;margin:0 0 12px;color:#08285a;letter-spacing:-.05em}.headline h1 span{color:#0b8f2a}.lead{font-size:21px;line-height:1.55;font-weight:900;color:#163050;margin:0 auto 22px;max-width:880px}.heroActions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.section{padding:28px 0}.sectionTitle{text-align:center;color:#06451d;font-size:38px;margin:0 0 10px;font-weight:900;letter-spacing:-.03em}.sectionSub{text-align:center;color:#163050;font-weight:800;max-width:780px;margin:0 auto 26px;line-height:1.55}.benefits{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.benefit{background:#fff;border:1px solid #e2eddc;border-radius:22px;padding:20px;text-align:center;box-shadow:0 14px 30px rgba(0,0,0,.07);font-weight:900;color:#0a2858}.benefit b{display:flex;width:58px;height:58px;margin:0 auto 12px;align-items:center;justify-content:center;border-radius:18px;background:linear-gradient(180deg,#eef8ff,#eaffef);font-size:30px}.benefit span{display:block;font-size:18px;line-height:1.3}
+.visualGrid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.visualCard{background:#fff;border:1px solid #dbeaf8;border-radius:28px;padding:16px;box-shadow:0 18px 40px rgba(8,40,90,.10)}.visualFrame{height:360px;border-radius:22px;overflow:hidden;background:#f6fbff;border:1px solid #d9e9ff}.visualFrame img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}.visualCard h3{font-size:24px;color:#0a2858;margin:16px 8px 7px}.visualCard p{font-size:16px;line-height:1.5;font-weight:800;margin:0 8px 4px;color:#1a3558}.wideVisual{grid-column:1/-1}.wideVisual .visualFrame{height:430px}.wideVisual .visualFrame img{object-position:center top}
+.workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.step{background:#fff;border:1px solid #e2eddc;border-radius:22px;padding:18px;text-align:center;font-weight:900;color:#0a2858;box-shadow:0 12px 26px rgba(0,0,0,.07)}.step b{display:flex;width:54px;height:54px;margin:0 auto 10px;border-radius:50%;align-items:center;justify-content:center;background:#f0fff2;color:#0b8f2a;border:3px solid #0b8f2a;font-size:24px}
+.cta{margin:20px auto 50px;background:linear-gradient(135deg,#08285a,#005c25);border-radius:30px;padding:30px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;color:white;box-shadow:0 20px 45px rgba(0,0,0,.18)}.cta h2{margin:0 0 8px;font-size:32px}.cta p{margin:0;font-weight:900;line-height:1.5;color:#eaf7ff}.footer{background:linear-gradient(180deg,#06451d,#003011);color:white;text-align:center;padding:30px 0;font-weight:800}.footer img{width:66px;display:block;margin:0 auto 10px}
+@media(max-width:1000px){.benefits{grid-template-columns:repeat(2,1fr)}.visualGrid,.workflow,.cta{grid-template-columns:1fr}.wideVisual .visualFrame,.visualFrame{height:320px}.nav{align-items:flex-start;flex-direction:column;padding:12px 0}}
+@media(max-width:600px){.container{padding:0 16px}.brand img{width:58px;height:58px}.brandTitle strong{font-size:20px}.brandTitle span{font-size:10px}.headline h1{font-size:38px}.lead{font-size:18px}.sectionTitle{font-size:30px}.benefits{grid-template-columns:1fr}.heroCard{padding:10px;border-radius:24px}.heroCard img{border-radius:18px}.visualFrame,.wideVisual .visualFrame{height:240px}.cta{padding:22px}.btn{width:100%}}
+</style>
 </head>
 <body>
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="index.html" aria-label="Smart Chess Math home">
-      <img src="assets/smart-chess-math-logo.svg" alt="Smart Chess Math logo">
-      <span class="brand-title"><strong>Smart Chess Math</strong><span>CHESS • MATHEMATICS • LOGIC</span></span>
+<header class="header">
+  <div class="container nav">
+    <a class="brand" href="index.html">
+      <img src="logo-smart-chess-math.png" alt="Smart Chess Math Logo">
+      <div class="brandTitle"><strong>Smart Chess Math</strong><span>Chess • Mathematics • Logic</span></div>
     </a>
-    <nav class="nav" aria-label="Main navigation">
+    <nav class="menu">
       <a href="index.html#programs">Programs</a>
       <a href="index.html#championships">Championships</a>
-      <a href="index.html#workflow">Workflow</a>
-      <a class="mission" href="index.html#mission">🌍 Mission</a>
       <a href="index.html#contact">Contact</a>
-      <a class="live" href="https://smartchessmath-live.campo1234567.workers.dev/">Enter Program</a>
+      <a class="login" href="https://smartchessmath-live.campo1234567.workers.dev/">🎓 Login for Schools</a>
     </nav>
   </div>
 </header>
-
 <main>
-  <section class="hero live-hero">
-    <div class="container hero-card">
-      <div>
-        <span class="badge">SmartChessMath Live V1.0</span>
-        <h1>Interactive Educational Platform for Schools.</h1>
-        <p class="lead">A live classroom platform that connects chess, mathematics, logic, student participation, rankings, reports, and certificates in one interactive school experience.</p>
-        <p class="sublead">Built for schools that want to develop 21st century thinking skills: focus, planning, problem solving, confidence, calculation speed, and smart competition.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="https://smartchessmath-live.campo1234567.workers.dev/">Enter SmartChessMath Live V1.0 →</a>
-          <a class="btn btn-dark" href="#benefits">Why schools use it</a>
+  <section class="hero">
+    <div class="container">
+      <div class="headline">
+        <div class="badge">🚀 SmartChessMath Live V1.0</div>
+        <h1>The 21st Century <span>Learning Leap</span></h1>
+        <p class="lead">A modern live classroom where chess, mathematics, logic, participation, rankings, reports, and certificates become one exciting school experience.</p>
+        <div class="heroActions">
+          <a class="btn blue" href="https://smartchessmath-live.campo1234567.workers.dev/">Enter SmartChessMath Live</a>
+          <a class="btn orange" href="#visual-experience">See the Live Experience</a>
         </div>
-        <p class="micro">Registered schools enter with their school username and password. New schools can contact SmartChessMath administration to subscribe.</p>
       </div>
-      <div class="school-login-preview" aria-label="School login preview">
-        <div class="login-title">🏫 School Login</div>
-        <p class="login-copy">Registered schools can enter the platform, create live classrooms, and use the interactive activities with their students.</p>
-        <div class="field"><label>School Username</label><div class="input">school-username</div></div>
-        <div class="field"><label>Password</label><div class="input">••••••••</div></div>
-        <a class="btn btn-primary" href="https://smartchessmath-live.campo1234567.workers.dev/">Login to the Program</a>
-        <div class="notice">This platform is available for registered schools only. To subscribe, please contact SmartChessMath administration.</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="benefits">
-    <div class="container">
-      <div class="section-title">
-        <div class="eyebrow">Why it matters</div>
-        <h2>A modern school platform, not just a game.</h2>
-        <p>SmartChessMath Live V1.0 helps teachers turn mathematics into an active, visual, and measurable classroom experience.</p>
-      </div>
-      <div class="feature-grid">
-        <article class="feature"><div class="icon">🎓</div><h3>Easy for teachers</h3><p>Open a classroom, select an activity, explain live, and guide students step by step.</p></article>
-        <article class="feature"><div class="icon">🧠</div><h3>Thinking skills</h3><p>Students practice logic, planning, attention, and exact calculation through chess movement.</p></article>
-        <article class="feature"><div class="icon">🏆</div><h3>Competition ready</h3><p>Official challenges, stars, rankings, medals, reports, and certificates support school events.</p></article>
-        <article class="feature"><div class="icon">📊</div><h3>Clear progress</h3><p>Teachers and schools can observe student performance, speed, accuracy, and participation.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container split">
-      <div class="panel">
-        <h3>What the teacher can do</h3>
-        <ul>
-          <li>Create a live classroom for a school group.</li>
-          <li>Explain questions before the challenge starts.</li>
-          <li>Let a selected student solve while everyone watches.</li>
-          <li>Start official rounds and monitor participation.</li>
-          <li>Print reports and certificates after the challenge.</li>
-        </ul>
-      </div>
-      <div class="panel">
-        <h3>What students experience</h3>
-        <ul>
-          <li>Join from a teacher link or classroom code.</li>
-          <li>Follow the teacher explanation in real time.</li>
-          <li>Solve chess-math challenges on their own device.</li>
-          <li>Compete safely with classmates.</li>
-          <li>Build confidence through visible progress.</li>
-        </ul>
+      <div class="heroCard">
+        <img src="assets/scm-live-hero.png" alt="SmartChessMath Live classroom with teacher and students">
       </div>
     </div>
   </section>
 
   <section class="section">
     <div class="container">
-      <div class="section-title">
-        <div class="eyebrow">Included Live Programs</div>
-        <h2>Four live classroom activities to start.</h2>
-        <p>The platform currently includes Knight, Queen, Rook, and Bishop Number Quest LIVE. More activities can be added as the platform grows.</p>
+      <h2 class="sectionTitle">Built for Schools</h2>
+      <p class="sectionSub">Short, clear, and visual: teachers create the classroom, students join, everyone participates, and the school receives meaningful results.</p>
+      <div class="benefits">
+        <div class="benefit"><b>🧑‍🏫</b><span>Live Classroom</span></div>
+        <div class="benefit"><b>🎧</b><span>Voice & Interaction</span></div>
+        <div class="benefit"><b>🏆</b><span>Rankings</span></div>
+        <div class="benefit"><b>📜</b><span>Reports & Certificates</span></div>
       </div>
-      <div class="program-grid">
-        <article class="program"><div class="program-head">♞ Knight Number Quest LIVE</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♞</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Plan knight moves and collect exact target numbers.</p></article>
-        <article class="program"><div class="program-head">♕ Queen Number Quest LIVE</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♕</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Use queen lines to build smart mathematical routes.</p></article>
-        <article class="program"><div class="program-head">♖ Rook Number Quest LIVE</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♖</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Think in rows and columns to reach the exact target.</p></article>
-        <article class="program"><div class="program-head">♗ Bishop Number Quest LIVE</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♗</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Move on diagonals, discover patterns, and solve challenges.</p></article>
+    </div>
+  </section>
+
+  <section id="visual-experience" class="section">
+    <div class="container">
+      <h2 class="sectionTitle">A Visual Learning Experience</h2>
+      <p class="sectionSub">The platform is designed to impress schools visually before they read long explanations.</p>
+      <div class="visualGrid">
+        <article class="visualCard wideVisual">
+          <div class="visualFrame"><img src="assets/scm-live-overview.png" alt="SmartChessMath Live overview built for schools"></div>
+          <h3>Interactive. Live. Educational.</h3>
+          <p>One clear view for classrooms, challenges, student participation, rankings, certificates, and school reports.</p>
+        </article>
+        <article class="visualCard">
+          <div class="visualFrame"><img src="assets/scm-live-classroom.png" alt="Live class and student practice sessions"></div>
+          <h3>Live Class + Student Practice</h3>
+          <p>The teacher explains, students follow from their laptops, and the challenge becomes a real classroom activity.</p>
+        </article>
+        <article class="visualCard">
+          <div class="visualFrame"><img src="assets/scm-live-hero.png" alt="Teacher guiding students through SmartChessMath Live"></div>
+          <h3>The 21st Century Learning Leap</h3>
+          <p>Chess becomes a practical tool for mathematics, logic, focus, planning, and school competition.</p>
+        </article>
       </div>
     </div>
   </section>
 
   <section class="section">
-    <div class="container final-cta">
+    <div class="container">
+      <h2 class="sectionTitle">Simple School Workflow</h2>
+      <div class="workflow">
+        <div class="step"><b>1</b>School Login</div>
+        <div class="step"><b>2</b>Create Classroom</div>
+        <div class="step"><b>3</b>Students Join</div>
+        <div class="step"><b>4</b>Live Challenge</div>
+        <div class="step"><b>5</b>Reports & Certificates</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="cta">
       <div>
-        <h2>Enter the program.</h2>
-        <p>Schools with an active account can enter the platform, write the teacher name, create a classroom, and start the live learning experience.</p>
+        <h2>Ready to enter the live learning arena?</h2>
+        <p>Registered schools can access SmartChessMath Live through the official school login.</p>
       </div>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="https://smartchessmath-live.campo1234567.workers.dev/">Enter SmartChessMath Live V1.0 →</a>
-      </div>
+      <a class="btn orange" href="https://smartchessmath-live.campo1234567.workers.dev/">Enter SmartChessMath Live</a>
     </div>
   </section>
 </main>
-
 <footer class="footer">
-  <div class="container">SmartChessMath Live V1.0<br>Educational concept, design, and development by Eng. Salman Ahmed Salman<br>© 2026 Smart Chess Math. All rights reserved.</div>
+  <img src="logo-smart-chess-math.png" alt="Smart Chess Math">
+  <strong>Smart Chess Math</strong><br>
+  SmartChessMath Live V1.0 • The 21st Century Learning Leap
 </footer>
 </body>
 </html>
