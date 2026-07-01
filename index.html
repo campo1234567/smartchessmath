@@ -1,154 +1,508 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Smart Chess Math — Chess, Mathematics, Logic</title>
-  <meta name="description" content="Interactive chess-and-math programs for schools, classrooms, championships, reports, and certificates.">
-  <link rel="stylesheet" href="site.css">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Smart Chess Math — Chess, Mathematics, Logic & School Championships</title>
+<link rel="icon" type="image/png" href="favicon.png"/>
+
+<style>
+:root{
+  --navy:#08285a;--green:#0b8f2a;--green2:#31b83f;--gold:#ffd21f;
+  --orange:#ff970f;--orange2:#ff6f00;--purple:#6034a6;--ink:#0a2342;
+  --soft:#f5fff0;--card:#ffffff;--line:#d9e9d6;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  color:var(--ink);
+  background:linear-gradient(180deg,#f8fff5 0%,#f6fff3 42%,#ecfbdf 100%);
+}
+a{color:inherit}
+.container{max-width:1240px;margin:0 auto;padding:0 24px}
+.header{
+  position:sticky;top:0;z-index:100;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,255,255,.88));
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(8,40,90,.08);
+}
+.nav{
+  min-height:86px;display:flex;align-items:center;justify-content:space-between;gap:22px
+}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:900}
+.brand img{width:72px;height:72px;border-radius:50%;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(0,0,0,.12))}
+.brandTitle{line-height:1}
+.brandTitle strong{display:block;font-size:26px;color:#06451d;letter-spacing:-.03em}
+.brandTitle span{display:block;font-size:13px;color:#f05a00;font-weight:900;letter-spacing:.12em;margin-top:3px;text-transform:uppercase}
+.menu{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.menu a{font-weight:900;text-decoration:none;color:#07351b;padding:9px 11px;border-radius:999px;font-size:15px;line-height:1;white-space:nowrap}
+.menu a:hover{background:#eaf8e6}
+.menu a.missionLink{background:linear-gradient(180deg,#fff2a8,#ffd21f);color:#08285a;border:1px solid #efc928;box-shadow:0 5px 13px rgba(0,0,0,.10)}
+.menu a.dashboardLink{background:linear-gradient(180deg,#1fbc4d,#07852b);color:#fff;box-shadow:0 5px 0 #065d20,0 10px 18px rgba(0,0,0,.12)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  border:0;border-radius:14px;padding:14px 19px;text-decoration:none;font-weight:900;
+  color:#fff;background:linear-gradient(180deg,#19b344,#087b28);
+  box-shadow:0 6px 0 #055a1b,0 12px 26px rgba(0,0,0,.18);cursor:pointer
+}
+.btn.orange{background:linear-gradient(180deg,#ffc338,#ff850b);color:#fff;box-shadow:0 6px 0 #c76400,0 12px 26px rgba(0,0,0,.18)}
+.btn.secondary{background:linear-gradient(180deg,#fff,#eff9ed);color:#07451c;border:1px solid #d8ead7;box-shadow:0 5px 0 #c2d6c3,0 10px 20px rgba(0,0,0,.12)}
+.btn.dashboard{background:linear-gradient(180deg,#1fbc4d,#07852b);box-shadow:0 6px 0 #065d20}
+
+.heroShell{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(circle at 70% 18%,rgba(255,220,40,.55),transparent 28%),
+    radial-gradient(circle at 20% 20%,rgba(165,255,96,.33),transparent 30%),
+    linear-gradient(135deg,#00561b 0%,#038b2a 42%,#82d934 100%);
+}
+.heroShell:before{
+  content:"";position:absolute;inset:0;opacity:.18;
+  background-image:
+    linear-gradient(45deg,rgba(255,255,255,.16) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.16) 75%),
+    linear-gradient(45deg,rgba(255,255,255,.16) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.16) 75%);
+  background-position:0 0,42px 42px;background-size:84px 84px;
+  transform:rotate(-10deg) scale(1.25);
+}
+.heroShell:after{
+  content:"♜   ♞   ♟   ♛   ♝";position:absolute;left:-40px;right:-40px;top:110px;
+  font-size:110px;color:rgba(255,255,255,.12);letter-spacing:52px;white-space:nowrap;pointer-events:none
+}
+.hero{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:.88fr 1.12fr;gap:34px;align-items:center;
+  min-height:670px;padding:54px 0 74px;
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;padding:11px 17px;border-radius:999px;
+  background:linear-gradient(180deg,#81df42,#38a90f);color:white;border:1px solid rgba(255,255,255,.35);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 22px rgba(0,0,0,.18);
+  text-transform:uppercase;font-weight:900;font-size:14px;letter-spacing:.02em;margin-bottom:20px
+}
+h1{
+  font-size:clamp(48px,6vw,86px);line-height:.95;margin:0;color:#fff;
+  letter-spacing:-.05em;text-shadow:0 4px 14px rgba(0,0,0,.25)
+}
+h1 .gold{
+  display:inline-block;color:var(--gold);
+  text-shadow:0 0 15px rgba(255,210,31,.82),0 4px 12px rgba(0,0,0,.35)
+}
+.heroLead{
+  color:#fff;font-weight:900;font-size:clamp(18px,2vw,23px);line-height:1.45;
+  margin:24px 0 28px;max-width:570px;text-shadow:0 2px 9px rgba(0,0,0,.28)
+}
+.heroActions{display:flex;gap:18px;flex-wrap:wrap}
+.heroVisual{position:relative;min-height:545px}
+.photoStage{
+  position:absolute;right:0;top:0;width:min(680px,100%);
+  min-height:500px;border-radius:48px 48px 22px 22px;
+  background:linear-gradient(140deg,#fff9d9 0%,#fff 52%,#eaffcf 100%);
+  border:6px solid rgba(255,255,255,.92);
+  box-shadow:0 30px 65px rgba(0,0,0,.28);
+  overflow:hidden;
+}
+.photoStage:before{
+  content:"♕";position:absolute;right:70px;top:-10px;font-size:260px;line-height:1;
+  color:rgba(255,193,12,.45);text-shadow:0 0 35px rgba(255,200,24,.95),0 0 70px rgba(255,200,24,.75);transform:rotate(-5deg);z-index:1
+}
+.photoStage:after{
+  content:"★  ✦  ★";position:absolute;right:28px;top:35px;font-size:38px;color:#ffc400;
+  letter-spacing:28px;text-shadow:0 0 14px rgba(255,208,0,.95);z-index:3
+}
+.photoStage img{
+  position:absolute;z-index:2;left:0;bottom:0;width:100%;height:100%;object-fit:cover;
+  object-position:center center;filter:saturate(1.08) contrast(1.04)
+}
+.heroSlogan{
+  position:absolute;z-index:4;right:52px;top:78px;text-align:center;
+  color:#08722d;font-weight:900;font-size:24px;line-height:1.35;transform:rotate(-4deg);
+  text-shadow:0 2px 0 rgba(255,255,255,.7)
+}
+.heroSlogan span{display:block;font-size:28px}
+.statsBand{
+  position:absolute;z-index:6;left:44px;right:44px;bottom:-34px;display:grid;grid-template-columns:repeat(3,1fr);
+  background:rgba(255,255,255,.96);border-radius:24px;box-shadow:0 20px 40px rgba(0,0,0,.20);overflow:hidden;
+  border:1px solid rgba(0,0,0,.08)
+}
+.stat{padding:22px 10px;text-align:center;font-weight:900;border-right:1px solid #dbe6d8}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-size:34px;color:#0b8f2a;margin-bottom:4px}.stat .orange{color:#f7a000}.stat .purple{color:#5d37a1}
+.wave{position:absolute;left:0;right:0;bottom:-1px;height:86px;background:#f8fff5;
+  clip-path:ellipse(78% 100% at 50% 100%);z-index:1
+}
+
+.section{padding:24px 0}.sectionTitle{text-align:center;color:#06451d;font-size:38px;margin:0 0 8px;font-weight:900;letter-spacing:-.03em}.sectionTitle:after{content:"★";display:block;color:#f4c430;font-size:20px;line-height:1;margin-top:6px}.sectionSub{text-align:center;color:#163050;font-weight:800;max-width:720px;margin:0 auto 30px;line-height:1.55}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.program{background:#fff;border-radius:24px;padding:28px;box-shadow:0 18px 36px rgba(0,0,0,.11);border:1px solid #e2eddc;min-height:300px;display:flex;flex-direction:column;justify-content:space-between}.program .icon{font-size:62px}.program h3{font-size:24px;color:#0a2858;margin:16px 0 10px}.program p{font-size:16px;line-height:1.55;font-weight:800;color:#173050;margin:0 0 16px}.pills{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}.pill{border-radius:999px;background:#fff2c7;color:#d85c00;font-weight:900;padding:8px 13px}.pill:first-child{background:#dff6d8;color:#08792b}
+.grid2{display:grid;grid-template-columns:1.05fr .95fr;gap:24px}
+.panel{background:#fff;border:1px solid #e2eddc;border-radius:24px;padding:26px;box-shadow:0 18px 36px rgba(0,0,0,.1)}.panel h3{font-size:28px;color:#0a2858;margin:0 0 10px}.roleGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.role{background:#fff;border:1px solid #e0ecda;border-radius:18px;text-align:center;padding:17px 8px;font-weight:900;box-shadow:0 8px 18px rgba(0,0,0,.06)}.roleIcon{font-size:34px;margin-bottom:6px}
+.workflow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start}.step{text-align:center;font-weight:900;color:#0a2858}.stepIcon{width:54px;height:54px;margin:0 auto 9px;border:3px solid #0b9b32;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:25px;color:#0b9b32;background:#f8fff5}.step:nth-child(even) .stepIcon{border-color:#ff970f;color:#ff970f}
+.contactWrap{display:grid;grid-template-columns:1.1fr .9fr;gap:24px}.contactBox{background:#fff;border:1px solid #e2eddc;border-radius:24px;padding:26px;box-shadow:0 18px 36px rgba(0,0,0,.1)}.contactBox h3{font-size:26px;color:#0a2858;margin:0 0 14px}.contactBox input,.contactBox textarea{width:100%;border:1px solid #cfded0;border-radius:10px;padding:13px;margin:8px 0;font-weight:800}.contactBox textarea{min-height:112px}.contactItem{display:flex;gap:10px;margin:12px 0;font-weight:800;color:#0f2b4e}.contactItem strong{color:#06451d}
+.footer{background:linear-gradient(180deg,#06451d,#003011);color:white;text-align:center;padding:34px 0;font-weight:800;position:relative;overflow:hidden}.footer:before{content:"♜ ♞ ♝";position:absolute;left:28px;bottom:10px;font-size:70px;color:rgba(255,255,255,.12);letter-spacing:18px}.footer img{width:70px;display:block;margin:0 auto 10px}.small{font-size:13px;color:#557}
+
+.footer a{
+  color:#ffd21f;
+  text-decoration:none;
+  font-weight:700;
+}
+.footer a:hover{
+  text-decoration:underline;
+}
+
+
+@media(max-width:950px){
+ .hero{grid-template-columns:1fr;min-height:auto;padding-bottom:110px}.heroVisual{min-height:520px}.photoStage{left:0;margin:auto}.cards,.grid2,.contactWrap{grid-template-columns:1fr}.roleGrid{grid-template-columns:repeat(2,1fr)}.nav{align-items:flex-start;flex-direction:column;padding:12px 0}.menu{gap:8px}
+}
+@media(max-width:600px){
+ .container{padding:0 16px}.brand img{width:58px;height:58px}.brandTitle strong{font-size:20px}.brandTitle span{font-size:10px}.menu a{font-size:13px;padding:8px}.heroActions .btn{width:100%}.photoStage{min-height:410px;border-radius:30px}.heroSlogan{font-size:16px;right:20px}.heroSlogan span{font-size:20px}.statsBand{left:8px;right:8px}.stat{padding:14px 4px;font-size:12px}.stat b{font-size:23px}.workflow{grid-template-columns:1fr 1fr}.sectionTitle{font-size:30px}
+}
+
+/* === v8.5 Clean Split Home Slider === */
+.heroSlider{
+  position:relative;overflow:hidden;background:#f7fff1;
+  min-height:520px;border-bottom:1px solid rgba(0,0,0,.06)
+}
+.sliderTrack{position:relative;height:520px}
+.slide{
+  position:absolute;inset:0;opacity:0;transform:translateX(10px);
+  transition:opacity .75s ease,transform .9s ease;
+  display:grid;grid-template-columns:42% 58%;align-items:stretch;
+  background:linear-gradient(110deg,#ffffff 0%,#f7fff0 48%,#e7ffd9 100%)
+}
+.slide.active{opacity:1;transform:translateX(0);z-index:2}
+.slideContent{
+  position:relative;z-index:3;align-self:center;max-width:560px;margin-left:max(38px,calc((100vw - 1240px)/2 + 24px));
+  padding:30px 30px 28px;border-radius:26px;background:rgba(255,255,255,.72);
+  backdrop-filter:blur(10px);box-shadow:0 18px 45px rgba(0,0,0,.10);border:1px solid rgba(255,255,255,.9)
+}
+.slideMedia{position:relative;overflow:hidden;min-height:520px;background-size:cover;background-position:center right;}
+.slideMedia:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(247,255,241,.78) 0%,rgba(255,255,255,.16) 22%,rgba(255,255,255,0) 55%)}
+.slideMedia:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(0,0,0,.08))}
+.slideBadge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#ffe66a,#ffbd22);color:#083d18;padding:9px 15px;border-radius:999px;font-weight:900;box-shadow:0 5px 13px rgba(0,0,0,.13);margin-bottom:14px;font-size:14px}
+.slideTitle{font-size:clamp(36px,4.3vw,62px);line-height:1.02;margin:0 0 16px;font-weight:1000;letter-spacing:-.05em;color:#06451d;text-shadow:0 1px 0 rgba(255,255,255,.75)}
+.slideTitle .gold{color:#ffd21f;text-shadow:0 0 14px rgba(255,210,31,.7),0 2px 2px rgba(0,0,0,.18)}
+.slideText{color:#0e2d4b;font-weight:900;font-size:clamp(16px,1.6vw,20px);line-height:1.5;margin:0 0 22px;max-width:520px}
+.slideActions{display:flex;gap:14px;flex-wrap:wrap}
+.slideMiniBenefits{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:26px;max-width:500px}
+.slideMiniBenefits .mini{font-weight:900;text-align:center;color:#123050;font-size:13px}
+.slideMiniBenefits .mini b{display:block;font-size:25px;margin-bottom:5px}
+.slideNav{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:10px;z-index:5}
+.slideDot{width:13px;height:13px;border-radius:50%;border:0;background:rgba(7,69,28,.22);cursor:pointer;box-shadow:0 0 0 3px rgba(255,255,255,.35)}
+.slideDot.active{background:#ffd21f;box-shadow:0 0 0 4px rgba(255,210,31,.24)}
+.slideArrow{position:absolute;z-index:5;top:50%;transform:translateY(-50%);width:46px;height:46px;border:0;border-radius:50%;background:rgba(255,255,255,.9);font-size:27px;font-weight:900;color:#06451d;cursor:pointer;box-shadow:0 10px 25px rgba(0,0,0,.16);opacity:.32;transition:opacity .25s ease}
+.heroSlider:hover .slideArrow{opacity:1}.slideArrow.prev{left:22px}.slideArrow.next{right:22px}
+@media(max-width:900px){
+ .heroSlider,.sliderTrack{height:680px;min-height:680px}.slide{grid-template-columns:1fr;grid-template-rows:auto 1fr}.slideContent{margin:22px;max-width:none;padding:24px}.slideMedia{min-height:360px;order:-1;background-position:center}.slideMedia:before{background:linear-gradient(180deg,rgba(255,255,255,0),rgba(247,255,241,.92))}.slideArrow{display:none}.slideMiniBenefits{grid-template-columns:repeat(2,1fr)}
+}
+
+
+/* === Final 1600x480 Website Slider === */
+.heroSlider{position:relative;overflow:hidden;background:#fff;min-height:480px;height:480px;border-bottom:1px solid rgba(0,0,0,.08)}
+.sliderTrack{position:relative;height:480px;max-width:1600px;margin:0 auto;background:#fff}
+.slide{position:absolute;inset:0;opacity:0;transform:none;transition:opacity .8s ease;background-size:cover;background-position:center;background-repeat:no-repeat;display:block}
+.slide.active{opacity:1;z-index:2}
+.slideHotspot{position:absolute;z-index:6;display:block;border-radius:18px;text-indent:-9999px;overflow:hidden}
+.slideHotspot.kadi{right:360px;bottom:78px;width:190px;height:58px}
+.slideHotspot.sally{left:55px;bottom:75px;width:290px;height:75px}
+.slideHotspot.jannah{left:60px;bottom:70px;width:320px;height:78px}
+.slideArrow{position:absolute;z-index:8;top:50%;transform:translateY(-50%);width:48px;height:48px;border:0;border-radius:50%;background:rgba(255,255,255,.92);font-size:32px;font-weight:900;color:#06451d;cursor:pointer;box-shadow:0 10px 25px rgba(0,0,0,.18);opacity:.55;transition:opacity .25s ease}
+.heroSlider:hover .slideArrow{opacity:1}.slideArrow.prev{left:22px}.slideArrow.next{right:22px}
+.slideNav{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:10px;z-index:8}
+.slideDot{width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(6,69,29,.28);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.slideDot.active{background:#ffd21f;box-shadow:0 0 0 4px rgba(255,210,31,.25)}
+@media(max-width:900px){.heroSlider,.sliderTrack{height:360px;min-height:360px}.slide{background-size:cover;background-position:center}.slideArrow{display:none}.slideNav{bottom:10px}}
+@media(max-width:600px){.heroSlider,.sliderTrack{height:300px;min-height:300px}.slide{background-size:cover;background-position:center}.slideHotspot{display:none}}
+
+
+/* SCM skills strip */
+.sectionTitle:after{content:none!important;display:none!important}
+.skillsStrip{display:flex;align-items:center;justify-content:center;gap:12px;margin:10px auto 26px;font-size:31px;font-weight:900;color:#06451d;flex-wrap:wrap}
+.skillsStrip .skillsArrow{font-size:28px;color:#f59e0b;margin:0 4px}
+.skillsStrip span{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:linear-gradient(180deg,#fff,#f2ffe9);border:1px solid #dbeed2;box-shadow:0 7px 18px rgba(0,0,0,.08);cursor:help;transition:.18s}
+.skillsStrip span:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.12)}
+@media(max-width:600px){.skillsStrip{font-size:25px;gap:8px}.skillsStrip span{width:36px;height:36px}}
+
+/* Smart Balance program card icon */
+.balanceIcon{width:132px;height:98px;display:flex;align-items:center;justify-content:flex-start;margin:0 0 8px}
+.balanceIcon svg{width:132px;height:98px;display:block;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18))}
+.balanceIcon text{font-family:Arial,Helvetica,sans-serif;font-weight:1000}
+
+</style>
+
 </head>
+
 <body>
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="index.html" aria-label="Smart Chess Math home">
-      <img src="assets/smart-chess-math-logo.svg" alt="Smart Chess Math logo">
-      <span class="brand-title"><strong>Smart Chess Math</strong><span>CHESS • MATHEMATICS • LOGIC</span></span>
+<header class="header">
+  <div class="container nav">
+    <a class="brand" href="#top">
+      <img src="logo-smart-chess-math.png" alt="Smart Chess Math Logo">
+      <div class="brandTitle"><strong>Smart Chess Math</strong><span>Chess • Mathematics • Logic</span></div>
     </a>
-    <nav class="nav" aria-label="Main navigation">
+    <nav class="menu">
       <a href="#programs">Programs</a>
       <a href="#championships">Championships</a>
       <a href="#workflow">Workflow</a>
-      <a class="mission" href="#mission">🌍 Mission</a>
+      <a class="missionLink" href="join-our-mission/index.html">🌍 Mission</a>
       <a href="#contact">Contact</a>
-      <a class="live" href="smartchessmath-live.html">SmartChessMath Live</a>
+      <a class="dashboardLink" href="dashboard.html">🎓 Dashboard</a>
     </nav>
   </div>
 </header>
 
-<main>
-  <section class="hero">
-    <div class="container hero-card">
-      <div>
-        <span class="badge">♞ Chess • Mathematics • Logic</span>
-        <h1>Learning that students feel, see, and solve.</h1>
-        <p class="lead">Smart Chess Math turns mathematics into movement, logic, challenge, and discovery.</p>
-        <p class="sublead">Modern interactive programs for schools that want stronger thinking skills, faster problem solving, deeper focus, and joyful classroom participation.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="smartchessmath-live.html">Explore SmartChessMath Live V1.0 →</a>
-          <a class="btn btn-dark" href="#programs">View Programs</a>
+<main id="top">
+  <section class="heroSlider" aria-label="Smart Chess Math Highlights">
+    <div class="sliderTrack">
+      <article class="slide active" style="background-image:url('assets/slide-kadi.png')" aria-label="Become a Math and Chess Champion">
+        <a class="slideHotspot kadi" href="knight.html" aria-label="Try Knight Number Quest"></a>
+      </article>
+      <article class="slide" style="background-image:url('assets/slide-sally.png')" aria-label="Your Child Is Your Greatest Treasure">
+        <a class="slideHotspot sally" href="#programs" aria-label="Explore Games"></a>
+      </article>
+      <article class="slide" style="background-image:url('assets/slide-jannah.png')" aria-label="Every Champion Starts with a Single Move">
+        <a class="slideHotspot jannah" href="#championships" aria-label="Join Championships"></a>
+      </article>
+    </div>
+    <button class="slideArrow prev" type="button" aria-label="Previous slide">‹</button>
+    <button class="slideArrow next" type="button" aria-label="Next slide">›</button>
+    <div class="slideNav" aria-label="Slider navigation">
+      <button class="slideDot active" type="button" aria-label="Slide 1"></button>
+      <button class="slideDot" type="button" aria-label="Slide 2"></button>
+      <button class="slideDot" type="button" aria-label="Slide 3"></button>
+    </div>
+  </section>
+
+  <section id="programs" class="container section">
+    <h2 class="sectionTitle">Educational Programs</h2>
+    <p class="sectionSub">Interactive chess-and-math programs designed for young learners, school pilots, competitions, and classroom practice.</p>
+    <div class="skillsStrip" aria-label="Smart Chess Math Skills">
+      <span title="Smart Chess Math Educational Programs">♞</span>
+      <span title="Smart Chess Math Educational Programs">♛</span>
+      <span title="Smart Chess Math Educational Programs">♜</span>
+      <span title="Smart Chess Math Educational Programs">♝</span>
+      <b class="skillsArrow">➜</b>
+      <span title="Creative Thinking">💡</span>
+      <span title="Strategic Thinking">🎯</span>
+      <span title="Planning & Organization">📋</span>
+      <span title="Pattern Recognition">🔍</span>
+    </div>
+    <div class="cards">
+      <article class="program">
+        <div>
+          <div class="icon">♘</div>
+          <h3>Knight Number Quest</h3>
+          <p>Knight movement, number targets, smart routes, time challenges, live class mode, and championship rankings.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Tournament Ready</span></div>
         </div>
-        <p class="micro">Designed for 21st century learners, classroom pilots, school championships, and live educational challenges.</p>
-      </div>
-      <div class="visual-panel">
-        <img src="assets/live-classroom-illustration.svg" alt="Teacher explains SmartChessMath Live while students follow on laptops">
-      </div>
+        <a class="btn orange" href="knight.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">♛</div>
+          <h3>Queen Number Quest</h3>
+          <p>Master queen lines, collect exact target numbers, discover smart routes, improve speed, and compete in live school championships.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="queen.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">♜</div>
+          <h3>Rook Number Quest</h3>
+          <p>Master straight-line thinking with the rook. Move across ranks and files, collect exact target numbers, improve planning speed, and compete in live school championships.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="rook.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">♝</div>
+          <h3>Bishop Number Quest</h3>
+          <p>Master diagonal thinking with the bishop. Follow legal diagonals, collect exact target numbers, recognize patterns, and compete in live school championships.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="bishop.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="balanceIcon" aria-hidden="true" style="font-size:64px;display:flex;align-items:center;justify-content:center;">⚖️<!--
+            <svg viewBox="0 0 120 90" role="img" aria-label="Smart Balance icon" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="sbGold" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#fff18a"/>
+                  <stop offset=".42" stop-color="#ffc531"/>
+                  <stop offset="1" stop-color="#c87400"/>
+                </linearGradient>
+                <linearGradient id="sbGreen" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#44d85b"/>
+                  <stop offset="1" stop-color="#0b8f2a"/>
+                </linearGradient>
+              </defs>
+              <line x1="22" y1="34" x2="98" y2="34" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
+              <line x1="60" y1="24" x2="60" y2="68" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="60" cy="34" r="9" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
+              <path d="M45 72h30" stroke="url(#sbGold)" stroke-width="8" stroke-linecap="round"/>
+              <path d="M37 72h46" stroke="#9b5d00" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+              <line x1="27" y1="34" x2="16" y2="59" stroke="#b87300" stroke-width="2"/>
+              <line x1="27" y1="34" x2="39" y2="59" stroke="#b87300" stroke-width="2"/>
+              <path d="M9 59 Q27 74 45 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
+              <text x="19" y="58" font-size="21" fill="#0a2858">♛</text>
+              <text x="31" y="58" font-size="19" fill="#0a2858">♜</text>
+              <line x1="93" y1="34" x2="82" y2="59" stroke="#b87300" stroke-width="2"/>
+              <line x1="93" y1="34" x2="105" y2="59" stroke="#b87300" stroke-width="2"/>
+              <path d="M75 59 Q93 74 111 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
+              <text x="78" y="62" font-size="32" fill="url(#sbGreen)" stroke="#fff5a6" stroke-width="1">14</text>
+            </svg>--></div>
+          <h3>Smart Balance</h3>
+          <p>Build target numbers using chess piece values. Discover multiple solutions, strengthen combinatorial thinking, optimization, mathematical reasoning, and strategic planning.</p>
+          <div class="pills"><span class="pill">Age 7+</span><span class="pill">Practice + Tournament</span></div>
+        </div>
+        <a class="btn orange" href="balance.html">Open Program →</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">⭐</div>
+          <h3>Smart Moves Junior</h3>
+          <p>Chess piece values, number recognition, logical thinking, quick challenges, and certificates for young learners.</p>
+          <div class="pills"><span class="pill">Age 6+</span><span class="pill">Game Mode</span></div>
+        </div>
+        <a class="btn" href="#">Coming Soon ⏳</a>
+      </article>
+      <article class="program">
+        <div>
+          <div class="icon">🏰</div>
+          <h3>Rescue the Princess</h3>
+          <p>A fun chess adventure that develops planning, logical thinking, and problem-solving skills.</p>
+          <div class="pills"><span class="pill">Age 5+</span><span class="pill">Adventure Mode</span></div>
+        </div>
+        <a class="btn orange" href="rescue-princess-online.html">🏰 Rescue the Princess</a>
+      </article>
     </div>
   </section>
 
-  <section class="platform-highlight">
-    <div class="container platform-feature-card">
-      <div class="platform-feature-art">
-        <img src="assets/platform-leap-card.svg" alt="SmartChessMath Live V1.0 — The 21st Century Learning Leap">
-      </div>
-      <div class="platform-feature-text">
-        <span class="tag">🚀 SmartChessMath Live V1.0</span>
-        <h2>The 21st Century Learning Leap</h2>
-        <p>A modern live educational platform for schools. Teachers can create classrooms, explain activities, run official challenges, monitor student progress, and print reports and certificates — while students learn mathematics through chess, logic, focus, and smart competition.</p>
-      </div>
-      <div class="platform-feature-actions">
-        <a class="btn btn-primary" href="smartchessmath-live.html">Open Platform Page →</a>
-        <a class="btn btn-dark" href="https://smartchessmath-live.campo1234567.workers.dev/">Enter Program</a>
-        <div class="mini-note">For registered schools. The program opens with School Login before the teacher creates a classroom.</div>
-      </div>
-    </div>
-  </section>
-
-  <section id="programs" class="section">
-    <div class="container">
-      <div class="section-title">
-        <div class="eyebrow">Educational Programs</div>
-        <h2>Chess-powered math activities students love.</h2>
-        <p>Each activity combines legal chess movement, number targets, smart routes, time challenges, and clear feedback to help students learn by doing.</p>
-      </div>
-      <div class="program-grid">
-        <article class="program"><div class="program-head">♞ Knight Number Quest</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♞</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Plan knight moves, collect exact target numbers, and build flexible thinking through challenge routes.</p></article>
-        <article class="program"><div class="program-head">♕ Queen Number Quest</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♕</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Use the queen’s lines to connect speed, strategy, and mathematical route planning.</p></article>
-        <article class="program"><div class="program-head">♖ Rook Number Quest</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♖</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Think in rows and columns, reach exact targets, and strengthen structured calculation.</p></article>
-        <article class="program"><div class="program-head">♗ Bishop Number Quest</div><div class="mini-board"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">7</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="piece">♗</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div><span class="num">5</span></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div><p>Explore diagonals, recognize patterns, and solve exact-number challenges through visual logic.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section id="mission" class="section">
-    <div class="container split">
+  <section id="championships" class="container section">
+    <div class="grid2">
       <div class="panel">
-        <h3>Built for schools</h3>
-        <p class="sublead">Smart Chess Math supports teachers with ready-to-use classroom activities, school competitions, and a powerful learning experience that develops thinking skills.</p>
-        <ul>
-          <li>Connects mathematics with chess movement and logic.</li>
-          <li>Improves focus, planning, calculation, and confidence.</li>
-          <li>Makes learning active, visual, and enjoyable.</li>
-          <li>Supports school pilots, clubs, and enrichment programs.</li>
-        </ul>
+        <h3>🏆 Pilot Championship</h3>
+        <p><strong>The first online school pilot</strong> will test student entries, participation control, three-round plays, live rankings, reports, and certificates.</p>
+        <div class="panel" style="box-shadow:none;margin-top:16px;padding:18px">
+          <h3 style="font-size:22px">♘ Knight Number Quest — School Pilot</h3>
+          <p><strong>Format:</strong> Round 1 (10 mins), Round 2 (10 mins), Round 3 (10 mins)</p>
+          <p><strong>Goal:</strong> Set number targets, live dash challenge, smart routes, real ranking, student profile, and certificate.</p>
+          <div class="roleGrid">
+            <div class="role"><div class="roleIcon">👑</div>Admin<br><br><a class="btn orange" href="dashboard.html">Open</a></div>
+            <div class="role"><div class="roleIcon">🛡️</div>Supervisor<br><br><a class="btn" href="dashboard.html">Open</a></div>
+            <div class="role"><div class="roleIcon">🎓</div>Student<br><br><a class="btn orange" href="knight.html">Enter</a></div>
+            <div class="role"><div class="roleIcon">🔭</div>Spectator<br><br><a class="btn secondary" href="#">Soon</a></div>
+          </div>
+        </div>
       </div>
-      <div class="panel">
-        <h3>Useful for teachers</h3>
-        <p class="sublead">Teachers can explain, observe, challenge, compare, and celebrate student progress with clear classroom tools.</p>
-        <ul>
-          <li>Live explanation and student participation.</li>
-          <li>Official challenges with rankings and medals.</li>
-          <li>Reports and certificates for rounds and champions.</li>
-          <li>Easy flow from classroom practice to school championship.</li>
-        </ul>
+
+      <div id="workflow" class="panel">
+        <h3>🚀 Pilot Workflow</h3>
+        <div class="workflow">
+          <div class="step"><div class="stepIcon">♙</div>1<br>Import<br>Students</div>
+          <div class="step"><div class="stepIcon">🏁</div>2<br>Create<br>Room</div>
+          <div class="step"><div class="stepIcon">👤</div>3<br>Students<br>Join</div>
+          <div class="step"><div class="stepIcon">♞</div>4<br>Play<br>3 Rounds</div>
+          <div class="step"><div class="stepIcon">📋</div>5<br>Print<br>Certificates</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="workflow" class="section">
-    <div class="container">
-      <div class="section-title">
-        <div class="eyebrow">Workflow</div>
-        <h2>From lesson to challenge in minutes.</h2>
+  <section id="contact" class="container section">
+    <div class="contactWrap">
+      <div class="contactBox">
+        <h3>Request a School Championship</h3>
+        <form id="schoolRequestForm">
+          <input name="contact" placeholder="Contact Person" required>
+          <input name="mobile" placeholder="Mobile / WhatsApp" required>
+          <input name="country" placeholder="Country" required>
+          <input name="school" placeholder="School / Organization" required>
+          <input name="email" type="email" placeholder="Email" required>
+          <textarea name="message" placeholder="Message"></textarea>
+          <input type="hidden" name="requestType" value="School Championship Request">
+          <button class="btn" type="submit">Send Request →</button>
+          <div id="requestStatus" style="margin-top:14px;font-weight:900;color:#08792b;line-height:1.45"></div>
+        </form>
       </div>
-      <div class="workflow">
-        <div class="step"><strong>1</strong>Choose activity</div>
-        <div class="step"><strong>2</strong>Create classroom</div>
-        <div class="step"><strong>3</strong>Students join</div>
-        <div class="step"><strong>4</strong>Explain & play</div>
-        <div class="step"><strong>5</strong>Rank, report, certify</div>
-      </div>
-    </div>
-  </section>
-
-  <section id="championships" class="section">
-    <div class="container final-cta">
-      <div>
-        <h2>Ready for live school challenges.</h2>
-        <p>SmartChessMath Live V1.0 gives schools a live classroom environment with teacher control, student participation, rankings, reports, and certificates.</p>
-      </div>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="smartchessmath-live.html">Open Live Platform Page →</a>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact" class="section">
-    <div class="container split">
-      <div class="panel">
-        <h3>Request a school pilot</h3>
-        <p class="sublead">Use Smart Chess Math for school enrichment, math clubs, educational chess events, and official classroom challenges.</p>
-        <a class="btn btn-green" href="mailto:info@smartchessmath.com">Contact Smart Chess Math</a>
-      </div>
-      <div class="panel">
-        <h3>Educational concept</h3>
-        <p class="sublead">Educational concept, design, and development by Eng. Salman Ahmed Salman.</p>
+      <div class="contactBox">
+        <h3>Direct Contact</h3>
+        <div class="contactItem">👤 <div><strong>Eng. Salman Ahmed Salman</strong><br>Head of Schools & eSports Committee — Arab Chess Federation</div></div>
+        <div class="contactItem">📧 <div><strong>Email</strong><br>smartchessmath@gmail.com<br>campo12345@yahoo.com</div></div>
+        <div class="contactItem">💬 <div><strong>WhatsApp Türkiye</strong><br><a href="https://wa.me/905526739958">+90 552 673 9958</a></div></div>
+        <div class="contactItem">💬 <div><strong>WhatsApp Iraq</strong><br><a href="https://wa.me/9647731687477">+964 773 168 7477</a></div></div>
       </div>
     </div>
   </section>
 </main>
 
 <footer class="footer">
-  <div class="container">© 2026 Smart Chess Math. All rights reserved.</div>
+  <img src="logo-smart-chess-math.png" alt="Smart Chess Math">
+  <strong>Smart Chess Math</strong><br>
+  Chess • Mathematics • Logic • School Championships<br>
+  © 2026 Eng. Salman Ahmed Salman. All rights reserved.
+  |
+  <a href="legal.html#terms">Terms</a>
+  |
+  <a href="legal.html#privacy">Privacy</a>
+  |
+  <a href="legal.html#ip">IP Rights</a>
 </footer>
+
+<script>
+(function(){
+  const CONTACT_ENDPOINT='/contact-api/message';
+  const form=document.getElementById('schoolRequestForm');
+  const status=document.getElementById('requestStatus');
+  if(!form) return;
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const btn=form.querySelector('button[type="submit"]');
+    const original=btn ? btn.textContent : '';
+    if(status){status.style.color='#08792b';status.textContent='Sending your request...';}
+    if(btn){btn.disabled=true;btn.textContent='Sending...';}
+    try{
+      const data=Object.fromEntries(new FormData(form).entries());
+      const res=await fetch(CONTACT_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const out=await res.json().catch(()=>({}));
+      if(!res.ok || out.ok===false) throw new Error(out.error || 'Unable to send request.');
+      form.reset();
+      if(status){status.style.color='#08792b';status.textContent='✅ Thank you! Your request has been received successfully. Our team will contact you soon.';}
+    }catch(err){
+      if(status){status.style.color='#b42318';status.textContent='⚠️ We could not submit your request right now. Please try again after the contact Worker is configured.';}
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent=original;}
+    }
+  });
+})();
+</script>
+
+<script>
+(function(){
+  const slides=[...document.querySelectorAll('.heroSlider .slide')];
+  const dots=[...document.querySelectorAll('.heroSlider .slideDot')];
+  const prev=document.querySelector('.heroSlider .prev');
+  const next=document.querySelector('.heroSlider .next');
+  if(!slides.length) return;
+  let i=0,timer=null;
+  function show(n){
+    i=(n+slides.length)%slides.length;
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+  }
+  function play(){ clearInterval(timer); timer=setInterval(()=>show(i+1),6000); }
+  function stop(){ clearInterval(timer); timer=null; }
+  dots.forEach((d,idx)=>d.addEventListener('click',()=>{show(idx);play();}));
+  prev&&prev.addEventListener('click',()=>{show(i-1);play();});
+  next&&next.addEventListener('click',()=>{show(i+1);play();});
+  const slider=document.querySelector('.heroSlider');
+  slider&&slider.addEventListener('mouseenter', stop);
+  slider&&slider.addEventListener('mouseleave', play);
+  play();
+})();
+</script>
+
 </body>
 </html>
