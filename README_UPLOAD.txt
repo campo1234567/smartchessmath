@@ -1,7 +1,6 @@
-SmartChessMath Live V1.0 — Visual Platform Page Update
+SmartChessMath Live Visual Platform Page v3
 
-Upload these files to the MAIN WEBSITE repository/folder: smartchessmath
-Do NOT upload them to smartchessmath-live Worker repository.
+Upload these files to the root of the main smartchessmath website repo, not the smartchessmath-live Worker repo.
 
 Files:
 - index.html
@@ -11,14 +10,14 @@ Files:
 - assets/scm-live-overview.png
 - assets/scm-live-classroom.png
 
-What changed:
-1. The main homepage keeps its original design.
-2. A single SmartChessMath Live card was added inside Educational Programs.
-3. The homepage card button is: 🚀 SmartChessMath Live
-4. The button opens: smartchessmath-live.html
-5. The platform page contains multiple medium, equal-size visual sections.
-6. The final login buttons open:
-   https://smartchessmath-live.campo1234567.workers.dev/
+Changes in v3:
+- Added the missing SmartChessMath Live card to the homepage programs grid.
+- Removed duplicate lower hero image from the platform page.
+- Removed the second top button; the page now flows visually.
+- Improved the hero image so it does not crop the title.
+- Made platform-page visual images equal medium cards.
+- Added a teacher/school insight note about discovering student level and tracking development speed.
+- Strengthened Built for Schools benefit cards.
 
-Suggested Git commit message:
-Add SmartChessMath Live visual platform page
+Commit suggestion:
+Refine SmartChessMath Live platform page visuals
