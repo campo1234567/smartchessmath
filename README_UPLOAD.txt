@@ -9,3 +9,9 @@ Changes in this update:
 Upload all files/folders in this package to the root of the main smartchessmath website repository.
 Commit suggestion:
 Refine header navigation for SmartChessMath Live
+
+
+V3.3 HEADER FIX:
+- Dashboard button changed to a normal text navigation link.
+- SmartChessMath Live remains the highlighted main platform button.
+- Desktop header uses nowrap and tighter spacing to prevent Dashboard from dropping to a second line.
