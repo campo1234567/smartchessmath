@@ -21,3 +21,9 @@ Changes in v3:
 
 Commit suggestion:
 Refine SmartChessMath Live platform page visuals
+
+
+V3.1 update:
+- Added a top navigation button on the homepage: 🚀 SmartChessMath Live
+- The button links to smartchessmath-live.html
+- No change to the live Worker program.
