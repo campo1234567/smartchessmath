@@ -1,0 +1,2674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chess Shape Builders</title>
+<style>
+:root{
+  --board:min(640px,92vw);
+  --green1:#8ed966; --green2:#62a043; --green3:#3f7b2c;
+  --panel:#0f5b2e; --lime:#a8ff4a; --gold:#ffd84a;
+  --light:#dbeafe; --blue:#2f80ed;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Arial,system-ui,sans-serif;
+  background:
+    radial-gradient(circle at 18% 8%,rgba(255,255,255,.25),transparent 18%),
+    radial-gradient(circle at 82% 4%,rgba(255,216,77,.28),transparent 22%),
+    radial-gradient(circle at 50% -12%,#b7ef83 0%,var(--green1) 20%,var(--green2) 58%,var(--green3) 100%);
+  color:#fff; padding:10px; overflow-x:hidden;
+}
+.container{max-width:1280px;margin:auto;display:grid;gap:12px}
+h1{text-align:center;margin:8px 0 0;font-size:clamp(30px,4vw,48px);text-shadow:0 4px 0 rgba(0,0,0,.22)}
+.subtitle{text-align:center;font-size:clamp(16px,2vw,22px);font-weight:900;color:#fff6b8;margin-bottom:2px}
+.top{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.card,.control{
+  background:linear-gradient(180deg,#fff9d6,#ffe17d); color:#10251a;
+  border:3px solid rgba(255,255,255,.9); border-radius:18px;
+  padding:9px 14px; font-weight:1000; font-size:18px;
+  box-shadow:0 4px 12px rgba(0,0,0,.22);
+}
+.control{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.92)}
+select,button{border:none;border-radius:13px;padding:9px 13px;font-size:16px;font-weight:1000}
+select{background:#fff;color:#0b1b13;border:2px solid #b8c8ff;max-width:100%}
+button{background:linear-gradient(180deg,#ffbd4d,#f58220);color:#fff;cursor:pointer;border:3px solid #ffe5a9;box-shadow:0 4px 0 #bf5f00}
+button:active{transform:translateY(2px);box-shadow:0 2px 0 #bf5f00}
+.startStars{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.92);border:3px solid rgba(255,255,255,.9);border-radius:18px;padding:6px 10px;box-shadow:0 4px 12px rgba(0,0,0,.18);flex:0 1 auto;min-width:0}
+.startStars>button{flex:0 0 auto}
+.stars{display:flex;align-items:center;gap:4px;flex-wrap:nowrap}
+.star{width:28px;height:28px;flex:0 0 28px;border-radius:8px;background:linear-gradient(#fff6b8,#c79a35);border:2px solid #ffe8a4;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 2px 0 #895c19;opacity:.55}
+.star.done{opacity:1;background:linear-gradient(#fff7a8,#ffd84a);box-shadow:0 0 8px #ffd84a,0 0 14px #fff3a0}
+.star.pop{animation:starPop .45s ease}
+@keyframes starPop{0%{transform:scale(.82)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+.equalTick{fill:none;stroke:#fff6b8;stroke-width:7;stroke-linecap:round;filter:drop-shadow(0 0 6px #fff6b8)}
+.sideHit{fill:none;stroke:rgba(255,255,255,.01);stroke-width:36;stroke-linecap:round;pointer-events:stroke;cursor:pointer}
+.shapePath.equalSide{stroke:#fff6b8;stroke-width:8}
+.shapePath.geoHeight{stroke:#67e8f9;stroke-width:8;filter:drop-shadow(0 0 5px #67e8f9)}
+.stage{display:grid;grid-template-columns:calc(34px + var(--board)) minmax(330px,1fr);gap:18px;align-items:start}
+.boardWrap{display:grid;grid-template-areas:"ranks board" ". files";grid-template-columns:34px var(--board);grid-template-rows:var(--board) 28px;gap:7px;margin:0 auto}
+.ranks{grid-area:ranks;display:grid;grid-template-rows:repeat(8,1fr)}
+.files{grid-area:files;display:grid;grid-template-columns:repeat(8,1fr)}
+.rank,.file{display:flex;align-items:center;justify-content:center;color:#173a13;font-weight:1000;font-size:17px;text-shadow:0 1px 1px rgba(255,255,255,.35)}
+.board{
+  grid-area:board; position:relative; display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr);
+  width:var(--board);height:var(--board);border:4px solid #204020;border-radius:20px;overflow:hidden;
+  box-shadow:0 8px 0 #21482d,0 0 20px rgba(255,255,255,.4); background:#fff;
+}
+.square{position:relative;display:flex;align-items:center;justify-content:center;user-select:none;}
+.light{background:linear-gradient(135deg,#e7f2ff,#cfe1f6)}
+.dark{background:linear-gradient(135deg,#4490f4,#2576d8)}
+.shapeLayer{position:absolute;inset:0;z-index:5;pointer-events:none;overflow:visible}
+.shapeSvg{width:100%;height:100%;overflow:visible}
+.shapePath{
+  fill:none; stroke-linecap:round; stroke-linejoin:round; stroke-width:12;
+  filter:drop-shadow(0 0 6px currentColor) drop-shadow(0 0 13px currentColor) drop-shadow(0 0 21px currentColor);
+  stroke-dasharray:3000; stroke-dashoffset:3000; animation:drawLine 1.05s ease-out forwards;
+}
+.shapePath.thin{stroke-width:10}
+@keyframes drawLine{to{stroke-dashoffset:0}}
+.guideCircle{
+  fill:none; stroke:rgba(255,255,255,.65); stroke-width:9; stroke-dasharray:10 14;
+  filter:drop-shadow(0 0 7px currentColor) drop-shadow(0 0 18px currentColor);
+}
+.shapeDot{
+  filter:drop-shadow(0 0 8px currentColor) drop-shadow(0 0 15px currentColor);
+}
+.centerStar{
+  font-size:38px; filter:drop-shadow(0 0 8px #fff) drop-shadow(0 0 14px #ffd84a);
+}
+
+.centerPiece{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.15);z-index:8;
+  font-size:calc(var(--board)*.16);line-height:1;opacity:0;
+  font-family:"Segoe UI Symbol","Noto Sans Symbols","DejaVu Sans",Arial,sans-serif;
+  color:#fff;text-shadow:0 0 2px #333,0 0 7px #333,0 4px 7px rgba(0,0,0,.5);
+  filter:drop-shadow(0 0 8px rgba(255,255,255,.7));
+}
+.centerPiece.show{animation:piecePop .55s cubic-bezier(.18,1.3,.3,1) forwards}
+.movingPiece{position:absolute;z-index:12;font-size:calc(var(--board)*.105);line-height:1;font-family:"Segoe UI Symbol","Noto Sans Symbols","DejaVu Sans",Arial,sans-serif;color:#fff;text-shadow:0 0 2px #333,0 0 7px #333,0 4px 7px rgba(0,0,0,.5);filter:drop-shadow(0 0 8px rgba(255,255,255,.75));transform:translate(-50%,-50%);transition:left .85s ease, top .85s ease}
+.notationBox{font-size:16px;font-weight:1000;color:#fff6b8;margin-top:8px;min-height:26px}
+.missingPath{stroke-dasharray:14 14;opacity:.35;animation:none!important}
+.shapePath.knightGuide{stroke-dasharray:12 14;stroke-dashoffset:0;stroke-width:8;opacity:0;animation:knightAppear .65s ease-out forwards}
+@keyframes knightAppear{to{opacity:.95}}
+.angleArc{fill:none;stroke:#ffd84a;stroke-width:8;stroke-linecap:round;filter:drop-shadow(0 0 6px #ffd84a) drop-shadow(0 0 12px #ffd84a);stroke-dasharray:160;stroke-dashoffset:160;animation:drawAngle .55s ease-out forwards}
+.angleArc.pending{stroke-dasharray:7 6;stroke-dashoffset:0;animation:none;opacity:.8}
+.angleArc.ghost{opacity:.9}
+@keyframes drawAngle{to{stroke-dashoffset:0}}
+.angleLabel{font-size:20px;font-weight:1000;fill:#fff6b8;stroke:#173a13;stroke-width:3;paint-order:stroke}
+.shapePath.zGuide{stroke:#fffef8;stroke-width:5;filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 12px #ffd84a)}
+.shapePath.linkPulse{stroke:#fffef8;stroke-width:6;filter:drop-shadow(0 0 6px #fff) drop-shadow(0 0 14px #ffd84a)}
+.movingPiece.boardPiece{font-size:calc(var(--board)*.15);z-index:11}
+
+.arrowHint{
+  position:absolute; z-index:14; width:54px; height:54px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle,#fff7a8,#ffb020); color:#10251a;
+  border:4px solid #fff; font-size:30px; font-weight:1000;
+  box-shadow:0 0 12px #fff7a8,0 0 24px #ffd84a,0 4px 0 #9a5c00;
+  transform:translate(-50%,-50%); pointer-events:none; animation:arrowPulse 1s ease-in-out infinite;
+}
+@keyframes arrowPulse{0%,100%{transform:translate(-50%,-50%) scale(.93)}50%{transform:translate(-50%,-50%) scale(1.08)}}
+.square.clickableTarget::after{
+  content:""; position:absolute; inset:16%; border-radius:14px; z-index:4;
+  border:4px solid rgba(255,247,168,.95); box-shadow:0 0 12px #fff7a8, inset 0 0 14px rgba(255,255,255,.45);
+}
+.coordHint{
+  position:absolute; z-index:7; pointer-events:none;
+  font-size:clamp(13px,2vw,18px); font-weight:1000; letter-spacing:.02em;
+  color:#173a13; background:rgba(255,247,168,.94); border:2px solid #fff;
+  border-radius:9px; padding:1px 6px; line-height:1.2;
+  box-shadow:0 0 8px rgba(255,216,74,.85);
+}
+.rightMark{
+  fill:none; stroke:#ffd84a; stroke-width:7; stroke-linecap:round; stroke-linejoin:round;
+  filter:drop-shadow(0 0 5px #ffd84a) drop-shadow(0 0 12px #fff6b8);
+}
+.trueCircle{
+  fill:none; stroke-width:10; stroke-linecap:round;
+  filter:drop-shadow(0 0 6px currentColor) drop-shadow(0 0 16px currentColor);
+  stroke-dasharray:1200; stroke-dashoffset:1200; animation:drawLine 1.15s ease-out forwards;
+}
+.shapePath.geoRadius{stroke:#ffd84a;stroke-width:8}
+.shapePath.geoDiameter{stroke:#ffffff;stroke-width:8}
+.toolRow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;align-items:center}
+button.mini{background:linear-gradient(180deg,#fff7c7,#ffe88a);color:#10251a;border:3px solid #fff;box-shadow:0 3px 0 #b89a3a;font-size:15px;padding:7px 12px}
+.miniCheck{background:rgba(255,255,255,.92);color:#10251a;border-radius:13px;padding:7px 12px;font-weight:1000;display:flex;gap:6px;align-items:center}
+.panel[hidden]{display:none}
+.square.wrongFlash::after{
+  content:""; position:absolute; inset:12%; border-radius:14px; z-index:4;
+  border:4px solid rgba(255,70,70,.95); box-shadow:0 0 12px #ff7070;
+}
+.previewPath{stroke-width:10!important; opacity:.55!important; stroke-dasharray:10 12!important; animation:none!important}
+.shapeFact{font-size:16px;font-weight:1000;color:#fff6b8;margin-top:6px;min-height:24px}
+
+@keyframes piecePop{to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.side{display:grid;gap:10px}
+.panel{background:linear-gradient(180deg,#155f31,#0d4f28);border:4px solid var(--lime);border-radius:22px;padding:12px;box-shadow:0 0 18px rgba(168,255,63,.6), inset 0 0 12px rgba(255,255,255,.1);text-align:center}
+.badge{display:inline-block;background:linear-gradient(180deg,#fff7c7,#ffe88a);color:#10251a;padding:7px 18px;border-radius:999px;font-weight:1000;font-size:16px;margin-bottom:9px}
+.question{font-size:clamp(22px,2.8vw,34px);line-height:1.15;font-weight:1000;text-shadow:0 4px 0 rgba(0,0,0,.24)}
+.shapeName{color:#ffd84a}
+.options{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:13px 0 8px}
+.optionBtn{min-height:78px;border-radius:18px;background:linear-gradient(180deg,#fff1a6,#ffb02e);color:#10251a;border:5px solid #fff4b0;box-shadow:0 6px 0 #b26a00;font-size:20px;display:grid;place-items:center;gap:2px}
+.optionBtn .symbol{font-size:34px;line-height:1;color:#fff;text-shadow:0 0 2px #333,0 0 5px #333,0 2px 4px rgba(0,0,0,.4)}
+.optionBtn.correct{background:linear-gradient(180deg,#b8ff7d,#58d436)!important;color:white}
+.optionBtn.wrong{background:linear-gradient(180deg,#ff9f9f,#ef4444)!important;color:white}
+.status{font-size:19px;font-weight:1000;min-height:30px;color:#fff6b8}
+.gallery{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px;min-height:44px}
+.gem{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.45);display:flex;align-items:center;justify-content:center;font-size:21px;opacity:.7}.gem.done{background:linear-gradient(180deg,#fff7a8,#ffd84a);color:#173a13;opacity:1;box-shadow:0 0 12px rgba(255,216,77,.7)}
+.help{text-align:left;font-size:16px;line-height:1.45;font-weight:850}.help b{color:#fff6b8}.credit{text-align:center;margin:4px 0 0;font-size:12px;color:rgba(255,255,255,.86);font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:99;padding:18px}.final{position:relative;max-width:820px;width:100%;background:radial-gradient(circle at 20% 15%,rgba(255,255,255,.45),transparent 20%),linear-gradient(135deg,#fff9c4,#ffe082,#b3e5fc,#d1c4e9);color:#142033;border:7px solid #fff7a8;border-radius:30px;padding:24px;text-align:center;box-shadow:0 20px 55px rgba(0,0,0,.38);overflow:hidden}.final h2{font-size:46px;margin:0 0 8px}.final p{font-size:22px;font-weight:1000}.final input{width:min(520px,92%);padding:12px;border-radius:12px;border:2px solid #cbd5e1;font-size:22px;text-align:center;margin:8px}.signature{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-top:18px;text-align:left}.confetti{position:fixed;top:-40px;font-size:34px;z-index:120;pointer-events:none;animation:fall linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.9}}
+@media(max-width:1040px){.stage{grid-template-columns:1fr}.side{width:100%}}
+@media(max-width:700px){:root{--board:min(92vw,420px)}body{padding:6px}h1{font-size:31px}.subtitle{font-size:16px}.top{gap:6px}.card,.control{font-size:13px;padding:7px 8px;border-radius:13px}select,button{font-size:13px;padding:7px 8px}.startStars{padding:4px 6px;gap:6px}.star{width:16px;height:16px;flex-basis:16px;font-size:10px;border-radius:5px;box-shadow:none}.stars{gap:2px}.boardWrap{grid-template-columns:24px var(--board);grid-template-rows:var(--board) 22px;gap:4px}.rank,.file{font-size:14px}.board{border-radius:18px}.panel{padding:10px}.options{grid-template-columns:1fr;gap:8px}.optionBtn{min-height:62px;display:flex;justify-content:center;gap:12px;font-size:20px}.optionBtn .symbol{font-size:35px}.help{font-size:14px}.final h2{font-size:31px}.final p{font-size:18px}.signature{text-align:center;justify-content:center}}
+body.shape-play #practiceControls,
+body.shape-play .toolRow,
+body.shape-play #galleryPanel,
+body.shape-play #helpPanel,
+body.shape-play .credit,
+body.shape-play .subtitle{display:none!important}
+body.shape-play h1{margin:2px 0;font-size:clamp(22px,3vw,34px)}
+body.shape-play .stage{align-items:start}
+#shapeMsgBanner{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:200;max-width:min(720px,94vw);background:#fff7c2;color:#17324d;border:3px solid #facc15;border-radius:16px;padding:12px 16px;font-size:18px;font-weight:1000;line-height:1.35;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,.22)}
+#shapeMsgBanner[hidden]{display:none!important}
+#shapeMsgModal{position:fixed;inset:0;z-index:210;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+#shapeMsgModal[hidden]{display:none!important}
+#shapeMsgCard{width:min(640px,94vw);background:#fff;color:#17324d;border:4px solid #38bdf8;border-radius:22px;padding:18px;text-align:left}
+#shapeMsgCard h3{margin:0 0 10px;text-align:center;color:#075985}
+#shapeMsgText{width:100%;box-sizing:border-box;min-height:84px;border:2px solid #93c5fd;border-radius:14px;padding:12px;font-size:17px;font-weight:800;color:#17324d}
+.shapeMsgPresets{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.shapeMsgPresets button{width:auto!important;min-height:40px;background:#e0f2fe;color:#075985;border:0;box-shadow:none}
+.shapeMsgActions{display:flex;justify-content:flex-end;gap:8px}
+.shapeMsgActions button{width:auto!important;min-height:44px}
+#shapeLogin{position:fixed;inset:0;z-index:230;background:rgba(15,23,42,.62);display:flex;align-items:center;justify-content:center;padding:16px}
+#shapeLogin[hidden]{display:none!important}
+#shapeLoginCard{width:min(420px,94vw);background:#fff;color:#17324d;border:4px solid #12b886;border-radius:22px;padding:18px 18px 16px;text-align:center;box-shadow:0 16px 40px rgba(0,0,0,.28)}
+#shapeLoginCard h3{margin:0 0 6px;color:#0f5b2e;font-size:28px}
+#shapeLoginCard p{margin:0 0 12px;font-weight:800;color:#334155}
+#shapeLoginPin{width:100%;min-height:52px;border:2px solid #8aa5c8;border-radius:14px;padding:10px 12px;font-size:22px;font-weight:1000;text-align:center;letter-spacing:.18em}
+#shapeLoginError{margin:10px 0 0;color:#9f1239;font-weight:1000}
+#shapeLoginActions{display:flex;gap:8px;margin-top:14px}
+#shapeLoginActions button{width:auto;flex:1;min-height:48px}
+@media(max-width:700px){
+  body.shape-play{--board:min(320px,calc(100vw - 40px));padding:4px 4px 10px}
+  body.shape-play h1{font-size:20px}
+  body.shape-play .container{display:flex;flex-direction:column;gap:6px}
+  body.shape-play .stage,body.shape-play .side,body.shape-play .panel{display:contents}
+  body.shape-play #statRow{order:2;gap:4px}
+  body.shape-play #mode{order:2;margin:0 auto;font-size:13px;padding:4px 10px}
+  body.shape-play #question{order:3;font-size:18px;line-height:1.2;background:linear-gradient(180deg,#155f31,#0d4f28);border:3px solid #a8ff4a;border-radius:16px;padding:8px 10px}
+  body.shape-play .boardWrap{order:4}
+  body.shape-play #options{order:5;grid-template-columns:1fr;gap:6px;margin:0}
+  body.shape-play .optionBtn{min-height:46px;font-size:16px;border-width:3px;box-shadow:0 3px 0 #b26a00}
+  body.shape-play #status,body.shape-play #notationBox{order:6;font-size:15px;min-height:0}
+  body.shape-play .card{font-size:14px;padding:5px 8px}
+  #shapeMsgBanner{font-size:15px;padding:8px 10px}
+}
+.shapeDash{margin:8px 0 12px}
+.shapeDashBox{background:rgba(255,255,255,.9);border:3px solid #fff;border-radius:18px;padding:12px;text-align:center;color:#17324d}
+.shapeDashMeta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px}
+.shapeDashMeta span{background:#eef7ff;border:2px solid #bfdbfe;border-radius:999px;padding:6px 12px;font-weight:1000}
+.shapeNextRow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+.shapeNextRow label{font-weight:1000;display:flex;gap:6px;align-items:center}
+.shapeNextRow select{min-height:42px;border:2px solid #93c5fd;border-radius:12px;font-weight:1000;background:#fff;color:#10251a}
+.shapeDashBtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.shapeDashBtns button{width:auto!important;min-height:46px;flex:1 1 180px}
+.shapeBtnStart{background:linear-gradient(180deg,#ffbd4d,#f58220)!important}
+.shapeBtnSave,.shapeBtnRank,.shapeBtnPrint{background:linear-gradient(180deg,#63e6be,#12b886)!important;color:#10251a!important;border-color:#e7fff6!important;box-shadow:0 4px 0 #087f5b!important}
+.shapeBtnReport{background:linear-gradient(180deg,#5eead4,#0d9488)!important;color:#042f2e!important;border-color:#ccfbf1!important;box-shadow:0 4px 0 #0f766e!important}
+.shapeBtnMsg{background:linear-gradient(180deg,#38bdf8,#0284c7)!important;border-color:#e0f2fe!important;box-shadow:0 4px 0 #0369a1!important}
+.shapeBtnEnd{background:linear-gradient(180deg,#fb923c,#ea580c)!important}
+.shapeReport{margin:10px 0;text-align:left}
+@media print{
+  body.shape-printing *{visibility:hidden}
+  body.shape-printing #shapeReport,body.shape-printing #shapeReport *{visibility:visible}
+  body.shape-printing #shapeReport{position:absolute;left:0;top:0;width:100%}
+}
+body:has(#shapeOnline:not([hidden])){overflow:hidden}
+.shapeOnline{position:fixed;inset:0;z-index:80;background:rgba(15,27,36,.86);display:flex;align-items:safe center;justify-content:center;padding:14px;overflow:auto}
+.shapeOnline[hidden],.shapeCard [hidden]{display:none!important}
+.shapeCard{position:relative;width:min(760px,100%);min-width:0;margin:8px auto;background:linear-gradient(135deg,#fff4a6,#b8f7ff,#d9c7ff);color:#142033;border:6px solid #fff;border-radius:30px;padding:24px 26px 20px;text-align:center;box-shadow:0 20px 55px rgba(0,0,0,.35)}
+.shapeCard:has(#shapeRoom:not([hidden])){width:min(980px,100%)}
+.shapeCard h2{margin:0 0 6px;font-size:clamp(32px,4.4vw,42px);text-align:center;color:#0f5b2e;line-height:1.15}
+.shapeLead{text-align:center;font-weight:1000;font-size:21px;line-height:1.35;margin:6px 0 4px;color:#142033}
+.shapeTheme{margin:0 0 8px;font-size:16px;font-weight:1000;letter-spacing:.08em;color:#334155}
+.shapeGlyphs{display:flex;justify-content:center;align-items:center;gap:16px;margin:2px 0 12px;font-size:28px;line-height:1;color:#0f5b2e}
+.shapeGlyphs span{opacity:.78}
+.shapeGlyphs .shapeAngle{color:#b86e00;text-shadow:0 0 8px rgba(255,216,74,.95)}
+.shapeRoleCard{background:rgba(255,255,255,.82);border:4px solid #fff;border-radius:24px;padding:18px 16px 16px;margin:8px auto 4px;max-width:640px;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.shapeRoleCard h3{margin:0 0 6px;font-size:26px;color:#0f5b2e}
+.shapeRoleCard p{margin:0 0 12px;font-size:16px;font-weight:1000;color:#334155}
+.shapeRoleBtns,.shapeModeBtns{display:flex;gap:12px;justify-content:center;align-items:stretch}
+.shapeActions,.shapeGrid{display:grid;gap:10px;margin-top:8px}
+.shapeCard button{width:100%;min-height:56px;font-size:18px}
+.shapeRoleBtns button,.shapeModeBtns button{width:auto;flex:1 1 210px;min-width:210px;min-height:58px}
+.shapeTeacherBtn{background:linear-gradient(180deg,#63e6be,#12b886)!important;color:#10251a!important;border:3px solid #e7fff6!important;box-shadow:0 4px 0 #087f5b!important}
+.shapeTeacherBtn:active{box-shadow:0 2px 0 #087f5b!important}
+.shapePracticeBtn{display:block;width:min(100%,420px)!important;margin:14px auto 0;min-height:58px;font-size:20px}
+.shapeBackBtn{display:inline-block;width:auto!important;min-width:148px;margin-top:12px;background:linear-gradient(180deg,#94a3b8,#475569)!important;color:#fff!important;border:3px solid #e2e8f0!important;box-shadow:0 4px 0 #334155!important}
+.shapeBackBtn:active{box-shadow:0 2px 0 #334155!important}
+.shapeGrid input,.shapeGrid select{width:100%;min-height:48px;padding:10px 12px;border-radius:12px;border:2px solid #8aa5c8;font-size:18px;font-weight:900;background:#fff;color:#10251a}
+.shapeNote{background:rgba(255,255,255,.72);border:2px solid #fff;border-radius:14px;padding:10px 12px;font-weight:900;line-height:1.45;margin:10px 0;color:#17324d;text-align:left}
+.shapeTestNote{display:inline-block;margin:12px 0 0;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.7);color:#334155;font-size:12px;font-weight:1000;letter-spacing:.04em}
+.shapeCode{font-size:clamp(32px,6vw,46px);letter-spacing:4px;text-align:center;margin:8px 0;color:#0f5b2e;background:#fff;border:3px dashed #0f5b2e;border-radius:18px;padding:8px 18px;display:inline-block}
+.shapeTable{width:100%;border-collapse:separate;border-spacing:0 7px;margin:8px 0 12px}
+.shapeTable th{background:#203040;color:#fff;padding:8px;font-size:13px;letter-spacing:.03em}
+.shapeTable td{background:rgba(255,255,255,.9);padding:8px;text-align:left;font-size:16px;color:#142033;font-weight:900}
+.shapeTable th:first-child,.shapeTable td:first-child{border-radius:10px 0 0 10px}
+.shapeTable th:last-child,.shapeTable td:last-child{border-radius:0 10px 10px 0}
+.shapeSmall{min-height:40px!important;width:auto!important;padding:8px 10px!important;font-size:14px!important}
+.shapeRosterCards{display:none}
+.shapeStudentCard{background:rgba(255,255,255,.94);border:2px solid #d7e6f5;border-radius:16px;padding:10px 12px;text-align:left;color:#142033}
+.shapeStudentCard h3{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:0 0 6px;text-align:left;color:#10251a;font-size:18px;line-height:1.25}
+.shapeCardRank{color:#0f5b2e;font-size:15px;font-weight:1000;white-space:nowrap}
+.shapeCardName{font-size:18px;font-weight:1000;line-height:1.25;overflow-wrap:anywhere}
+.shapeCardStats{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0 0 4px;font-size:15px;font-weight:1000;color:#10251a}
+.shapeCardLine{margin:0;font-size:14px;font-weight:800;line-height:1.35;color:#17324d;overflow-wrap:anywhere}
+.shapeCardId{white-space:nowrap;font-weight:1000}
+.shapeStudentCard .shapeSmall{margin-top:8px}
+.shapeStudentEmpty{text-align:center;font-weight:1000}
+.certGold{border-color:#e6b325!important}.certSilver{border-color:#b9c4ce!important}.certBronze{border-color:#d08a4c!important}.certAchieve{border-color:#7dcea0!important}
+#shapeCert{z-index:400;background:rgba(10,16,24,.78);align-items:flex-start;justify-content:center;overflow:auto;padding:18px 12px}
+#shapeCertCard{width:min(1122px,calc(100vw - 32px),calc((100vh - 128px) * 297 / 210));margin:0 auto;background:transparent;color:#1a2744;box-shadow:none}
+.shapeCertSheet{position:relative;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;gap:0;width:100%;aspect-ratio:297 / 210;background:#fffdf8;border:3px solid #c9a24d;border-radius:6px;padding:28px 32px 22px;box-shadow:0 0 0 7px #fffdf8,0 0 0 8px #e7d7a6,0 18px 44px rgba(0,0,0,.28);text-align:center}
+.shapeCertSheet:before{content:"";position:absolute;inset:7px;border:1px solid rgba(201,162,77,.55);border-radius:3px;pointer-events:none}
+#shapeCertCard.certFinal .shapeCertSheet{background:linear-gradient(180deg,#fff6e4 0%,#fffdf8 34%)}
+#shapeCertCard.certFinal.certGold .shapeCertSheet{border-color:#b8860b;box-shadow:0 0 0 7px #fffaf0,0 0 0 10px #e6b325,0 18px 44px rgba(0,0,0,.28)}
+.shapeCertTop{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px 14px;flex:0 0 auto}
+.shapeCertLogo{display:flex;flex-direction:column;align-items:center;justify-self:start;gap:3px}
+.shapeCertLogo img{width:108px;height:108px;object-fit:contain}
+.shapeCertLogo span{font-size:12px;font-weight:800;letter-spacing:.01em;color:#16324f}
+.shapeCertHead{justify-self:center;text-align:center;padding:0}
+.shapeCertBrand{margin:0;font-size:clamp(34px,3.9vw,45px);line-height:1.02;font-weight:800;letter-spacing:-.02em;color:#16324f}
+.shapeCertBrand span{color:#e0a100}
+.shapeCertProgram{margin:3px 0 0;font-size:clamp(20px,2.3vw,24px);font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#1e3a5f}
+.shapeCertMotto{margin:3px 0 0;font-size:16px;font-weight:650;letter-spacing:.03em;color:#6d624e}
+.shapeCertArtWrap{display:flex;align-items:center;justify-content:flex-end;justify-self:end;width:min(280px,100%);min-width:0;height:128px}
+#shapeCertArt{width:100%;height:100%;object-fit:contain;object-position:center right;background:transparent}
+.shapeCertBody{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;padding:0}
+#shapeCertTitle{margin:0;font-size:clamp(18px,2.2vw,26px);line-height:1.2;letter-spacing:.14em;font-weight:750;color:#1e3a5f;text-transform:uppercase}
+#shapeCertCard.certFinal.certGold #shapeCertTitle{color:#8a5a12}
+.shapeCertPresented{margin:6px 0 0;font-size:12px;font-weight:750;letter-spacing:.2em;text-transform:uppercase;color:#8a7b58}
+#shapeCertName{margin:2px 18px 0;font-family:"Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;font-style:italic;font-weight:700;font-size:clamp(34px,4.8vw,54px);line-height:1.12;color:#1a2744;overflow-wrap:anywhere}
+#shapeCertSchool{margin:2px 18px 0;font-size:17px;font-weight:700;color:#5c6b7a;overflow-wrap:anywhere}
+#shapeCertRound{margin:4px 18px 0;font-size:15px;font-weight:700;color:#1e3a5f}
+.shapeCertLower{flex:0 0 auto;margin-top:0}
+.shapeCertFacts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 4px;border-top:1px solid #d4b56a;border-bottom:1px solid #d4b56a}
+.shapeCertFacts div{padding:10px 6px;min-width:0;border-left:1px solid #e4d3a4}
+.shapeCertFacts div:first-child{border-left:0}
+.shapeCertFacts span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#7a6a45;font-weight:750;line-height:1.2}
+.shapeCertFacts strong{display:block;margin-top:4px;font-size:clamp(16px,2vw,26px);line-height:1.15;color:#1a2744;font-weight:750}
+#shapeCertCard.certGold #shapeCertAward{color:#8a5a12}
+#shapeCertCard.certSilver #shapeCertAward{color:#5f6e7d}
+#shapeCertCard.certBronze #shapeCertAward{color:#8a5a32}
+#shapeCertMeta{margin:8px 0 0;font-size:13px;font-weight:700;letter-spacing:.04em;color:#6b6252}
+#shapeCertNote{margin:8px 0 0;font-size:12px;font-weight:700;color:#64748b}
+.shapeCertActions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+.shapeCertActions button{width:auto!important;min-height:42px;padding:8px 12px}
+.shapeCertOn{outline:3px solid #1e3a5f}
+@media(max-width:760px){
+  #shapeCertCard{width:min(100%,calc(100vw - 16px))}
+  .shapeCertSheet{padding:12px 8px 10px}
+  .shapeCertTop{gap:4px 6px}
+  .shapeCertArtWrap{width:min(112px,100%)}
+  .shapeCertLogo img{width:60px;height:60px}
+  .shapeCertLogo span{font-size:8px}
+  .shapeCertArtWrap{height:78px}
+  .shapeCertBrand{font-size:18px}
+  .shapeCertProgram{font-size:11px;letter-spacing:.03em}
+  .shapeCertMotto{font-size:10px}
+  .shapeCertFacts span{font-size:8px;letter-spacing:0}
+  .shapeCertFacts strong{font-size:15px}
+  #shapeCertAward{font-size:11px}
+  .shapeCertFacts div{padding:8px 3px}
+  #shapeCertName{font-size:clamp(28px,8vw,38px);margin-left:4px;margin-right:4px}
+}
+@media(max-width:700px){#shapeCertCard{grid-template-columns:1fr;grid-template-areas:"head" "lead" "name" "school" "facts" "art" "note" "actions";padding:16px}#shapeCertArt{max-height:150px;width:min(220px,72%);justify-self:center}}
+@media(max-width:700px){
+  .shapeOnline{padding:8px;align-items:flex-start}
+  .shapeCard{padding:16px 12px 14px;border-radius:22px;border-width:4px}
+  .shapeCard h2{font-size:30px}
+  .shapeLead{font-size:18px}
+  .shapeRoleCard{padding:14px 10px}
+  .shapeRoleCard h3{font-size:22px}
+  .shapeGlyphs{gap:12px;font-size:24px}
+  .shapeRoleBtns,.shapeModeBtns{flex-direction:column}
+  .shapeRoleBtns button,.shapeModeBtns button{width:100%;min-width:0;flex-basis:auto}
+  .shapeTable th,.shapeTable td{font-size:14px;padding:6px 4px}
+  .shapeCard:has(#shapeRoom:not([hidden])){padding:12px 10px 10px}
+  #shapeRoom{display:flex;flex-direction:column;gap:6px;min-width:0}
+  #shapeRoomHeading{order:1;margin:0;font-size:26px}
+  #shapeRoomLead{order:2;margin:0;font-size:17px;line-height:1.25}
+  #shapeCodeLine{order:3;font-size:28px;letter-spacing:2px;padding:2px 14px;margin:0 auto;border-width:2px}
+  #shapeMsgNote{order:4;margin:0;padding:6px 10px;font-size:14px;line-height:1.3;border-radius:12px}
+  #shapeMsgNote.shapeMsgQuiet{background:transparent;border:0;padding:0 4px;font-size:13px;font-weight:800;text-align:center;color:#334155}
+  #shapeDash{order:5;margin:0}
+  #shapeScoreNote{order:6;margin:0;padding:0 4px;background:transparent;border:0;font-size:12px;line-height:1.3;text-align:center;font-weight:800;color:#334155}
+  #shapeRoster{order:7;min-width:0}
+  #shapeRoomButtons{order:8;margin-top:2px}
+  #shapeReport{order:9;max-width:100%;overflow-x:auto}
+  #shapeLeave{order:10;margin-top:4px}
+  .shapeRosterTable{display:none}
+  .shapeRosterCards{display:flex;flex-direction:column;gap:8px}
+  body:has(#shapeOnline:not([hidden])) #shapeMsgBanner{display:none!important}
+}
+body.shape-live .startStars button:not(#shapeHome),body.shape-live .top select{pointer-events:none;opacity:.55}
+@media print{
+  html,body{background:#fff!important}
+  body *{visibility:hidden!important}
+  .overlay,.overlay *{visibility:visible!important}
+  .overlay{position:absolute!important;inset:0!important;background:#fff!important}
+  .final{box-shadow:none!important}
+  .printHide{display:none!important}
+  .final input{border:none!important;background:transparent!important;font-weight:1000!important}
+  @page{size:A4 landscape;margin:10mm}
+  @page shapeCertPage{size:A4 landscape;margin:0}
+  html:has(body.shape-cert-print),body.shape-cert-print{page:shapeCertPage;background:#fffdf8!important;width:297mm!important;height:210mm!important;margin:0!important;padding:0!important;overflow:hidden!important}
+  body.shape-cert-print > *:not(#shapeCert){display:none!important}
+  body.shape-cert-print #shapeCert,body.shape-cert-print #shapeCert *{visibility:visible!important}
+  body.shape-cert-print #shapeCert{display:block!important;position:absolute!important;inset:0!important;width:297mm!important;height:210mm!important;margin:0!important;background:#fffdf8!important;padding:0!important;overflow:hidden!important}
+  body.shape-cert-print #shapeCert .printHide{display:none!important}
+  body.shape-cert-print .overlay:not(#shapeCert){display:none!important}
+  body.shape-cert-print #shapeCertCard{width:297mm!important;height:210mm!important;max-width:none!important;margin:0!important;box-shadow:none!important;background:transparent!important}
+  body.shape-cert-print .shapeCertSheet{box-sizing:border-box!important;display:flex!important;flex-direction:column;justify-content:space-between!important;gap:0!important;box-shadow:inset 0 0 0 7mm #fffdf8,inset 0 0 0 calc(7mm + .7mm) #c9a24d,inset 0 0 0 calc(7mm + 2.4mm) #fffdf8,inset 0 0 0 calc(7mm + 2.8mm) rgba(201,162,77,.7)!important;width:297mm!important;height:210mm!important;max-width:297mm!important;max-height:210mm!important;aspect-ratio:297 / 210!important;margin:0!important;border:none!important;border-radius:0!important;padding:16mm 18mm 12mm!important;background:#fffdf8!important;overflow:hidden!important;page-break-after:avoid!important;break-after:avoid!important;page-break-inside:avoid!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.shape-cert-print #shapeCertCard.certFinal.certGold .shapeCertSheet{box-shadow:inset 0 0 0 7mm #fffaf0,inset 0 0 0 calc(7mm + .8mm) #b8860b,inset 0 0 0 calc(7mm + 2.2mm) #fffaf0,inset 0 0 0 calc(7mm + 2.9mm) #e6b325!important}
+  body.shape-cert-print .shapeCertSheet:before{inset:10.5mm!important;border-radius:0!important}
+  body.shape-cert-print .shapeCertTop{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important}
+  body.shape-cert-print .shapeCertArtWrap{width:min(78mm,100%)!important;height:34mm!important}
+  body.shape-cert-print .shapeCertLogo img{width:28mm;height:28mm}
+  body.shape-cert-print .shapeCertBrand{font-size:45px!important}
+  body.shape-cert-print .shapeCertProgram{font-size:24px!important}
+  body.shape-cert-print .shapeCertMotto{font-size:16px!important}
+  body.shape-cert-print #shapeCertName{font-size:40px}
+  body.shape-cert-print .shapeCertFacts{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  body.shape-cert-print #shapeCertArt,.shapeCertLogo img{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+/* Final polish v16: compact right panel, smaller answer buttons, clearer shape labels */
+</style>
+</head>
+<body>
+<!-- Chess Shape Builders. Official scores are marked by the SmartChessMath API. -->
+<div id="shapeOnline" class="shapeOnline" hidden>
+  <div class="shapeCard">
+    <section id="shapeWelcome">
+      <h2>♟️ Chess Shape Builders</h2>
+      <p class="shapeLead">Learn Geometry Through Chess!</p>
+      <p class="shapeTheme">Shapes • Lines • Angles</p>
+      <p class="shapeGlyphs" aria-hidden="true"><span>♕</span><span>△</span><span>□</span><span>○</span><span class="shapeAngle">∠</span><span>♘</span></p>
+      <div class="shapeRoleCard">
+        <h3>🏫 SmartChessMath Live Challenge</h3>
+        <p>Choose your role to begin.</p>
+        <div class="shapeRoleBtns">
+          <button type="button" class="shapeTeacherBtn" id="shapePickTeacher">👨‍🏫 Teacher / Admin</button>
+          <button type="button" id="shapePickStudent">👩‍🎓 Student</button>
+        </div>
+      </div>
+      <button type="button" class="shapePracticeBtn" id="shapePractice">🎮 Practice Mode</button>
+      <p class="shapeNote" id="shapeReturnNote" hidden></p>
+      <div class="shapeActions" id="shapeReturnWrap" hidden>
+        <button type="button" id="shapeReturn">Return to room</button>
+      </div>
+      <div><span class="shapeTestNote">TEST VERSION — RESULTS NOT OFFICIAL</span></div>
+    </section>
+    <section id="shapeModes" hidden>
+      <h2 id="shapeModeHeading">Teacher / Admin</h2>
+      <p class="shapeLead" id="shapeModeLead">Choose the classroom you want to open.</p>
+      <div class="shapeModeBtns">
+        <button type="button" id="shapeClass">Class Challenge</button>
+        <button type="button" id="shapeChamp">Championship Mode</button>
+      </div>
+      <button type="button" class="shapeBackBtn" id="shapeModeBack">Back</button>
+    </section>
+    <section id="shapeGate" hidden>
+      <h2 id="shapeGateTitle">Class Challenge</h2>
+      <p class="shapeLead" id="shapeGateLead"></p>
+      <div id="shapeTeacherForm" class="shapeGrid" hidden>
+        <input id="shapeChampTitle" maxlength="60" placeholder="Championship name" value="Chess Shape Builders">
+        <input id="shapeTeacherSchool" maxlength="60" placeholder="School name (optional)" autocomplete="organization">
+        <select id="shapeSet"></select>
+        <button type="button" id="shapeCreate">Create Room</button>
+      </div>
+      <div id="shapeStudentForm" class="shapeGrid" hidden>
+        <input id="shapeStudentName" maxlength="40" placeholder="Student name" autocomplete="name">
+        <input id="shapeStudentSchool" maxlength="60" placeholder="School name" autocomplete="organization">
+        <input id="shapeStudentCode" maxlength="8" placeholder="Room code" autocapitalize="characters">
+        <input id="shapeStudentAge" maxlength="3" placeholder="Age (optional)">
+        <input id="shapeStudentGrade" maxlength="20" placeholder="Class (optional)">
+        <button type="button" id="shapeJoin">Join Room</button>
+      </div>
+      <p class="shapeNote">The server marks every answer. The teacher starts the round and opens the ranking.</p>
+      <button type="button" class="shapeBackBtn" id="shapeGateBack">Back</button>
+    </section>
+    <section id="shapeRoom" hidden>
+      <h2 id="shapeRoomHeading">Classroom</h2>
+      <p class="shapeLead" id="shapeRoomLead"></p>
+      <p class="shapeNote" id="shapeMsgNote" hidden></p>
+      <p class="shapeCode" id="shapeCodeLine"></p>
+      <div id="shapeDash" hidden>
+        <div class="shapeDashBox">
+          <div class="shapeDashMeta">
+            <span id="shapeDashRound">Round not started</span>
+            <span id="shapeDashSet">Question set</span>
+            <span id="shapeDashTime">3 Minutes</span>
+            <span id="shapeDashState">Waiting</span>
+          </div>
+          <div id="shapeNextRow" class="shapeNextRow">
+            <label>Next round
+              <select id="shapeNextSet" aria-label="Question set">
+                <option value="shapes">Shapes</option>
+                <option value="triangles">Triangles</option>
+                <option value="angles">Angles</option>
+                <option value="mixed">Mixed</option>
+              </select>
+            </label>
+            <label>Time
+              <select id="shapeNextTime" aria-label="Round duration">
+                <option value="180" selected>3 Minutes</option>
+                <option value="240">4 Minutes</option>
+                <option value="300">5 Minutes</option>
+                <option value="420">7 Minutes</option>
+              </select>
+            </label>
+          </div>
+          <p id="shapeDashNote" class="shapeLead" style="font-size:16px"></p>
+        </div>
+      </div>
+      <p class="shapeNote" id="shapeScoreNote">Scores on this screen come from the server. A browser cannot submit its own star total.</p>
+      <div id="shapeRoster"></div>
+      <div class="shapeActions shapeDashBtns" id="shapeRoomButtons"></div>
+      <div id="shapeReport" class="shapeReport" hidden></div>
+      <button type="button" class="shapeBackBtn" id="shapeLeave">Back to welcome</button>
+    </section>
+  </div>
+</div>
+<div id="shapeLogin" hidden>
+  <form id="shapeLoginCard">
+    <h3>Teacher Access</h3>
+    <p>Enter the teacher password to open the classroom.</p>
+    <input id="shapeLoginPin" type="password" autocomplete="current-password" maxlength="32" aria-label="Teacher password">
+    <p id="shapeLoginError" hidden></p>
+    <div id="shapeLoginActions">
+      <button type="button" id="shapeLoginCancel">Cancel</button>
+      <button type="submit" id="shapeLoginGo">Login</button>
+    </div>
+  </form>
+</div>
+<div id="shapeCert" class="overlay">
+  <article id="shapeCertCard">
+    <div class="shapeCertSheet">
+      <header class="shapeCertTop">
+        <div class="shapeCertLogo">
+          <img src="smartchessmath-logo.png" alt="SmartChessMath">
+          <span>SmartChessMath</span>
+        </div>
+        <div class="shapeCertHead">
+          <p class="shapeCertBrand">Smart<span>Chess</span>Math</p>
+          <p class="shapeCertProgram">Chess Shape Builders</p>
+          <p class="shapeCertMotto">Learn Geometry Through Chess</p>
+        </div>
+        <div class="shapeCertArtWrap">
+          <img id="shapeCertArt" src="shape-certificate-art.png" alt="A golden chess queen and a blue rook with a circle, triangles, a square, and angles">
+        </div>
+      </header>
+      <div class="shapeCertBody">
+        <h2 id="shapeCertTitle">CERTIFICATE OF ACHIEVEMENT</h2>
+        <p class="shapeCertPresented">Proudly presented to</p>
+        <p id="shapeCertName"></p>
+        <p id="shapeCertSchool"></p>
+        <p id="shapeCertRound"></p>
+      </div>
+      <div class="shapeCertLower">
+        <div class="shapeCertFacts">
+          <div><span id="shapeCertStarsLabel">Stars</span><strong id="shapeCertStars"></strong></div>
+          <div><span id="shapeCertSolvedLabel">Correct answers</span><strong id="shapeCertSolved"></strong></div>
+          <div><span>Rank</span><strong id="shapeCertRank"></strong></div>
+          <div><span>Award</span><strong id="shapeCertAward"></strong></div>
+        </div>
+        <p id="shapeCertMeta"></p>
+      </div>
+    </div>
+    <p id="shapeCertNote" class="printHide"></p>
+    <div class="printHide shapeCertActions" id="shapeCertActions">
+      <button type="button" id="shapeCertPrint">Print certificate</button>
+      <button type="button" id="shapeCertClose">Close</button>
+    </div>
+  </article>
+</div>
+<div class="overlay" id="overlay">
+  <div class="final">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:260px;opacity:.05;pointer-events:none">♕</div>
+    <div style="font-size:66px">🏆</div>
+    <h2 id="finalTitle">Chess Shape Builder Champion</h2>
+    <p id="finalMessage">Congratulations! You completed the shape challenge.</p>
+    <input id="studentName" placeholder="⭐ Student Name ⭐" />
+    <input id="schoolName" placeholder="School Name" />
+    <p>Final Score: <span id="finalScore">0</span>/10</p>
+    <p>Time Challenge: <span id="finalTime">2 Minutes</span></p>
+    <div class="signature">
+      <div>
+        <div style="font-family:cursive;font-size:38px;color:#1e3a8a">Salman A. Salman</div>
+        <div style="font-weight:1000;font-size:18px">Eng. Salman Ahmed Salman</div>
+        <div style="font-weight:800;font-size:14px">Educational Chess & Digital Learning</div>
+        <div style="margin-top:6px;font-weight:1000;color:#7c2d12">Designed by Eng. Salman Ahmed Salman</div>
+      </div>
+      <div style="font-size:76px">♟⭐♟</div>
+    </div>
+    <div class="printHide" style="margin-top:18px">
+      <button onclick="window.print()">🖨 Print Certificate</button>
+      <button onclick="closeFinal()">❌ Close</button>
+      <button onclick="startGame()">▶ Play Again</button>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <h1>♟️ Chess Shape Builders</h1>
+  <div class="subtitle">Learn chess moves by building glowing shapes</div>
+  <div class="top" id="statRow">
+    <div class="card">⏰ Time: <span id="time">02:00</span></div>
+    <div class="card">⭐ Score: <span id="score">0</span></div>
+    <div class="card">❓ Question: <span id="qnum">1</span>/<span id="qtotal">10</span></div>
+  </div>
+  <div class="top" id="practiceControls">
+    <div class="control">🎯 Level:
+      <select id="level">
+        <option value="1">Level 1 — Shape Builder</option>
+        <option value="2">Level 2 — Chess Path Finder</option>
+        <option value="3">Level 3 — Chess Shape Artist</option>
+      </select>
+    </div>
+    <div class="control">📐 Example:
+      <select id="trianglePick">
+        <option value="">Play the selected level</option>
+        <option value="1">1 — Build the Triangle</option>
+        <option value="2">2 — Triangle Challenge</option>
+        <option value="3">3 — Triangle Challenge</option>
+        <option value="4">4 — Knight's Triangle Challenge</option>
+        <option value="5">5 — Triangle Challenge</option>
+        <option value="6">6 — Knight's Triangle Challenge</option>
+        <option value="7">7 — Queen's Triangle Lesson</option>
+        <option value="8">8 — Queen's Triangle Challenge</option>
+        <option value="A1">9 — Rook's Square Corner</option>
+        <option value="A2">10 — Bishop's Secret Corner</option>
+        <option value="A3">11 — The Angle Across</option>
+        <option value="A4">12 — Queen Copies the Rook</option>
+        <option value="A5">13 — The Same Corner</option>
+        <option value="A6">14 — The Z Angles</option>
+        <option value="A7">15 — Same Side Inside</option>
+        <option value="A8">16 — Neighbours on a Line</option>
+        <option value="A9">17 — Alternate Exterior Angles</option>
+      </select>
+    </div>
+    <div class="control">⏳ Challenge:
+      <select id="duration">
+        <option value="60">1 Minute</option>
+        <option value="120" selected>2 Minutes</option>
+        <option value="180">3 Minutes</option>
+        <option value="300">5 Minutes</option>
+        <option value="420">7 Minutes</option>
+      </select>
+    </div>
+    <div class="startStars">
+      <button onclick="beginSession()">▶ Start</button>
+      <div class="stars" id="stars"></div>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="boardWrap">
+      <div class="ranks" id="ranks"></div>
+      <div class="board" id="board"><svg class="shapeLayer shapeSvg" id="shapeSvg" viewBox="0 0 640 640"></svg><div class="centerPiece" id="centerPiece">♖</div></div>
+      <div class="files" id="files"></div>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <div class="badge" id="mode">Level 1 — Shape Builder</div>
+        <div class="question" id="question">Press Start</div>
+        <div class="options" id="options"></div>
+        <div class="status" id="status">Look at the glowing shape. Choose the correct builder.</div><div class="notationBox" id="notationBox"></div>
+      </div>
+      <div class="toolRow">
+        <button type="button" class="mini" onclick="toggleGallery()">⭐ Gallery</button>
+        <label class="miniCheck"><input id="coordHelp" type="checkbox" checked onchange="setCoordHelp(this.checked)"> Square names</label>
+      </div>
+      <div class="panel" id="galleryPanel" hidden>
+        <div class="badge">Shape Builder Gallery</div>
+        <div class="gallery" id="gallery"></div>
+      </div>
+      <div class="panel help" id="helpPanel">
+        <b id="helpTitle">How to play</b><br>
+        <span id="helpBody">Level 1: choose the builder. Level 2: complete the missing side and read the notation. Level 3: follow the arrow and draw the shape. Or open one example, then press Start. Angle lessons each ask one question. The clock starts only when a level starts.</span>
+        <div style="margin-top:8px"><button type="button" class="mini" id="helpMore" style="display:none" onclick="toggleHelp()">Full guide</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="credit">© Eng. Salman Ahmed Salman</div>
+</div>
+<script>
+const files=['a','b','c','d','e','f','g','h'];
+const board=document.getElementById('board');
+const svg=document.getElementById('shapeSvg');
+const centerPiece=document.getElementById('centerPiece');
+let squares={}, timer=null, remaining=120, score=0, q=1, running=false, locked=false;
+let gameQuestions=[], totalQuestions=10, currentLevel='1', level2Step='piece';
+let level3Index=0, level3Step=0, currentL3=null, previewEl=null, level3KnightTargets=[];
+let showCoords=true, aimedSquares=[], lesson=null, galleryOpen=false, helpExpanded=false, latestHint='';
+let angleMode=false, angleRun=0, anglePhase='';
+const FULL_HELP='Level 1: choose the builder. Level 2: complete the missing side and read the notation. Level 3: follow the arrow and draw the shape. Triangle lessons and angle lessons are in the Example menu. Each angle lesson asks one question. The clock starts only when a level starts. Square names can be turned off for a harder challenge.';
+const pieceData={
+  rook:{name:'Rook',icon:'♖'}, queen:{name:'Queen',icon:'♕'}, bishop:{name:'Bishop',icon:'♗'}, knight:{name:'Knight',icon:'♘'}, king:{name:'King',icon:'♔'}, pawn:{name:'Pawn',icon:'♙'}
+};
+function sq(name){const file=name[0].toLowerCase();const rank=parseInt(name[1],10);return [files.indexOf(file)*80+40,(8-rank)*80+40];}
+function pathFromSquares(list){return list.map(sq)}
+function shuffleArray(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pathD(points){return points.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ')}
+const questions=[
+  {shape:'Square',emoji:'□',color:'#ffd84a',piece:'rook',opts:['rook','pawn','knight'],squares:['b2','b6','f6','f2','b2'],msg:'Rook: straight lines. Four equal sides.'},
+  {shape:'Square',emoji:'□',color:'#ffd84a',piece:'queen',opts:['queen','bishop','knight'],squares:['b2','b6','f6','f2','b2'],msg:'Queen: straight lines. Four equal sides.'},
+  {shape:'Rectangle',emoji:'▭',color:'#58f07c',piece:'rook',opts:['rook','bishop','knight'],squares:['b2','b5','h5','h2','b2'],msg:'Rook: straight lines. Opposite sides are equal.'},
+  {shape:'Rectangle',emoji:'▭',color:'#58f07c',piece:'queen',opts:['queen','king','bishop'],squares:['b2','b5','h5','h2','b2'],msg:'Queen: straight lines. Opposite sides are equal.'},
+  {shape:'Diamond',emoji:'◇',color:'#39b6ff',piece:'bishop',opts:['bishop','rook','knight'],squares:['d2','g5','d8','a5','d2'],msg:'Bishop: diagonal lines. A square on a corner.'},
+  {shape:'Diamond',emoji:'◇',color:'#39b6ff',piece:'queen',opts:['queen','rook','king'],squares:['d2','g5','d8','a5','d2'],msg:'Queen: diagonal lines. A square on a corner.'},
+  {shape:'Circle',emoji:'○',color:'#c084fc',piece:'knight',opts:['knight','rook','bishop'],circleGuide:true,center:'d4',squares:['c2','b3','b5','c6','e6','f5','f3','e2','c2'],msg:'Centre d4. The knight jumps out and back.'},
+  {shape:'Hexagon',emoji:'⬡',color:'#ff9f1c',piece:'queen',opts:['queen','rook','bishop'],squares:['d3','b5','d7','f7','h5','f3','d3'],msg:'Queen: straight and diagonal lines. Six unequal sides.'},
+  {shape:'Octagon',emoji:'⯃',color:'#22d3ee',piece:'queen',opts:['queen','rook','knight'],squares:['c2','f2','g3','g6','f7','c7','b6','b3','c2'],msg:'Queen: straight and diagonal lines. Eight unequal sides.'},
+  {shape:'Circle',emoji:'○',color:'#c084fc',piece:'knight',opts:['knight','queen','rook'],circleGuide:true,center:'d4',squares:['c2','b3','b5','c6','e6','f5','f3','e2','c2'],msg:'Centre d4. The knight jumps out and back.'}
+];
+const level2Questions=[
+  {shape:'Triangle House',emoji:'🏠',color:'#ff4d6d',piece:'rook',opts:['rook','knight','pawn'],path:['b2','e5','h2','b2'],missingFrom:'h2',missingTo:'b2',notationOpts:['♖ h2 → b2','♖ h2 → h6','♖ h2 → b6'],answerNotation:'♖ h2 → b2',msg:'Rook: h2 to b2, a straight line. The roof is diagonal.'},
+  {shape:'Diamond Roof',emoji:'🔶',color:'#39b6ff',piece:'bishop',opts:['bishop','rook','knight'],path:['d2','b4','d6','f4','d2'],missingFrom:'f4',missingTo:'d2',notationOpts:['♗ f4 → d2','♗ f4 → f2','♗ f4 → b4'],answerNotation:'♗ f4 → d2',msg:'Bishop: f4 to d2, a diagonal line.'},
+  {shape:'Square Window',emoji:'□',color:'#ffd84a',piece:'rook',opts:['rook','bishop','knight'],path:['b2','b6','f6','f2','b2'],missingFrom:'f2',missingTo:'b2',notationOpts:['♖ f2 → b2','♖ f2 → f6','♖ f2 → b6'],answerNotation:'♖ f2 → b2',msg:'Rook: f2 to b2, a straight line.'},
+  {shape:'Rectangle Garden',emoji:'▭',color:'#58f07c',piece:'rook',opts:['rook','bishop','knight'],path:['b2','b6','g6','g2','b2'],missingFrom:'g2',missingTo:'b2',notationOpts:['♖ g2 → b2','♖ g2 → g6','♖ g2 → b6'],answerNotation:'♖ g2 → b2',msg:'Rook: g2 to b2, a straight line.'},
+  {shape:'Queen Hexagon',emoji:'⬡',color:'#ff9f1c',piece:'queen',opts:['queen','knight','pawn'],path:['d3','b5','d7','f7','h5','f3','d3'],missingFrom:'f3',missingTo:'d3',notationOpts:['♕ f3 → d3','♕ f3 → f7','♕ f3 → h5'],answerNotation:'♕ f3 → d3',msg:'Queen: f3 to d3, a straight line.'},
+  {shape:'Knight Circle',emoji:'○',color:'#c084fc',piece:'knight',special:'knightCircle',opts:['e2','b2','f2'],answerSquare:'e2',path:['c2','b3','b5','c6','e6','f5','f3','e2','c2'],center:'d4',notationOpts:['♘ d4 → e2','♘ d4 → b2','♘ d4 → f2'],answerNotation:'♘ d4 → e2',msg:'Knight: d4 to e2, then back to d4.'},
+  {shape:'Bishop Triangle',emoji:'🔺',color:'#ff4d6d',piece:'bishop',legalPieces:['bishop','queen'],opts:['bishop','queen','rook'],partialSegments:[['f2','f7'],['f2','a2']],missingFrom:'a2',missingTo:'f7',notationOpts:['♗ a2 → f7','♕ a2 → f7','♖ a2 → f7'],answerNotations:['♗ a2 → f7','♕ a2 → f7'],answerNotation:'♗ a2 → f7',askType:'right',msg:'Bishop / Queen: a2 to f7, a diagonal line. 90° at f2.'},
+  {shape:'Large Diamond',emoji:'🔷',color:'#22d3ee',piece:'bishop',opts:['bishop','rook','knight'],path:['d2','a5','d8','g5','d2'],missingFrom:'g5',missingTo:'d2',notationOpts:['♗ g5 → d2','♗ g5 → g2','♗ g5 → a5'],answerNotation:'♗ g5 → d2',msg:'Bishop: g5 to d2, a diagonal line.'},
+  {shape:'Queen Square',emoji:'□',color:'#ffd84a',piece:'queen',opts:['queen','bishop','knight'],path:['c3','c7','g7','g3','c3'],missingFrom:'g3',missingTo:'c3',notationOpts:['♕ g3 → c3','♕ g3 → g7','♕ g3 → c7'],answerNotation:'♕ g3 → c3',msg:'Queen: g3 to c3, a straight line.'},
+  {shape:'Queen Octagon',emoji:'⯃',color:'#22d3ee',piece:'queen',opts:['queen','rook','knight'],path:['c2','f2','g3','g6','f7','c7','b6','b3','c2'],missingFrom:'b3',missingTo:'c2',notationOpts:['♕ b3 → c2','♕ b3 → b6','♕ b3 → f3'],answerNotation:'♕ b3 → c2',msg:'Queen: b3 to c2, a diagonal line.'}
+];
+const level3Questions=[
+  {shape:'Square',emoji:'□',color:'#ffd84a',piece:'rook',path:['b2','b6','f6','f2','b2'],fact:'Four equal sides. Four right angles.'},
+  {shape:'Rectangle',emoji:'▭',color:'#58f07c',piece:'queen',path:['b2','b6','g6','g2','b2'],fact:'Opposite sides are equal. Four right angles.'},
+  {shape:'Diamond',emoji:'◇',color:'#39b6ff',piece:'bishop',path:['d2','b4','d6','f4','d2'],fact:'A square on a corner. Four right angles.'},
+  {shape:'Triangle',emoji:'🔺',color:'#ff4d6d',piece:'queen',path:['f2','f7','a2','f2'],fact:'One angle is 90°. 90° at f2.'},
+  {shape:'Hexagon',emoji:'⬡',color:'#ff9f1c',piece:'queen',path:['d3','b5','d7','f7','h5','f3','d3'],fact:'Six sides. The sides are not all equal.'},
+  {shape:'Circle',emoji:'○',color:'#c084fc',piece:'knight',center:'d4',path:['c2','b3','b5','c6','e6','f5','f3','e2','c2'],fact:'Centre, radius and diameter. Diameter = 2 × Radius.'},
+  {shape:'Octagon',emoji:'⯃',color:'#22d3ee',piece:'queen',path:['c2','f2','g3','g6','f7','c7','b6','b3','c2'],fact:'Eight sides. The sides are not all equal.'},
+  {shape:'Large Square',emoji:'□',color:'#ffdf4a',piece:'queen',path:['a2','a7','f7','f2','a2'],fact:'Four equal sides. Four right angles.'},
+  {shape:'Tall Rectangle',emoji:'▭',color:'#7cff6b',piece:'rook',path:['c1','c7','f7','f1','c1'],fact:'Opposite sides are equal. Four right angles.'},
+  {shape:'Large Diamond',emoji:'◇',color:'#4cc9ff',piece:'bishop',path:['d1','a4','d7','g4','d1'],fact:'A square on a corner. Four right angles.'}
+];
+function arrowSymbol(from,to,piece){
+  const a=sq(from), b=sq(to); const dx=b[0]-a[0], dy=b[1]-a[1];
+  if(piece==='knight') return '♘';
+  if(Math.abs(dx)>Math.abs(dy)*1.8) return dx>0?'➡':'⬅';
+  if(Math.abs(dy)>Math.abs(dx)*1.8) return dy>0?'⬇':'⬆';
+  if(dx>0&&dy<0) return '↗'; if(dx>0&&dy>0) return '↘'; if(dx<0&&dy<0) return '↖'; return '↙';
+}
+function placeArrow(from,to,piece){
+  [...board.querySelectorAll('.arrowHint')].forEach(e=>e.remove());
+  const a=sq(from), b=sq(to);
+  const dx=b[0]-a[0], dy=b[1]-a[1];
+  const len=Math.hypot(dx,dy)||1;
+  const px=a[0]+dx/len*46, py=a[1]+dy/len*46;
+  const el=document.createElement('div'); el.className='arrowHint'; el.textContent=arrowSymbol(from,to,piece);
+  el.style.left=(px/640*100)+'%'; el.style.top=(py/640*100)+'%'; board.appendChild(el);
+}
+function showPieceAt(squareName,piece){
+  const p=sq(squareName); centerPiece.textContent=pieceData[piece].icon; centerPiece.style.left=(p[0]/640*100)+'%'; centerPiece.style.top=(p[1]/640*100)+'%';
+  centerPiece.classList.remove('show'); void centerPiece.offsetWidth; centerPiece.classList.add('show');
+}
+function markTarget(name,on=true){ markTargets(on&&name?[name]:[]); }
+function markTargets(names){
+  aimedSquares=names.slice();
+  Object.values(squares).forEach(el=>{
+    el.classList.remove('clickableTarget','wrongFlash');
+    const old=el.querySelector('.coordHint'); if(old) old.remove();
+  });
+  aimedSquares.forEach(name=>{
+    const el=squares[name]; if(!el) return;
+    el.classList.add('clickableTarget');
+    if(!showCoords) return;
+    const tag=document.createElement('div'); tag.className='coordHint'; tag.textContent=name; el.appendChild(tag);
+  });
+}
+function setCoordHelp(on){ showCoords=on; markTargets(aimedSquares); }
+function toggleGallery(){ galleryOpen=!galleryOpen; document.getElementById('galleryPanel').hidden=!galleryOpen; }
+function showFullHelp(){
+  helpExpanded=false; latestHint='';
+  document.getElementById('helpTitle').textContent='How to play';
+  document.getElementById('helpBody').textContent=FULL_HELP;
+  document.getElementById('helpMore').style.display='none';
+}
+function setHint(text){
+  latestHint=text;
+  document.getElementById('helpMore').style.display='inline-block';
+  document.getElementById('helpMore').textContent=helpExpanded?'Short tip':'Full guide';
+  if(helpExpanded) return;
+  document.getElementById('helpTitle').textContent='Now';
+  document.getElementById('helpBody').textContent=text;
+}
+function toggleHelp(){
+  helpExpanded=!helpExpanded;
+  if(helpExpanded){
+    document.getElementById('helpTitle').textContent='How to play';
+    document.getElementById('helpBody').textContent=FULL_HELP;
+    document.getElementById('helpMore').textContent='Short tip';
+  }else{
+    document.getElementById('helpTitle').textContent='Now';
+    document.getElementById('helpBody').textContent=latestHint;
+    document.getElementById('helpMore').textContent='Full guide';
+  }
+}
+function beginActivity(){ galleryOpen=false; document.getElementById('galleryPanel').hidden=true; helpExpanded=false; }
+function rightAngleMarker(vertex,armA,armB){
+  const V=sq(vertex), A=sq(armA), B=sq(armB);
+  const ax=A[0]-V[0], ay=A[1]-V[1], bx=B[0]-V[0], by=B[1]-V[1];
+  const al=Math.hypot(ax,ay)||1, bl=Math.hypot(bx,by)||1, s=26;
+  const p1=[V[0]+ax/al*s, V[1]+ay/al*s];
+  const p2=[p1[0]+bx/bl*s, p1[1]+by/bl*s];
+  const p3=[V[0]+bx/bl*s, V[1]+by/bl*s];
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d','M '+p1[0]+' '+p1[1]+' L '+p2[0]+' '+p2[1]+' L '+p3[0]+' '+p3[1]);
+  path.setAttribute('class','rightMark'); svg.appendChild(path);
+}
+function markAllRightAngles(path){
+  const corners=path.slice(0,-1);
+  corners.forEach((corner,i)=>{
+    const prev=corners[(i+corners.length-1)%corners.length];
+    const next=corners[(i+1)%corners.length];
+    rightAngleMarker(corner, prev, next);
+  });
+  return corners;
+}
+function addBoardLabel(x,y,text){
+  const label=document.createElementNS('http://www.w3.org/2000/svg','text');
+  label.setAttribute('x',x); label.setAttribute('y',y); label.setAttribute('text-anchor','middle');
+  label.setAttribute('class','angleLabel'); label.textContent=text; svg.appendChild(label);
+  return label;
+}
+function teachSquare(path,onDone){
+  document.getElementById('options').innerHTML='';
+  const corners=markAllRightAngles(path);
+  const spot=sq(corners[0]);
+  addBoardLabel(spot[0], spot[1]-36, 'Right Angle = 90°');
+  const text='Four equal sides. Four right angles.';
+  document.getElementById('status').textContent=text;
+  document.getElementById('notationBox').innerHTML='<div class="shapeFact">📐 '+text+'</div>';
+  setHint(text); speak('A square has four equal sides and four right angles.');
+  setTimeout(onDone,2400);
+}
+function askIdentifyRightAngle(path,onDone){
+  document.getElementById('options').innerHTML='';
+  const corners=markAllRightAngles(path);
+  lesson={kind:'rightClick', corners, path, onDone};
+  markTargets(corners);
+  const text='Click one right angle on the rectangle.';
+  document.getElementById('question').innerHTML='<span class="shapeName">▭ Rectangle</span><br>'+text;
+  document.getElementById('status').textContent='Every corner you can click is a corner of the rectangle.';
+  setHint(text); speak('Click one right angle.');
+}
+function handleLessonClick(name){
+  if(lesson.kind!=='rightClick') return;
+  if(!lesson.corners.includes(name)){
+    if(squares[name]){squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450);}
+    document.getElementById('status').textContent='Click a corner of the rectangle.'; speak('Try again.'); return;
+  }
+  const spot=sq(name);
+  addBoardLabel(spot[0], spot[1]-34, '90°');
+  markTargets([]);
+  const text='Opposite sides are equal. Four right angles.';
+  document.getElementById('status').textContent=text;
+  document.getElementById('notationBox').innerHTML='<div class="shapeFact">📐 90° at '+name+'. '+text+'</div>';
+  setHint(text); speak('Ninety degrees. A rectangle has four right angles. Opposite sides are equal.');
+  const done=lesson.onDone; lesson=null;
+  setTimeout(done,2300);
+}
+function drawTrueKnightCircle(color,points){
+  const c=sq('d4');
+  const ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  ring.setAttribute('cx',c[0]); ring.setAttribute('cy',c[1]); ring.setAttribute('r',String(80*Math.sqrt(5)));
+  ring.setAttribute('class','trueCircle'); ring.setAttribute('stroke',color); ring.style.color=color; svg.appendChild(ring);
+  (points||[]).forEach(n=>addDot(n,color,15,0));
+  addDot('d4','#ffd84a',11,0);
+}
+function teachCircleMeasures(drawRing,onDone){
+  document.getElementById('options').innerHTML='';
+  if(drawRing) drawTrueKnightCircle('#c084fc',['c2','b3','b5','c6','e6','f5','f3','e2']);
+  setTimeout(()=>{
+    addPath(['d4','e2'],'#ffd84a','shapePath geoRadius');
+    const radiusMid=sq('d4'), radiusEnd=sq('e2');
+    addBoardLabel((radiusMid[0]+radiusEnd[0])/2+36,(radiusMid[1]+radiusEnd[1])/2+18,'Radius');
+    addPath(['c2','e6'],'#ffffff','shapePath geoDiameter');
+    const diaA=sq('c2'), diaB=sq('e6');
+    addBoardLabel((diaA[0]+diaB[0])/2-86,(diaA[1]+diaB[1])/2-28,'Diameter');
+    addBoardLabel(sq('d4')[0],sq('d4')[1]-58,'Center');
+    const text='Centre d4. Radius: d4 to e2. Diameter: c2 to e6.';
+    document.getElementById('status').textContent=text;
+    document.getElementById('notationBox').innerHTML='<div class="shapeFact">📐 Diameter = 2 × Radius</div>';
+    setHint('Diameter = 2 × Radius. The knight does not travel the circle.');
+    speak('Centre, radius and diameter. The diameter is twice the radius.');
+    setTimeout(onDone,2800);
+  }, drawRing?1000:200);
+}
+function drawLevel3Guide(item){
+  if(item.piece==='knight'){
+    // Level 3 Knight: do NOT show the full circle at the start.
+    // Only the center star appears; dots and glowing lines are built step by step.
+    const center=sq(item.center||'d4');
+    const star=document.createElementNS('http://www.w3.org/2000/svg','text');
+    star.setAttribute('x',center[0]);star.setAttribute('y',center[1]+14);
+    star.setAttribute('text-anchor','middle');star.setAttribute('class','centerStar');star.textContent='⭐';svg.appendChild(star);
+  }else{
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',pathD(pathFromSquares(item.path))); p.setAttribute('class','shapePath missingPath'); p.setAttribute('stroke',item.color); p.style.color=item.color; svg.appendChild(p);
+  }
+}
+function showLevel3Question(){
+  locked=false; clearShape(); level3Step=0; currentL3=gameQuestions[q-1];
+  level3KnightTargets = (currentL3.piece==='knight') ? currentL3.path.slice(0,-1) : [];
+  document.getElementById('qnum').textContent=q; document.getElementById('qtotal').textContent=totalQuestions;
+  document.getElementById('mode').textContent='Level 3 — Chess Shape Artist';
+  document.getElementById('options').innerHTML='';
+  drawLevel3Guide(currentL3);
+
+  if(currentL3.piece==='knight'){
+    const first=level3KnightTargets[0];
+    document.getElementById('question').innerHTML=`<span class="shapeName">♘ Mystery Shape</span><br>The Knight starts on d4.`;
+    document.getElementById('status').textContent='Click '+first+'. The knight jumps there and returns to d4.';
+    setHint('Click '+first+'. The knight jumps out and comes back to d4.');
+    showPieceAt('d4','knight');
+    markTarget(first,true);
+    speak('The knight is on d4. Click '+first+'.');
+  }else{
+    document.getElementById('question').innerHTML=`<span class="shapeName">${pieceData[currentL3.piece].icon} Mystery Shape</span><br>Follow the arrow and build the mystery shape.`;
+    document.getElementById('status').textContent='Click '+currentL3.path[1]+'.';
+    setHint('Click '+currentL3.path[1]+'. Follow the arrow.');
+    showPieceAt(currentL3.path[0],currentL3.piece);
+    placeArrow(currentL3.path[0],currentL3.path[1],currentL3.piece);
+    markTarget(currentL3.path[1],true);
+    speak('Click '+currentL3.path[1]+'.');
+  }
+}
+function handleSquareHover(name){
+  if(triangleMode||angleMode) return;
+  if(!running || currentLevel!=='3' || !currentL3 || locked || currentL3.piece==='knight') return;
+  const target=currentL3.path[level3Step+1];
+  if(name===target){
+    clearPreview();
+    previewEl=addPath([currentL3.path[level3Step],target],currentL3.color,'shapePath previewPath');
+  }
+}
+function clearPreview(){ if(previewEl){previewEl.remove();previewEl=null;} }
+function handleBoardClick(name){
+  if(angleMode) return;
+  if(lesson){ handleLessonClick(name); return; }
+  if(triangleMode){ triangleClick(name); return; }
+  if(!running || currentLevel!=='3' || !currentL3 || locked) return;
+
+  if(currentL3.piece==='knight'){
+    const target=level3KnightTargets[level3Step];
+    if(name!==target){
+      if(squares[name]){squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450)}
+      document.getElementById('status').textContent='Try again. Click '+target+'.'; speak('Try again.'); return;
+    }
+    locked=true; markTarget(null,false);
+    centerPiece.classList.remove('show');
+    hopKnight('d4', target, ()=>{
+      addDot(target,currentL3.color,16,0);
+      hopKnight(target, 'd4', ()=>{
+        showPieceAt('d4','knight'); level3Step++; locked=false;
+        if(level3Step>=level3KnightTargets.length){
+          drawTrueKnightCircle(currentL3.color, level3KnightTargets);
+          document.getElementById('status').textContent='The knight returned to d4 after every jump. The circle passes through the landing squares.';
+          setHint('The circle is a geometric drawing. The knight did not travel around it.');
+          celebrateSmall(); speak('The circle passes through the landing squares.');
+          setTimeout(showShapeIdentityStep,1200);
+        }else{
+          const next=level3KnightTargets[level3Step]; markTarget(next,true);
+          document.getElementById('question').innerHTML='<span class="shapeName">♘ Mystery Shape</span><br>The Knight is back on d4.';
+          document.getElementById('status').textContent='Click '+next+'. The knight jumps there and returns to d4.';
+          setHint('Click '+next+'. The knight jumps out and comes back.');
+          speak('Click '+next+'.');
+        }
+      });
+    });
+    return;
+  }
+
+  const from=currentL3.path[level3Step]; const target=currentL3.path[level3Step+1];
+  if(name!==target){
+    if(squares[name]){squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450)}
+    document.getElementById('status').textContent='Try again. Follow the arrow.'; speak('Try again. Follow the arrow.'); return;
+  }
+  locked=true; clearPreview(); markTarget(null,false);
+  const el=document.createElement('div');el.className='movingPiece';el.textContent=pieceData[currentL3.piece].icon;board.appendChild(el);
+  const a=sq(from), b=sq(target); el.style.left=(a[0]/640*100)+'%'; el.style.top=(a[1]/640*100)+'%';
+  setTimeout(()=>{addPath([from,target],currentL3.color);el.style.left=(b[0]/640*100)+'%';el.style.top=(b[1]/640*100)+'%';},70);
+  setTimeout(()=>{
+    el.remove(); showPieceAt(target,currentL3.piece); level3Step++; locked=false;
+    if(level3Step>=currentL3.path.length-1){
+      [...board.querySelectorAll('.arrowHint')].forEach(e=>e.remove());
+      document.getElementById('status').textContent='Great drawing! Now identify the shape.';
+      document.getElementById('notationBox').innerHTML='';
+      celebrateSmall(); speak('Great drawing. What shape did we draw?');
+      setTimeout(showShapeIdentityStep,750);
+    }else{
+      const next=currentL3.path[level3Step+1]; placeArrow(target,next,currentL3.piece); markTarget(next,true);
+      document.getElementById('status').textContent='Great! Click '+next+'.'; setHint('Click '+next+'. Follow the arrow.'); speak('Click '+next+'.');
+    }
+  },950);
+}
+function baseShapeName(name){
+  if(name.includes('Square')) return 'Square';
+  if(name.includes('Rectangle')) return 'Rectangle';
+  if(name.includes('Diamond')) return 'Diamond';
+  if(name.includes('Circle')) return 'Circle';
+  if(name.includes('Octagon')) return 'Octagon';
+  if(name.includes('Hexagon')) return 'Hexagon';
+  if(name.includes('Triangle')) return 'Triangle';
+  return name;
+}
+function shapeSymbol(name){
+  const icons={
+    'Square':'□',
+    'Rectangle':'▭',
+    'Triangle':'🔺',
+    'Diamond':'◇',
+    'Hexagon':'⬡',
+    'Octagon':'⯃',
+    'Circle':'○'
+  };
+  return icons[name] || '□';
+}
+function shapeOptions(correct){
+  const correctBase=baseShapeName(correct);
+  const pool=['Square','Rectangle','Triangle','Diamond','Hexagon','Octagon','Circle'];
+  const opts=[correctBase];
+  const rest=shuffleArray(pool.filter(x=>x!==correctBase));
+  while(opts.length<3 && rest.length) opts.push(rest.shift());
+  return shuffleArray(opts);
+}
+function showShapeIdentityStep(){
+  locked=false;
+  const correctBase=baseShapeName(currentL3.shape);
+  document.getElementById('question').innerHTML=`<span class="shapeName">❓ Mystery Shape</span><br>What shape did we draw?`;
+  document.getElementById('status').textContent='Choose the correct shape name.';
+  const opts=document.getElementById('options');opts.innerHTML='';
+  shapeOptions(currentL3.shape).forEach(name=>{
+    const b=document.createElement('button');b.className='optionBtn';b.type='button';
+    b.innerHTML=`<span class="symbol">${shapeSymbol(name)}</span><span>${name}</span>`;
+    b.onclick=()=>chooseLevel3ShapeAnswer(name,b);opts.appendChild(b);
+  });
+  speak('What shape did we draw?');
+}
+function chooseLevel3ShapeAnswer(name,btn){
+  if(!running||locked)return;
+  if(name===baseShapeName(currentL3.shape)){
+    locked=true;btn.classList.add('correct');score++;updateStars();document.getElementById('score').textContent=score;
+    document.getElementById('status').textContent='Excellent! '+baseShapeName(currentL3.shape)+' completed.';
+    document.getElementById('notationBox').innerHTML='<div class="shapeFact">📐 '+currentL3.fact+'</div>';
+    addGallery(currentL3); celebrateSmall(); speak('Excellent. '+baseShapeName(currentL3.shape)+' completed.');
+    const base=baseShapeName(currentL3.shape);
+    const go=()=>setTimeout(nextQuestion,350);
+    if(currentL3.path && currentL3.path.join(',')==='f2,f7,a2,f2'){
+      highlightAngle('a2','f2','f7','');
+      showTypeChoices('right','The highlighted corner is at f2. What kind of triangle is this?', ()=>{
+        addBoardLabel(sq('f2')[0], sq('f2')[1]-36, '90°');
+        document.getElementById('question').innerHTML='<span class="shapeName">🔺 Right-angled triangle</span><br>90° at f2.';
+        document.getElementById('status').textContent='One angle is 90°.';
+        setHint('90° at f2.');
+        speak('Right-angled triangle. Ninety degrees at f2.');
+        setTimeout(nextQuestion,1800);
+      });
+      return;
+    }
+    if(base==='Square'){ teachSquare(currentL3.path, go); return; }
+    if(base==='Rectangle'){ askIdentifyRightAngle(currentL3.path, go); return; }
+    if(base==='Circle'){ teachCircleMeasures(false, go); return; }
+    setTimeout(nextQuestion,1900);
+  }else{
+    btn.classList.add('wrong');document.getElementById('status').textContent='Try again. Look at the shape you drew.';speak('Try again.');
+  }
+}
+
+function buildBoard(){
+  document.getElementById('ranks').innerHTML='';document.getElementById('files').innerHTML='';
+  [...board.querySelectorAll('.square')].forEach(e=>e.remove());squares={};
+  for(let r=8;r>=1;r--){const d=document.createElement('div');d.className='rank';d.textContent=r;document.getElementById('ranks').appendChild(d)}
+  files.forEach(f=>{const d=document.createElement('div');d.className='file';d.textContent=f;document.getElementById('files').appendChild(d)});
+  for(let r=8;r>=1;r--){for(let c=0;c<8;c++){const el=document.createElement('div');el.className='square '+(((c+r)%2===0)?'light':'dark');el.dataset.name=files[c]+r;el.onclick=()=>handleBoardClick(files[c]+r);el.onmouseenter=()=>handleSquareHover(files[c]+r);el.onmouseleave=()=>clearPreview();board.insertBefore(el,svg);squares[files[c]+r]=el;}}
+}
+function buildStars(){const box=document.getElementById('stars');box.innerHTML='';for(let i=1;i<=10;i++){const s=document.createElement('div');s.className='star';s.id='star'+i;s.textContent='☆';box.appendChild(s)}}
+function updateStars(){for(let i=1;i<=10;i++){const s=document.getElementById('star'+i);s.style.display='flex';const earned=i<=score;const was=s.classList.contains('done');s.classList.toggle('done',earned);s.textContent=earned?'⭐':'☆';if(earned&&!was){s.classList.remove('pop');void s.offsetWidth;s.classList.add('pop');}}}
+function formatTime(sec){return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function clearShape(){svg.innerHTML='';centerPiece.classList.remove('show');centerPiece.textContent='';centerPiece.style.left='50%';centerPiece.style.top='50%';document.getElementById('notationBox').textContent='';[...board.querySelectorAll('.movingPiece,.arrowHint,.coordHint')].forEach(e=>e.remove());Object.values(squares).forEach(el=>el.classList.remove('clickableTarget','wrongFlash'));aimedSquares=[];lesson=null;}
+function addPath(list,color,cls='shapePath'){const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',pathD(pathFromSquares(list)));p.setAttribute('class',cls);p.setAttribute('stroke',color);p.style.color=color;svg.appendChild(p);return p;}
+function addDot(name,color,r=9,delay=0){const d=sq(name);const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',d[0]);c.setAttribute('cy',d[1]);c.setAttribute('r',r);c.setAttribute('fill',color);c.style.filter='drop-shadow(0 0 8px '+color+')';c.style.opacity='0';svg.appendChild(c);setTimeout(()=>{c.style.opacity='1'},delay);return c;}
+function drawShape(item){
+  clearShape();
+  if(item.circleGuide){drawKnightCircleGuide(item,true);return;}
+  addPath(item.squares,item.color);
+  item.squares.slice(0,-1).forEach((name,i)=>addDot(name,item.color,item.circle?11:8,i*85+250));
+}
+function drawKnightCircleGuide(item,includeAnswer=true,missingAnswer=null){
+  const center=sq(item.center||'d4');
+  const guide=document.createElementNS('http://www.w3.org/2000/svg','circle');guide.setAttribute('cx',center[0]);guide.setAttribute('cy',center[1]);guide.setAttribute('r',String(80*Math.sqrt(5)));guide.setAttribute('class','guideCircle');guide.setAttribute('stroke',item.color);guide.style.color=item.color;svg.appendChild(guide);
+  const star=document.createElementNS('http://www.w3.org/2000/svg','text');star.setAttribute('x',center[0]);star.setAttribute('y',center[1]+14);star.setAttribute('text-anchor','middle');star.setAttribute('class','centerStar');star.textContent='⭐';svg.appendChild(star);
+  const list=item.path||item.squares;
+  list.slice(0,-1).forEach((name,i)=>{if(!includeAnswer && name===missingAnswer)return; addDot(name,item.color,18,i*90+250)});
+}
+function drawIncomplete(item){
+  clearShape();
+  if(item.special==='knightCircle'){
+    drawKnightCircleGuide(item,false,item.answerSquare);
+    const p=sq('d4');
+    centerPiece.textContent='♘';centerPiece.style.left=(p[0]/640*100)+'%';centerPiece.style.top=(p[1]/640*100)+'%';centerPiece.classList.add('show');
+    return;
+  }
+  if(item.partialSegments){
+    const shownDots=[];
+    item.partialSegments.forEach(seg=>{
+      addPath(seg,item.color);
+      seg.forEach(n=>{if(!shownDots.includes(n))shownDots.push(n);});
+    });
+    addPath([item.missingFrom,item.missingTo],item.color,'shapePath missingPath');
+    shownDots.forEach((name,i)=>addDot(name,item.color,8,i*75+200));
+    return;
+  }
+  const complete=item.path;
+  const partial=complete.slice(0,-1);
+  addPath(partial,item.color);
+  addPath([item.missingFrom,item.missingTo],item.color,'shapePath missingPath');
+  partial.forEach((name,i)=>addDot(name,item.color,8,i*75+200));
+  // Do not show the helper piece before the student chooses the correct answer.
+  // The piece will appear only during the completion animation.
+}
+function animateCompletion(item,after){
+  if(item.special==='knightCircle'){
+    addDot(item.answerSquare,item.color,20,0);
+    centerPiece.classList.remove('show');
+    hopKnight('d4', item.answerSquare, ()=>{
+      hopKnight(item.answerSquare, 'd4', ()=>{
+        showPieceAt('d4','knight');
+        setTimeout(after,300);
+      });
+    });
+    return;
+  }
+  centerPiece.classList.remove('show');
+  const el=document.createElement('div');el.className='movingPiece';el.textContent=pieceData[item.piece].icon;board.appendChild(el);
+  const a=sq(item.missingFrom), b=sq(item.missingTo);
+  el.style.left=(a[0]/640*100)+'%';el.style.top=(a[1]/640*100)+'%';
+  setTimeout(()=>{addPath([item.missingFrom,item.missingTo],item.color);el.style.left=(b[0]/640*100)+'%';el.style.top=(b[1]/640*100)+'%';},80);
+  setTimeout(()=>{el.remove();centerPiece.textContent=pieceData[item.piece].icon;centerPiece.style.left=(b[0]/640*100)+'%';centerPiece.style.top=(b[1]/640*100)+'%';centerPiece.classList.add('show');after();},1050);
+}
+function speak(text){try{if(!('speechSynthesis' in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.88;u.pitch=1.12;speechSynthesis.speak(u)}catch(e){}}
+function showLevel1Question(){
+  locked=false;clearShape();const item=gameQuestions[q-1];drawShape(item);
+  document.getElementById('qnum').textContent=q;document.getElementById('qtotal').textContent=totalQuestions;
+  document.getElementById('mode').textContent='Level 1 — Shape Builder';
+  document.getElementById('question').innerHTML=`<span class="shapeName">${item.emoji} ${item.shape}</span><br>Which piece can build this shape?`;
+  document.getElementById('status').textContent='Choose the correct chess builder.';
+  const opts=document.getElementById('options');opts.innerHTML='';
+  shuffleArray(item.opts).forEach(key=>{const b=document.createElement('button');b.className='optionBtn';b.type='button';b.innerHTML=`<span class="symbol">${pieceData[key].icon}</span><span>${pieceData[key].name}</span>`;b.onclick=()=>chooseLevel1(key,b);opts.appendChild(b)});
+  setHint('Choose the piece that can build this shape.');
+  speak('Which piece can build this shape?');
+}
+function chooseLevel1(key,btn){
+  if(!running||locked)return;const item=gameQuestions[q-1];
+  if(key===item.piece){locked=true;btn.classList.add('correct');score++;updateStars();document.getElementById('score').textContent=score;centerPiece.textContent=pieceData[key].icon;
+    if(item.center){const cp=sq(item.center);centerPiece.style.left=(cp[0]/640*100)+'%';centerPiece.style.top=(cp[1]/640*100)+'%';}else{centerPiece.style.left='50%';centerPiece.style.top='50%';}
+    centerPiece.classList.add('show');document.getElementById('status').textContent='Excellent! '+item.msg;addGallery(item);celebrateSmall();speak(item.msg);
+    const go=()=>setTimeout(nextQuestion,350);
+    const base=baseShapeName(item.shape);
+    if(base==='Square') teachSquare(item.squares, go);
+    else if(base==='Rectangle') askIdentifyRightAngle(item.squares, go);
+    else if(item.circleGuide) teachCircleMeasures(false, go);
+    else setTimeout(nextQuestion,1700);
+  }else{btn.classList.add('wrong');document.getElementById('status').textContent='Try again. Think about how the piece moves.';speak('Try again.');}
+}
+function showLevel2Question(){
+  locked=false;level2Step='piece';clearShape();const item=gameQuestions[q-1];if(item.legalPieces) item.piece=item.legalPieces[0];drawIncomplete(item);
+  document.getElementById('qnum').textContent=q;document.getElementById('qtotal').textContent=totalQuestions;
+  document.getElementById('mode').textContent='Level 2 — Chess Path Finder';
+  const opts=document.getElementById('options');opts.innerHTML='';
+  if(item.special==='knightCircle'){
+    document.getElementById('question').innerHTML=`<span class="shapeName">${item.emoji} ${item.shape}</span><br>The Knight is on d4 and wants to draw a full circle.<br>Which square completes the circle?`;
+    document.getElementById('status').textContent='Choose the missing square.';
+    shuffleArray(item.opts).forEach(squareName=>{const b=document.createElement('button');b.className='optionBtn';b.type='button';b.innerHTML=`<span class="symbol">${squareName}</span><span>Square</span>`;b.onclick=()=>chooseKnightSquare(squareName,b);opts.appendChild(b)});
+    setHint('Choose the missing landing square. The knight jumps from d4 and returns.');
+    speak('The Knight is on d4. Which square completes the circle?');
+  }else{
+    document.getElementById('question').innerHTML=`<span class="shapeName">${item.emoji} ${item.shape}</span><br>Which piece can complete the shape?`;
+    document.getElementById('status').textContent='Choose the piece that completes the missing side.';
+    shuffleArray(item.opts).forEach(key=>{const b=document.createElement('button');b.className='optionBtn';b.type='button';b.innerHTML=`<span class="symbol">${pieceData[key].icon}</span><span>${pieceData[key].name}</span>`;b.onclick=()=>chooseLevel2Piece(key,b);opts.appendChild(b)});
+    setHint('Choose the piece that completes the missing side.');
+    speak('Which piece can complete the shape?');
+  }
+}
+function chooseKnightSquare(squareName,btn){
+  if(!running||locked)return;const item=gameQuestions[q-1];
+  if(squareName===item.answerSquare){locked=true;btn.classList.add('correct');document.getElementById('status').textContent='Excellent! The square e2 completes the Knight circle.';speak('Excellent. Square e2 completes the circle.');animateCompletion(item,()=>showNotationStep(item));}
+  else{btn.classList.add('wrong');document.getElementById('status').textContent='Try again. Look at the empty place in the circle.';speak('Try again.');}
+}
+function chooseLevel2Piece(key,btn){
+  if(!running||locked)return;const item=gameQuestions[q-1];
+  const legal=item.legalPieces||[item.piece];
+  if(legal.includes(key)){locked=true;item.piece=key;btn.classList.add('correct');document.getElementById('status').textContent='Correct! Watch the move complete the shape.';speak('Correct. Watch the move complete the shape.');animateCompletion(item,()=>showNotationStep(item));}
+  else{btn.classList.add('wrong');document.getElementById('status').textContent='Try again. Think about the missing side.';speak('Try again.');}
+}
+function showNotationStep(item){
+  locked=false;level2Step='notation';
+  document.getElementById('question').innerHTML=`<span class="shapeName">${item.emoji} ${item.shape}</span><br>Which notation shows the move?`;
+  document.getElementById('status').textContent='Choose the correct algebraic notation.';
+  const opts=document.getElementById('options');opts.innerHTML='';
+  shuffleArray(item.notationOpts).forEach(txt=>{const b=document.createElement('button');b.className='optionBtn';b.type='button';b.innerHTML=`<span style="font-size:22px">${txt}</span>`;b.onclick=()=>chooseNotation(txt,b);opts.appendChild(b)});
+  speak('Which notation shows the move?');
+}
+function notationFor(piece,from,to){const symbol={rook:'♖',queen:'♕',bishop:'♗',knight:'♘'};return symbol[piece]+' '+from+' → '+to;}
+function chooseNotation(txt,btn){
+  if(!running||locked)return;const item=gameQuestions[q-1];
+  const watched=item.answerNotations?notationFor(item.piece,item.missingFrom,item.missingTo):item.answerNotation;
+  if(txt===watched){locked=true;btn.classList.add('correct');score++;updateStars();document.getElementById('score').textContent=score;document.getElementById('status').textContent='Excellent! '+item.msg;document.getElementById('notationBox').textContent='📖 '+item.msg;addGallery(item);celebrateSmall();speak('Excellent. '+item.msg);
+    if(item.askType==='right'){highlightAngle('a2','f2','f7','');showTypeChoices('right','The highlighted corner is at f2. What kind of triangle is this?',()=>{addBoardLabel(sq('f2')[0], sq('f2')[1]-36, '90°');document.getElementById('question').innerHTML='<span class="shapeName">🔺 Right-angled triangle</span><br>90° at f2.';document.getElementById('status').textContent='One angle is 90°.';setHint('90° at f2.');speak('Right-angled triangle. Ninety degrees at f2.');setTimeout(nextQuestion,1800);});return;}
+    const base=baseShapeName(item.shape);
+    const go=()=>setTimeout(nextQuestion,350);
+    if(base==='Square' && item.path){ teachSquare(item.path, go); return; }
+    if(base==='Rectangle' && item.path){ askIdentifyRightAngle(item.path, go); return; }
+    if(item.special==='knightCircle'){ teachCircleMeasures(false, go); return; }
+    setTimeout(nextQuestion,1800);
+  }
+  else{btn.classList.add('wrong');document.getElementById('status').textContent='Try again. Match the move you just watched.';speak('Try again.');}
+}
+function nextQuestion(){q++;if(q>totalQuestions)finish(true);else if(currentLevel==='3')showLevel3Question();else if(currentLevel==='2')showLevel2Question();else showLevel1Question();}
+function addGallery(item){const box=document.getElementById('gallery');const g=document.createElement('div');g.className='gem done';g.textContent=item.emoji;box.appendChild(g)}
+function celebrateSmall(){const symbols=['⭐','✨','🎉','⚡'];for(let i=0;i<12;i++){const c=document.createElement('div');c.className='confetti';c.textContent=symbols[Math.floor(Math.random()*symbols.length)];c.style.left=(20+Math.random()*60)+'vw';c.style.animationDuration=(1.4+Math.random()*1.2)+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),2800)}}
+function launchConfetti(){const symbols=['🎉','⭐','🌟','🎈','🏆','✨','♟'];for(let i=0;i<40;i++){const c=document.createElement('div');c.className='confetti';c.textContent=symbols[Math.floor(Math.random()*symbols.length)];c.style.left=(Math.random()*96)+'vw';c.style.animationDuration=(2.2+Math.random()*2.5)+'s';c.style.animationDelay=(Math.random()*0.45)+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),5400)}}
+let triangleMode=false, tri=null, triStep=0, triPhase='move', triPiece=null;
+function hopKnight(from,to,done){
+  const el=document.createElement('div'); el.className='movingPiece'; el.style.transition='none'; el.textContent='♘'; board.appendChild(el);
+  const a=sq(from), b=sq(to);
+  const mx=(a[0]+b[0])/2, my=(a[1]+b[1])/2, dx=b[0]-a[0], dy=b[1]-a[1], len=Math.hypot(dx,dy)||1;
+  const liftX=(mx-dy/len*52)/640*100, liftY=(my+dx/len*52)/640*100;
+  const ax=a[0]/640*100, ay=a[1]/640*100, bx=b[0]/640*100, by=b[1]/640*100;
+  el.style.left=ax+'%'; el.style.top=ay+'%';
+  el.animate([{left:ax+'%',top:ay+'%'},{left:liftX+'%',top:liftY+'%'},{left:bx+'%',top:by+'%'}],{duration:720,easing:'ease-in-out',fill:'forwards'});
+  setTimeout(()=>{el.remove(); if(done) done();},760);
+}
+function squareParts(name){return {f:files.indexOf(name[0].toLowerCase()), r:parseInt(name[1],10)};}
+function isRookMove(a,b){if(a===b)return false; const A=squareParts(a), B=squareParts(b); return A.f===B.f || A.r===B.r;}
+function isBishopMove(a,b){const A=squareParts(a), B=squareParts(b); const df=Math.abs(A.f-B.f), dr=Math.abs(A.r-B.r); return df>0 && df===dr;}
+function isKnightMove(a,b){const A=squareParts(a), B=squareParts(b); const df=Math.abs(A.f-B.f), dr=Math.abs(A.r-B.r); return (df===1&&dr===2)||(df===2&&dr===1);}
+function legalPieces(a,b){const out=[]; if(isRookMove(a,b)) out.push('rook','queen'); else if(isBishopMove(a,b)) out.push('bishop','queen'); if(isKnightMove(a,b)) out.push('knight'); return out;}
+function angleDeg(a,v,b){
+  const A=sq(a), V=sq(v), B=sq(b);
+  const ax=A[0]-V[0], ay=A[1]-V[1], bx=B[0]-V[0], by=B[1]-V[1];
+  const d=(ax*bx+ay*by)/(Math.hypot(ax,ay)*Math.hypot(bx,by));
+  return Math.acos(Math.max(-1,Math.min(1,d)))*180/Math.PI;
+}
+function triangleClass(deg){if(Math.abs(deg-90)<0.25) return 'right'; return deg<90?'acute':'obtuse';}
+function formatDeg(n){const r=Math.round(n*10)/10; if(Math.abs(r-Math.round(r))<0.05) return Math.round(r)+'°'; return r.toFixed(1)+'°';}
+function highlightAngle(from,vertex,to,label){
+  const V=sq(vertex), A=sq(from), B=sq(to);
+  let a0=Math.atan2(A[1]-V[1], A[0]-V[0]);
+  let sweep=Math.atan2(B[1]-V[1], B[0]-V[0])-a0;
+  while(sweep>Math.PI) sweep-=Math.PI*2;
+  while(sweep<-Math.PI) sweep+=Math.PI*2;
+  const r=48;
+  const p0=[V[0]+Math.cos(a0)*r, V[1]+Math.sin(a0)*r];
+  const p1=[V[0]+Math.cos(a0+sweep)*r, V[1]+Math.sin(a0+sweep)*r];
+  const arc=document.createElementNS('http://www.w3.org/2000/svg','path');
+  arc.setAttribute('d','M '+p0[0]+' '+p0[1]+' A '+r+' '+r+' 0 0 '+(sweep>0?1:0)+' '+p1[0]+' '+p1[1]);
+  arc.setAttribute('class','angleArc'); svg.appendChild(arc);
+  const mid=a0+sweep/2;
+  const text=document.createElementNS('http://www.w3.org/2000/svg','text');
+  text.setAttribute('x',V[0]+Math.cos(mid)*(r+26)); text.setAttribute('y',V[1]+Math.sin(mid)*(r+26)+7);
+  text.setAttribute('text-anchor','middle'); text.setAttribute('class','angleLabel'); text.textContent=label; svg.appendChild(text);
+}
+function showTypeChoices(correct,prompt,onOk){
+  locked=false;
+  document.getElementById('question').innerHTML='<span class="shapeName">🔺 Triangle</span><br>'+prompt;
+  document.getElementById('status').textContent='Choose the triangle type.';
+  const opts=document.getElementById('options'); opts.innerHTML='';
+  shuffleArray([['right','Right-angled'],['acute','Acute-angled'],['obtuse','Obtuse-angled']]).forEach(([key,label])=>{
+    const b=document.createElement('button'); b.className='optionBtn'; b.type='button'; b.textContent=label;
+    b.onclick=()=>{
+      if(!running||locked) return;
+      if(key!==correct){b.classList.add('wrong'); document.getElementById('status').textContent='Look again at the highlighted corner.'; speak('Try again.'); return;}
+      locked=true; b.classList.add('correct'); onOk();
+    };
+    opts.appendChild(b);
+  });
+  speak(prompt);
+}
+const TRIANGLES=[
+  {id:'1', title:'Build the Triangle', name:'Right-angled triangle', type:'right', emoji:'🔺', color:'#ff4d6d', angleAt:'f2', arms:['a2','f7'], expected:90,
+    checks:[{at:'a2',arms:['f2','f7'],deg:45},{at:'f7',arms:['f2','a2'],deg:45}],
+    moves:[
+      {from:'a2',to:'f2',kind:'slide',show:'rook',pieces:['rook','queen']},
+      {from:'f2',to:'f7',kind:'slide',show:'rook',pieces:['rook','queen']},
+      {from:'f7',to:'a2',kind:'slide',pieces:['bishop','queen'],distractor:'knight'}
+    ],
+    feedback:'90° at f2.<br>Rook / Queen: straight lines.<br>Bishop / Queen: diagonal lines.', line:'One angle is 90°.', note:'Rook / Queen: straight lines. Bishop / Queen: diagonal lines.', say:'Right-angled triangle. Ninety degrees at f2. A rook or queen draws straight lines. A bishop or queen draws diagonal lines.'},
+  {id:'2', title:'Triangle Challenge 2', name:'Acute-angled triangle', type:'acute', emoji:'🔺', color:'#58f07c', angleAt:'d3', arms:['b2','b5'], expected:71.57,
+    checks:[{at:'b2',arms:['b5','d3'],deg:63.43},{at:'b5',arms:['b2','d3'],deg:45}],
+    moves:[
+      {from:'b2',to:'b5',kind:'slide',show:'rook',pieces:['rook','queen']},
+      {from:'b5',to:'d3',kind:'slide',show:'bishop',pieces:['bishop','queen']},
+      {from:'d3',to:'b2',kind:'knight',pieces:['knight'],distractor:'rook'}
+    ],
+    feedback:'All three angles are less than 90°.<br>Knight: the dashed side is a jump.', line:'All three angles are less than 90°.', note:'Knight: the dashed side is a jump.', say:'Acute-angled triangle. All three angles are less than ninety degrees. The dashed side is a knight jump.'},
+  {id:'3', title:'Triangle Challenge 3', name:'Obtuse-angled triangle', type:'obtuse', emoji:'🔺', color:'#ff9f1c', angleAt:'d3', arms:['b2','f2'], expected:126.87,
+    checks:[{at:'b2',arms:['d3','f2'],deg:26.57},{at:'f2',arms:['b2','d3'],deg:26.57}],
+    moves:[
+      {from:'b2',to:'d3',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'d3',to:'f2',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'f2',to:'b2',kind:'slide',pieces:['rook','queen'],distractor:'bishop'}
+    ],
+    feedback:'One angle is greater than 90°.<br>126.9° at d3.<br>Knight: dashed jumps. Rook / Queen: the base.', line:'One angle is greater than 90°.', note:'Knight: dashed jumps. Rook / Queen: the base.', say:'Obtuse-angled triangle. One angle is greater than ninety degrees. The dashed sides are knight jumps.'},
+  {id:'4', title:"Knight's Triangle Challenge", name:'Right-angled triangle', type:'right', emoji:'♞', color:'#c084fc', angleAt:'e4', arms:['c3','d6'], expected:90,
+    checks:[{at:'c3',arms:['e4','d6'],deg:45},{at:'d6',arms:['e4','c3'],deg:45}],
+    moves:[
+      {from:'c3',to:'e4',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'e4',to:'d6',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'d6',to:'c3',kind:'geometry',pieces:[]}
+    ],
+    feedback:'One angle is 90°.<br>90° at e4.<br>The closing side is geometry, not one chess move.', line:'One angle is 90°.', note:'No piece can travel d6 to c3 in one move.', say:'Right-angled triangle. Ninety degrees at e4. No piece can travel the closing side in one move.'},
+  {id:'5', title:'Triangle Challenge 5', name:'Acute-angled triangle', type:'acute', emoji:'♞', color:'#39b6ff', angleAt:'e4', arms:['c3','c5'], expected:53.13,
+    checks:[{at:'c3',arms:['e4','c5'],deg:63.43},{at:'c5',arms:['c3','e4'],deg:63.43}],
+    moves:[
+      {from:'c3',to:'e4',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'e4',to:'c5',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'c5',to:'c3',kind:'slide',pieces:['rook','queen'],distractor:'bishop'}
+    ],
+    feedback:'All three angles are less than 90°.<br>53.1° at e4.<br>Rook / Queen: c5 to c3.', line:'All three angles are less than 90°.', note:'Rook / Queen: c5 to c3, a straight line.', say:'Acute-angled triangle. All three angles are less than ninety degrees. A rook or queen draws the straight side.'},
+  {id:'6', title:"Knight's Triangle Challenge", name:'Obtuse-angled triangle', type:'obtuse', emoji:'♞', color:'#ff4d6d', angleAt:'d4', arms:['e6','e2'], expected:126.87,
+    checks:[{at:'e6',arms:['d4','e2'],deg:26.57},{at:'e2',arms:['e6','d4'],deg:26.57}],
+    moves:[
+      {from:'e6',to:'d4',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'d4',to:'e2',kind:'knight',show:'knight',pieces:['knight']},
+      {from:'e2',to:'e6',kind:'slide',pieces:['rook','queen'],distractor:'knight'}
+    ],
+    feedback:'One angle is greater than 90°.<br>126.9° at d4.<br>Rook / Queen: e2 to e6.', line:'One angle is greater than 90°.', note:'Rook / Queen: e2 to e6, a straight line.', say:'Obtuse-angled triangle. One angle is greater than ninety degrees. A rook or queen draws the straight side.'},
+  {id:'7', title:"Queen's Triangle Lesson", name:'Right-angled isosceles triangle', type:'right', emoji:'♛', color:'#ff5d73', flow:'queenLesson', guidedQueen:true, angleAt:'e7', arms:['b4','h4'], expected:90,
+    checks:[{at:'b4',arms:['e7','h4'],deg:45},{at:'h4',arms:['e7','b4'],deg:45}],
+    equal:['b4','e7','e7','h4'], apex:'e7', foot:'e4', base:['b4','h4'],
+    moves:[
+      {from:'b4',to:'e7',kind:'slide',show:'queen',pieces:['bishop','queen']},
+      {from:'e7',to:'h4',kind:'slide',show:'queen',pieces:['bishop','queen']},
+      {from:'h4',to:'b4',kind:'slide',show:'queen',pieces:['rook','queen']}
+    ],
+    feedback:'One angle is 90°.<br>90° at e7.<br>Two sides are equal.', line:'Right-angled by its angles. Isosceles: two sides are equal.', note:'45°, 90°, 45°. Two sides are equal.', say:'Right-angled triangle. Ninety degrees at e7. Two sides are equal, so it is isosceles.'},
+  {id:'8', title:"Queen's Triangle Challenge", name:'Right-angled isosceles triangle', type:'right', emoji:'♛', color:'#ffd24a', flow:'queenChallenge', guidedQueen:true, angleAt:'d6', arms:['a3','g3'], expected:90,
+    checks:[{at:'a3',arms:['d6','g3'],deg:45},{at:'g3',arms:['d6','a3'],deg:45}],
+    equal:['a3','d6','d6','g3'], apex:'d6', foot:'d3', base:['a3','g3'],
+    moves:[
+      {from:'a3',to:'d6',kind:'slide',show:'queen',pieces:['bishop','queen']},
+      {from:'d6',to:'g3',kind:'slide',show:'queen',pieces:['bishop','queen']},
+      {from:'g3',to:'a3',kind:'slide',show:'queen',pieces:['rook','queen']}
+    ],
+    feedback:'One angle is 90°.<br>90° at d6.<br>Two sides are equal.', line:'Right-angled and isosceles.', note:'90° at d6. Two sides are equal.', say:'Right-angled and isosceles. Ninety degrees at d6. Two sides are equal.'}
+];
+function samePieces(a,b){return a.slice().sort().join()===b.slice().sort().join();}
+function validateTriangle(t){
+  const errs=[];
+  t.moves.forEach((m,i)=>{
+    const legal=legalPieces(m.from,m.to);
+    if(m.kind==='knight' && !isKnightMove(m.from,m.to)) errs.push('Move '+(i+1)+' is not a knight jump.');
+    if(m.kind==='slide' && isKnightMove(m.from,m.to)) errs.push('Move '+(i+1)+' is a knight jump.');
+    if(m.kind==='geometry' && legal.length) errs.push('Side '+(i+1)+' is a legal chess move.');
+    if(m.kind!=='geometry' && !samePieces(legal,m.pieces)) errs.push('Side '+(i+1)+' allows '+legal.join(', ')+'.');
+  });
+  const shown=angleDeg(t.arms[0], t.angleAt, t.arms[1]);
+  if(Math.abs(shown-t.expected)>0.25) errs.push('Angle is '+shown.toFixed(2)+', not '+t.expected+'.');
+  if(triangleClass(shown)!==t.type) errs.push('This corner is '+triangleClass(shown)+'.');
+  (t.checks||[]).forEach(c=>{
+    const got=angleDeg(c.arms[0], c.at, c.arms[1]);
+    if(Math.abs(got-c.deg)>0.25) errs.push('Corner '+c.at+' is '+got.toFixed(2)+'.');
+  });
+  if(t.foot){
+    const footAngle=angleDeg(t.apex, t.foot, t.base[0]);
+    if(Math.abs(footAngle-90)>0.25) errs.push('The height is not perpendicular.');
+    const sideA=Math.hypot(sq(t.equal[0])[0]-sq(t.equal[1])[0], sq(t.equal[0])[1]-sq(t.equal[1])[1]);
+    const sideB=Math.hypot(sq(t.equal[2])[0]-sq(t.equal[3])[0], sq(t.equal[2])[1]-sq(t.equal[3])[1]);
+    const baseLen=Math.hypot(sq(t.base[0])[0]-sq(t.base[1])[0], sq(t.base[0])[1]-sq(t.base[1])[1]);
+    if(Math.abs(sideA-sideB)>0.5) errs.push('The marked sides are not equal.');
+    if(Math.abs(baseLen-sideA)<1) errs.push('The base was marked as an equal side.');
+    if(!t.moves.every(m=>m.pieces.includes('queen'))) errs.push('A queen move is missing.');
+  }
+  return errs;
+}
+function beginSession(){
+  const pick=document.getElementById('trianglePick').value;
+  if(pick && pick.charAt(0)==='A') startAngle(pick);
+  else if(pick) startTriangle(pick);
+  else startGame();
+}
+function showReady(){
+  running=false; triangleMode=false; angleMode=false; angleRun++; anglePhase=''; locked=false;
+  if(timer){clearInterval(timer); timer=null;}
+  document.getElementById('time').textContent='Ready';
+  document.getElementById('mode').textContent='Ready';
+  document.getElementById('qnum').textContent='–';
+  document.getElementById('qtotal').textContent='–';
+  document.getElementById('question').innerHTML='<span class="shapeName">Chess Shape Builders</span><br>Choose a level or one example, then press Start.';
+  document.getElementById('status').textContent='The clock stays still until a level starts.';
+  document.getElementById('options').innerHTML='';
+  galleryOpen=false; document.getElementById('galleryPanel').hidden=true; showFullHelp();
+}
+function startTriangle(id){
+  if(timer){clearInterval(timer); timer=null;}
+  tri=TRIANGLES.find(t=>t.id===id);
+  triangleMode=true; running=true; locked=false; score=0; q=1; currentLevel='T';
+  triStep=0; triPhase='move'; triPiece=null; totalQuestions=1;
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('score').textContent='0';
+  document.getElementById('qnum').textContent='1';
+  document.getElementById('qtotal').textContent='1';
+  document.getElementById('gallery').innerHTML='';
+  document.getElementById('options').innerHTML='';
+  document.getElementById('time').textContent='Lesson';
+  document.getElementById('mode').textContent=tri.title; beginActivity();
+  updateStars(); clearShape();
+  const errs=validateTriangle(tri);
+  if(errs.length){
+    running=false; triangleMode=false;
+    document.getElementById('question').textContent='This example failed the geometry check.';
+    document.getElementById('status').textContent=errs.join(' ');
+    return;
+  }
+  promptTriangleMove();
+}
+function promptTriangleMove(){
+  const move=tri.moves[triStep];
+  const last=triStep===tri.moves.length-1;
+  document.getElementById('question').innerHTML='<span class="shapeName">'+tri.emoji+' '+tri.title+'</span><br>'+trianglePrompt(move,last);
+  if(triStep===0){ showPieceAt(move.from, move.show||move.pieces[0]||'knight'); addDot(move.from, tri.color, 11, 0); }
+  if(last && move.kind!=='geometry' && !tri.guidedQueen){
+    triPhase='piece'; triPiece=null; markTarget(null,false); showTrianglePieces(move);
+    document.getElementById('status').textContent='Choose a piece that can complete this side.';
+    setHint('Choose a piece that can travel the missing side, then click the square.');
+    speak('Which piece can complete the triangle?');
+    return;
+  }
+  triPhase='move'; markTarget(move.to,true);
+  if(move.kind==='geometry'){
+    document.getElementById('status').textContent='No chess piece can travel '+move.from+' to '+move.to+' in one move. Click '+move.to+' to draw the geometric side.';
+    setHint('Click '+move.to+'. This side is geometry, not a chess move.');
+    speak('This side is geometry only. Click '+move.to+'.');
+  }else if(move.kind==='knight'){
+    document.getElementById('status').textContent='Click '+move.to+'. The knight will jump. The dashed line is the shape, not the jump.';
+    setHint('Click '+move.to+'. The knight jumps. The dashed line is the shape.');
+    speak('Click '+move.to+'. The knight will jump.');
+  }else{
+    document.getElementById('status').textContent=tri.guidedQueen?('Click '+move.to+'. The queen travels along the side.'):('Click '+move.to+'. Watch the piece travel along the side.');
+    setHint(tri.guidedQueen?('Click '+move.to+'. The queen draws one side.'):('Click '+move.to+'. Watch the piece travel along the side.'));
+    speak('Click '+move.to+'.');
+  }
+}
+function trianglePrompt(move,last){
+  if(tri.guidedQueen) return 'The queen is ready. Select '+move.to+'.';
+  if(!last && move.kind==='knight') return 'The knight is ready. Select the next square.';
+  if(!last) return 'Select the next square and watch the side appear.';
+  if(move.kind==='geometry') return 'Complete the third side as geometry. It is not a chess move.';
+  return 'Complete the missing side. Choose a piece, then select the square.';
+}
+function showTrianglePieces(move){
+  const opts=document.getElementById('options'); opts.innerHTML='';
+  shuffleArray(move.pieces.concat(move.distractor?[move.distractor]:[])).forEach(key=>{
+    const b=document.createElement('button'); b.className='optionBtn'; b.type='button';
+    b.innerHTML='<span class="symbol">'+pieceData[key].icon+'</span><span>'+pieceData[key].name+'</span>';
+    b.onclick=()=>chooseTrianglePiece(key,b,move); opts.appendChild(b);
+  });
+}
+function chooseTrianglePiece(key,btn,move){
+  if(!running||locked||triPhase!=='piece') return;
+  if(!move.pieces.includes(key)){btn.classList.add('wrong'); document.getElementById('status').textContent='That piece cannot travel this side. Try again.'; speak('Try again.'); return;}
+  triPiece=key; btn.classList.add('correct');
+  document.getElementById('options').innerHTML='';
+  triPhase='move'; markTarget(move.to,true); showPieceAt(move.from, key);
+  document.getElementById('status').textContent='Correct. Now click '+move.to+'.';
+  speak('Correct. Click '+move.to+'.');
+}
+function triangleClick(name){
+  if(!running||locked||!tri) return;
+  if(triPhase==='corner'){ queenCornerClick(name); return; }
+  if(triPhase==='foot'){ queenFootClick(name); return; }
+  if(triPhase==='matchSide'){ queenMatchSquare(name); return; }
+  if(triPhase!=='move'){ if(triPhase==='piece') document.getElementById('status').textContent='Choose the piece first.'; return; }
+  const move=tri.moves[triStep];
+  if(name!==move.to){
+    if(squares[name]){squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450);}
+    document.getElementById('status').textContent='Click the glowing square '+move.to+'.'; speak('Try again.'); return;
+  }
+  locked=true; markTarget(null,false);
+  playTriangleMove(move, ()=>{
+    triStep++; triPiece=null; locked=false;
+    if(triStep>=tri.moves.length){ if(tri.flow==='queenLesson') queenLessonSides(); else if(tri.flow==='queenChallenge') queenChallengeSides(); else askTriangleType(); }
+    else promptTriangleMove();
+  });
+}
+function playTriangleMove(move,done){
+  const piece=triPiece||move.show||move.pieces[0]||'knight';
+  if(move.kind==='geometry'){
+    addPath([move.from,move.to], tri.color, 'shapePath knightGuide');
+    addDot(move.to, tri.color, 11, 0);
+    document.getElementById('status').textContent='Geometric side drawn. It is not a chess move.';
+    setTimeout(done,720); return;
+  }
+  if(move.kind==='knight'){
+    centerPiece.classList.remove('show');
+    hopKnight(move.from, move.to, ()=>{
+      addPath([move.from,move.to], tri.color, 'shapePath knightGuide');
+      addDot(move.to, tri.color, 11, 0);
+      showPieceAt(move.to,'knight'); done();
+    });
+    return;
+  }
+  centerPiece.classList.remove('show');
+  const el=document.createElement('div'); el.className='movingPiece'; el.textContent=pieceData[piece].icon; board.appendChild(el);
+  const a=sq(move.from), b=sq(move.to);
+  el.style.left=(a[0]/640*100)+'%'; el.style.top=(a[1]/640*100)+'%';
+  setTimeout(()=>{addPath([move.from,move.to], tri.color); el.style.left=(b[0]/640*100)+'%'; el.style.top=(b[1]/640*100)+'%';},70);
+  setTimeout(()=>{el.remove(); addDot(move.to, tri.color, 11, 0); showPieceAt(move.to, piece); done();},980);
+}
+function showContinue(label,fn){
+  triPhase='teach';
+  const opts=document.getElementById('options'); opts.innerHTML='';
+  const b=document.createElement('button'); b.className='optionBtn'; b.type='button'; b.textContent=label;
+  b.onclick=()=>{ if(!running||locked) return; locked=true; opts.innerHTML=''; fn(); };
+  opts.appendChild(b); locked=false;
+}
+function sideTick(from,to){
+  const A=sq(from), B=sq(to);
+  const mx=(A[0]+B[0])/2, my=(A[1]+B[1])/2, dx=B[0]-A[0], dy=B[1]-A[1], len=Math.hypot(dx,dy)||1;
+  const px=-dy/len*16, py=dx/len*16;
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d','M '+(mx-px)+' '+(my-py)+' L '+(mx+px)+' '+(my+py));
+  path.setAttribute('class','equalTick'); svg.appendChild(path);
+}
+function markEqualSides(){
+  addPath([tri.equal[0],tri.equal[1]],'#fff6b8','shapePath equalSide');
+  addPath([tri.equal[2],tri.equal[3]],'#fff6b8','shapePath equalSide');
+  sideTick(tri.equal[0],tri.equal[1]); sideTick(tri.equal[2],tri.equal[3]);
+}
+function nudgeApexLabel(vertex){
+  const labels=svg.querySelectorAll('.angleLabel');
+  const last=labels[labels.length-1];
+  if(!last) return;
+  const V=sq(vertex);
+  last.setAttribute('x', V[0]);
+  last.setAttribute('y', Math.max(30, V[1]-36));
+}
+function drawHeightLine(){
+  addPath([tri.apex,tri.foot],'#67e8f9','shapePath geoHeight');
+  const A=sq(tri.apex), F=sq(tri.foot);
+  addBoardLabel((A[0]+F[0])/2+52,(A[1]+F[1])/2,'Height');
+  rightAngleMarker(tri.foot, tri.apex, tri.base[0]);
+}
+function addSideHit(from,to,kind){
+  const A=sq(from), B=sq(to);
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d','M '+A[0]+' '+A[1]+' L '+B[0]+' '+B[1]);
+  path.setAttribute('class','sideHit');
+  path.dataset.kind=kind;
+  path.addEventListener('click', event=>{ event.stopPropagation(); queenMatchSide(kind); });
+  svg.appendChild(path);
+}
+function squaresBetween(from,to){
+  const A=squareParts(from), B=squareParts(to);
+  const df=B.f-A.f, dr=B.r-A.r, steps=Math.max(Math.abs(df), Math.abs(dr));
+  const names=[];
+  for(let i=0;i<=steps;i++) names.push(files[A.f+Math.round(df*i/steps)]+(A.r+Math.round(dr*i/steps)));
+  return names;
+}
+function queenLessonSides(){
+  triPhase='matchSide';
+  addPath([tri.equal[0],tri.equal[1]],'#fff6b8','shapePath equalSide');
+  sideTick(tri.equal[0],tri.equal[1]);
+  addSideHit(tri.equal[0], tri.equal[1], 'first');
+  addSideHit(tri.equal[2], tri.equal[3], 'match');
+  addSideHit(tri.base[0], tri.base[1], 'base');
+  document.getElementById('options').innerHTML='';
+  document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>Can you find the other side with the same length?';
+  document.getElementById('status').textContent=tri.equal[0]+' to '+tri.equal[1]+' is one side. The base is not this side.';
+  setHint('Click the other sloping side.');
+  speak('Can you find the other side with the same length?');
+}
+function queenMatchSquare(name){
+  const match=squaresBetween(tri.equal[2], tri.equal[3]);
+  const first=squaresBetween(tri.equal[0], tri.equal[1]);
+  const base=squaresBetween(tri.base[0], tri.base[1]);
+  if(match.includes(name) && name!==tri.equal[2]){ queenMatchSide('match'); return; }
+  if(base.includes(name) && !first.includes(name)){ queenMatchSide('base'); return; }
+  if(first.includes(name)){ queenMatchSide('first'); return; }
+  if(squares[name]){squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450);}
+  document.getElementById('status').textContent='Click one of the triangle sides.';
+  speak('Try again.');
+}
+function queenMatchSide(kind){
+  if(!running||locked||triPhase!=='matchSide') return;
+  if(kind!=='match'){
+    document.getElementById('status').textContent=kind==='base'?'The base has a different length. Look for the other sloping side.':'That side is already marked. Find the other side with the same length.';
+    speak('Try again.');
+    return;
+  }
+  locked=true;
+  svg.querySelectorAll('.sideHit').forEach(p=>p.remove());
+  addPath([tri.equal[2],tri.equal[3]],'#fff6b8','shapePath equalSide');
+  sideTick(tri.equal[2],tri.equal[3]);
+  document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>Excellent! These two sides are equal!';
+  document.getElementById('status').textContent='Two sides are equal.';
+  document.getElementById('notationBox').innerHTML='<div class="shapeFact">These two sides are equal.</div>';
+  setHint('The matching marks show the equal sides. The base is a different length.');
+  speak('Excellent! These two sides are equal!');
+  showContinue('See the angles', queenLessonAngles);
+}
+function queenLessonAngles(){
+  const steps=[
+    {at:tri.apex, arms:tri.base, text:'90° — Right Angle', say:'The corner at '+tri.apex+' is a right angle.'},
+    {at:tri.base[0], arms:[tri.apex,tri.base[1]], text:'45° — Acute Angle', say:'The corner at '+tri.base[0]+' is 45 degrees.'},
+    {at:tri.base[1], arms:[tri.apex,tri.base[0]], text:'45° — Acute Angle', say:'The corner at '+tri.base[1]+' is 45 degrees.'}
+  ];
+  let i=0;
+  function step(){
+    const s=steps[i];
+    highlightAngle(s.arms[0], s.at, s.arms[1], s.at===tri.apex?'90°':'45°');
+    if(s.at===tri.apex){ rightAngleMarker(s.at, s.arms[0], s.arms[1]); nudgeApexLabel(s.at); }
+    document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>'+s.text;
+    document.getElementById('status').textContent=s.text+' at '+s.at+'.';
+    setHint(s.say);
+    speak(s.say);
+    i++;
+    if(i<steps.length) showContinue('Next angle', step);
+    else showContinue('Show the height', ()=>{
+      document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>One right angle and two equal acute angles.';
+      document.getElementById('status').textContent='One angle is 90°. The other two are equal and less than 90°.';
+      setHint('Next, the height meets the base at a right angle.');
+      speak('One right angle, and two equal acute angles.');
+      showContinue('Show the height', queenLessonHeight);
+    });
+  }
+  step();
+}
+function queenLessonHeight(){
+  drawHeightLine();
+  document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>The height is perpendicular to the base.';
+  document.getElementById('status').textContent='The mark at '+tri.foot+' is the height. The 90° corner of the triangle stays at '+tri.apex+'.';
+  document.getElementById('notationBox').innerHTML='<div class="shapeFact">The height is not a side.</div>';
+  setHint('The blue line is the height. The queen does not travel along it.');
+  speak('The height meets the base at a right angle. It is not a side.');
+  showContinue('Answer the question', askTriangleType);
+}
+function queenChallengeSides(){
+  triPhase='teach';
+  document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>Which two sides are equal?';
+  document.getElementById('status').textContent='The base is '+tri.base[0]+' to '+tri.base[1]+'.';
+  setHint('Choose the two matching sides.');
+  const opts=document.getElementById('options'); opts.innerHTML='';
+  shuffleArray([
+    {ok:true, text:tri.equal[0]+' → '+tri.equal[1]+' and '+tri.equal[2]+' → '+tri.equal[3]},
+    {ok:false, text:tri.base[0]+' → '+tri.base[1]+' and '+tri.equal[0]+' → '+tri.equal[1]},
+    {ok:false, text:tri.base[0]+' → '+tri.base[1]+' and '+tri.equal[2]+' → '+tri.equal[3]}
+  ]).forEach(choice=>{
+    const b=document.createElement('button'); b.className='optionBtn'; b.type='button'; b.textContent=choice.text;
+    b.onclick=()=>{
+      if(!running||locked) return;
+      if(!choice.ok){ b.classList.add('wrong'); document.getElementById('status').textContent='Look again at the two sloping sides.'; speak('Try again.'); return; }
+      locked=true; b.classList.add('correct'); opts.innerHTML='';
+      markEqualSides();
+      document.getElementById('status').textContent='Two sides are equal.';
+      setHint('Two sides are equal.');
+      speak('Two sides are equal.');
+      showContinue('Next question', queenChallengeCorner);
+    };
+    opts.appendChild(b);
+  });
+  speak('Which two sides are equal?');
+}
+function queenChallengeCorner(){
+  triPhase='corner'; locked=false;
+  document.getElementById('options').innerHTML='';
+  document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>Which corner has the right angle?';
+  document.getElementById('status').textContent='Click the corner that is 90°.';
+  setHint('Click the square corner between the two equal sides.');
+  markTargets([tri.base[0], tri.apex, tri.base[1]]);
+  speak('Which corner has the right angle?');
+}
+function queenCornerClick(name){
+  if(!tri.base.concat(tri.apex).includes(name)){
+    if(squares[name]){squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450);}
+    return;
+  }
+  if(name!==tri.apex){
+    squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450);
+    document.getElementById('status').textContent='Look for the square corner between the two equal sides.'; speak('Try again.'); return;
+  }
+  markTargets([]);
+  highlightAngle(tri.base[0], tri.apex, tri.base[1], '90°');
+  nudgeApexLabel(tri.apex);
+  rightAngleMarker(tri.apex, tri.base[0], tri.base[1]);
+  document.getElementById('status').textContent='90° at '+tri.apex+'. The other corners are 45°.';
+  setHint('90° at '+tri.apex+'.');
+  speak('Ninety degrees at '+tri.apex+'.');
+  showContinue('Next question', queenChallengeHeight);
+}
+function queenChallengeHeight(){
+  triPhase='foot'; locked=false;
+  document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.title+'</span><br>Which line is the height?';
+  document.getElementById('status').textContent='The base is '+tri.base[0]+' to '+tri.base[1]+'. Choose the height, or click '+tri.foot+' where it meets the base.';
+  setHint('The height is not a side of the triangle.');
+  const opts=document.getElementById('options'); opts.innerHTML='';
+  shuffleArray([
+    {ok:true, text:tri.apex+' → '+tri.foot},
+    {ok:false, text:tri.base[0]+' → '+tri.base[1]},
+    {ok:false, text:tri.equal[0]+' → '+tri.equal[1]}
+  ]).forEach(choice=>{
+    const b=document.createElement('button'); b.className='optionBtn'; b.type='button'; b.textContent=choice.text;
+    b.onclick=()=>{
+      if(!running||locked||triPhase!=='foot') return;
+      if(!choice.ok){ b.classList.add('wrong'); document.getElementById('status').textContent='That line is part of the triangle. The height is a separate line.'; speak('Try again.'); return; }
+      locked=true; finishQueenHeight();
+    };
+    opts.appendChild(b);
+  });
+  speak('Which line is the height?');
+}
+function queenFootClick(name){
+  if(name!==tri.foot){
+    if(squares[name]){squares[name].classList.add('wrongFlash'); setTimeout(()=>squares[name].classList.remove('wrongFlash'),450);}
+    document.getElementById('status').textContent='The height meets the base at '+tri.foot+'.'; speak('Try again.'); return;
+  }
+  locked=true; finishQueenHeight();
+}
+function finishQueenHeight(){
+  document.getElementById('options').innerHTML='';
+  markTargets([]);
+  drawHeightLine();
+  document.getElementById('question').innerHTML='<span class="shapeName">♛ '+tri.name+'</span><br>One angle is 90°.<br>Two sides are equal.';
+  document.getElementById('mode').textContent=tri.name;
+  document.getElementById('status').textContent='Right-angled and isosceles. Height meets the base at '+tri.foot+'.';
+  document.getElementById('notationBox').innerHTML='<div class="shapeFact">Height meets the base at '+tri.foot+'.</div>';
+  setHint('The height is not a side. The queen did not draw it.');
+  score=1; document.getElementById('score').textContent='1'; updateStars();
+  celebrateSmall(); speak('Right-angled and isosceles. The height meets the base at a right angle.');
+  running=false; triangleMode=false;
+}
+function askTriangleType(){
+  triPhase='ask';
+  if(tri.flow!=='queenLesson'){
+    const shown=angleDeg(tri.arms[0], tri.angleAt, tri.arms[1]);
+    highlightAngle(tri.arms[0], tri.angleAt, tri.arms[1], formatDeg(shown));
+  }
+  document.getElementById('question').innerHTML='<span class="shapeName">'+tri.emoji+' '+tri.title+'</span><br>What kind of triangle is this?';
+  document.getElementById('mode').textContent=tri.title;
+  document.getElementById('status').textContent=tri.flow==='queenLesson'?'Choose the angle type. The equal sides are a second way to name this triangle.':'Look at the highlighted corner at '+tri.angleAt+'. The measurement stays visible.';
+  setHint(tri.flow==='queenLesson'?'Choose right-angled, acute-angled, or obtuse-angled.':'Use the angle measurement, then choose the triangle type.');
+  const opts=document.getElementById('options'); opts.innerHTML='';
+  shuffleArray([['right','Right-angled'],['acute','Acute-angled'],['obtuse','Obtuse-angled']]).forEach(([key,label])=>{
+    const b=document.createElement('button'); b.className='optionBtn'; b.type='button'; b.textContent=label;
+    b.onclick=()=>answerTriangleType(key,b); opts.appendChild(b);
+  });
+  speak('What kind of triangle is this?');
+  locked=false;
+}
+function answerTriangleType(key,btn){
+  if(!running||locked||triPhase!=='ask') return;
+  if(key!==tri.type){btn.classList.add('wrong'); document.getElementById('status').textContent='Look again at the highlighted corner.'; speak('Try again.'); return;}
+  locked=true; btn.classList.add('correct'); score=1; document.getElementById('score').textContent='1'; updateStars();
+  document.getElementById('question').innerHTML='<span class="shapeName">'+tri.emoji+' '+tri.name+'</span><br>'+tri.feedback;
+  document.getElementById('mode').textContent=tri.name;
+  document.getElementById('status').textContent=tri.line;
+  document.getElementById('notationBox').innerHTML='<div class="shapeFact">'+tri.note+'</div>';
+  setHint(tri.note);
+  celebrateSmall(); speak(tri.say);
+  running=false; triangleMode=false;
+}
+const ANGLE_GREEN='#3DDC97', ANGLE_AMBER='#e0a045', ANGLE_GOLD='#ffd84a', ANGLE_BLUE='#7ecbff';
+function waitAngle(ms, run){return new Promise(resolve=>setTimeout(()=>resolve(angleRun===run), ms));}
+function chessVec(from,to){const A=squareParts(from), B=squareParts(to); return [B.f-A.f, B.r-A.r];}
+function vecCross(a,b){return a[0]*b[1]-a[1]*b[0];}
+function wedgeSide(vertex, armA, armB){
+  const va=chessVec(vertex, armA), vb=chessVec(vertex, armB);
+  const la=Math.hypot(va[0],va[1])||1, lb=Math.hypot(vb[0],vb[1])||1;
+  return [va[0]/la+vb[0]/lb, va[1]/la+vb[1]/lb];
+}
+function moveLegal(piece, from, to){
+  if(piece==='rook') return isRookMove(from,to);
+  if(piece==='bishop') return isBishopMove(from,to);
+  if(piece==='queen') return isRookMove(from,to)||isBishopMove(from,to);
+  return false;
+}
+function validateAngleLesson(lesson){
+  const errs=[];
+  const occupied=new Set(lesson.moves.map(m=>m.from));
+  if(occupied.size!==lesson.moves.length) errs.push('Two pieces start on the same square.');
+  lesson.moves.forEach((m,i)=>{
+    if(!moveLegal(m.piece,m.from,m.to)) errs.push('Move '+(i+1)+' is not a legal '+m.piece+' move.');
+    const blocked=squaresBetween(m.from,m.to).slice(1,-1).filter(s=>occupied.has(s));
+    if(blocked.length) errs.push(m.from+' to '+m.to+' is blocked at '+blocked.join(', ')+'.');
+    if(occupied.has(m.to)) errs.push(m.to+' is already occupied.');
+    occupied.delete(m.from); occupied.add(m.to);
+  });
+  if(lesson.bishopPath){
+    const path=squaresBetween('b2','f6').join(',');
+    if(path!=='b2,c3,d4,e5,f6') errs.push('Bishop path is '+path+'.');
+  }
+  if(lesson.parallel){
+    lesson.moves.forEach(m=>{
+      const A=squareParts(m.from), B=squareParts(m.to);
+      if(A.r!==B.r) errs.push(m.from+' to '+m.to+' is not horizontal.');
+    });
+    const ranks=lesson.moves.map(m=>squareParts(m.from).r);
+    if(new Set(ranks).size<2) errs.push('These lines are not separate parallel lines.');
+    const first=new Set(squaresBetween(lesson.moves[0].from, lesson.moves[0].to));
+    if(squaresBetween(lesson.moves[1].from, lesson.moves[1].to).some(s=>first.has(s))) errs.push('These lines meet.');
+  }
+  (lesson.meets||[]).forEach(name=>{
+    const count=lesson.moves.filter(m=>squaresBetween(m.from,m.to).includes(name)).length;
+    if(count<2) errs.push(name+' is not a crossing of two lines.');
+  });
+  (lesson.checks||[]).forEach(c=>{
+    const got=angleDeg(c.a,c.v,c.b);
+    if(Math.abs(got-c.deg)>0.25) errs.push('Angle at '+c.v+' is '+got.toFixed(2)+', not '+c.deg+'.');
+  });
+  if(lesson.relation==='opposite'){
+    const s1=wedgeSide('e5','g5','f6'), s2=wedgeSide('e5','b5','d4');
+    if(s1[0]*s2[0]+s1[1]*s2[1]>=0) errs.push('Those wedges are not opposite.');
+  }
+  if(lesson.relation==='corresponding'){
+    const s1=wedgeSide('e5','g5','f6'), s2=wedgeSide('d4','e4','e5');
+    if(s1[0]<=0||s1[1]<=0||s2[0]<=0||s2[1]<=0) errs.push('The matching corners do not face the same way.');
+  }
+  if(lesson.relation==='alternateInterior'){
+    const t=[1,1], s1=wedgeSide('e5','b5','d4'), s2=wedgeSide('d4','e4','e5');
+    if(s1[1]>=0||s2[1]<=0) errs.push('An interior angle is outside the parallel lines.');
+    if(vecCross(t,s1)*vecCross(t,s2)>=0) errs.push('The interior angles are not alternate.');
+  }
+  if(lesson.relation==='coInterior'){
+    const t=[1,1], s1=wedgeSide('e5','b5','d4'), s2=wedgeSide('d4','c4','e5');
+    if(s1[1]>=0||s2[1]<=0) errs.push('A co-interior angle is outside the parallel lines.');
+    if(vecCross(t,s1)*vecCross(t,s2)<=0) errs.push('The co-interior angles are not on the same side.');
+  }
+  if(lesson.relation==='alternateExterior'){
+    const t=[1,1], s1=wedgeSide('e5','g5','f6'), s2=wedgeSide('d4','c4','c3');
+    if(s1[1]<=0||s2[1]>=0) errs.push('An exterior angle is between the parallel lines.');
+    if(vecCross(t,s1)*vecCross(t,s2)>=0) errs.push('The exterior angles are not alternate.');
+  }
+  if(lesson.relation==='straight'){
+    const sum=(lesson.checks||[]).reduce((n,c)=>n+c.deg,0);
+    if(Math.abs(sum-180)>0.25) errs.push('The neighbouring angles do not make 180.');
+  }
+  return errs;
+}
+function placeBoardPiece(square, piece){
+  const el=document.createElement('div');
+  el.className='movingPiece boardPiece';
+  el.textContent=pieceData[piece].icon;
+  const p=sq(square);
+  el.style.transition='none';
+  el.style.left=(p[0]/640*100)+'%';
+  el.style.top=(p[1]/640*100)+'%';
+  el.style.opacity='0';
+  board.appendChild(el);
+  requestAnimationFrame(()=>{el.style.transition='opacity .35s ease'; el.style.opacity='1';});
+  return el;
+}
+function travelArrow(from,to,piece){
+  const el=document.createElement('div');
+  el.className='arrowHint';
+  el.textContent=arrowSymbol(from,to,piece);
+  const a=sq(from), b=sq(to);
+  const dx=b[0]-a[0], dy=b[1]-a[1], len=Math.hypot(dx,dy)||1;
+  el.style.transition='none';
+  el.style.left=((a[0]+dx/len*42)/640*100)+'%';
+  el.style.top=((a[1]+dy/len*42)/640*100)+'%';
+  board.appendChild(el);
+  void el.offsetWidth;
+  el.style.transition='left .9s ease, top .9s ease';
+  el.style.left=((b[0]-dx/len*36)/640*100)+'%';
+  el.style.top=((b[1]-dy/len*36)/640*100)+'%';
+  return el;
+}
+function playAngleMove(run, m){
+  return new Promise(resolve=>{
+    if(angleRun!==run){resolve(false); return;}
+    const arrow=travelArrow(m.from, m.to, m.piece);
+    addPath([m.from, m.to], m.color);
+    const b=sq(m.to);
+    m.el.style.transition='left .9s ease, top .9s ease';
+    void m.el.offsetWidth;
+    m.el.style.left=(b[0]/640*100)+'%';
+    m.el.style.top=(b[1]/640*100)+'%';
+    setTimeout(()=>{if(arrow.isConnected) arrow.remove(); resolve(angleRun===run);}, 1020);
+  });
+}
+function glowMeet(name){
+  const c=addDot(name,'#fffef2',8,0);
+  c.style.filter='drop-shadow(0 0 6px #fff) drop-shadow(0 0 16px #ffd84a)';
+}
+function pieceCenters(){
+  return [...board.querySelectorAll('.boardPiece')].map(el=>[parseFloat(el.style.left)/100*640, parseFloat(el.style.top)/100*640]);
+}
+function nearDrawnLine(x,y,pad){
+  return [...svg.querySelectorAll('.shapePath')].some(p=>{
+    const len=p.getTotalLength();
+    for(let d=0;d<=len;d+=14){
+      const pt=p.getPointAtLength(Math.min(d,len));
+      if(Math.hypot(pt.x-x, pt.y-y)<pad) return true;
+    }
+    return false;
+  });
+}
+function wedgeLabelPoint(V, mid){
+  const pieces=pieceCenters();
+  const labels=[...svg.querySelectorAll('.angleLabel')].map(t=>[+t.getAttribute('x'), +t.getAttribute('y')]);
+  let best=null, bestScore=-1;
+  for(let turn=-0.22; turn<=0.22; turn+=0.11){
+    const ang=mid+turn;
+    for(let dist=62; dist<=132; dist+=10){
+      const x=V[0]+Math.cos(ang)*dist, y=V[1]+Math.sin(ang)*dist;
+      if(x<42||x>598||y<40||y>598) continue;
+      const pieceD=pieces.reduce((n,p)=>Math.min(n, Math.hypot(p[0]-x, p[1]-y)), 999);
+      const labelD=labels.reduce((n,p)=>Math.min(n, Math.hypot(p[0]-x, p[1]-y)), 999);
+      if(pieceD<58||labelD<56) continue;
+      const lineD=nearDrawnLine(x,y,1)?0:nearDrawnLine(x,y,22)?12:28;
+      const score=Math.min(pieceD,140)+Math.min(labelD,90)+lineD*3-Math.abs(dist-78)*0.2;
+      if(score>bestScore){ bestScore=score; best=[x,y]; }
+    }
+  }
+  return best||[V[0]+Math.cos(mid)*72, V[1]+Math.sin(mid)*72];
+}
+function paintWedge(armA, vertex, armB, label, color, extra){
+  const V=sq(vertex), A=sq(armA), B=sq(armB);
+  let a0=Math.atan2(A[1]-V[1], A[0]-V[0]);
+  let sweep=Math.atan2(B[1]-V[1], B[0]-V[0])-a0;
+  while(sweep>Math.PI) sweep-=Math.PI*2;
+  while(sweep<-Math.PI) sweep+=Math.PI*2;
+  const r=46;
+  const p0=[V[0]+Math.cos(a0)*r, V[1]+Math.sin(a0)*r];
+  const p1=[V[0]+Math.cos(a0+sweep)*r, V[1]+Math.sin(a0+sweep)*r];
+  const arc=document.createElementNS('http://www.w3.org/2000/svg','path');
+  arc.setAttribute('d','M '+p0[0]+' '+p0[1]+' A '+r+' '+r+' 0 0 '+(sweep>0?1:0)+' '+p1[0]+' '+p1[1]);
+  arc.setAttribute('class','angleArc'+(extra?' '+extra:''));
+  arc.style.stroke=color||ANGLE_GOLD;
+  if(color && color!==ANGLE_GOLD) arc.style.filter='drop-shadow(0 0 6px '+color+') drop-shadow(0 0 12px '+color+')';
+  svg.appendChild(arc);
+  if(label){
+    const spot=wedgeLabelPoint(V, a0+sweep/2);
+    const text=addBoardLabel(spot[0], spot[1]+6, label);
+    if(color===ANGLE_BLUE) text.style.fill='#e7f7ff';
+  }
+  return arc;
+}
+function slideWedge(run, armA, vertex, armB, toVertex){
+  const arc=paintWedge(armA, vertex, armB, '', ANGLE_GOLD, 'ghost');
+  const from=sq(vertex), to=sq(toVertex);
+  const dx=to[0]-from[0], dy=to[1]-from[1];
+  let i=0;
+  const timer=setInterval(()=>{
+    if(angleRun!==run || !arc.isConnected){clearInterval(timer); return;}
+    i++;
+    const t=Math.min(1, i/16);
+    arc.setAttribute('transform','translate('+(dx*t)+' '+(dy*t)+')');
+    if(i>=16) clearInterval(timer);
+  }, 42);
+}
+function clearAngleMarks(){svg.querySelectorAll('.angleArc,.angleLabel,.rightMark').forEach(n=>n.remove());}
+function pulseAngleArcs(){svg.querySelectorAll('.angleArc').forEach(arc=>{arc.animate([{opacity:1},{opacity:.4},{opacity:1}],{duration:700});});}
+function markRightSet(vertex, pairs){
+  pairs.forEach(pair=>{
+    rightAngleMarker(vertex, pair[0], pair[1]);
+    paintWedge(pair[0], vertex, pair[1], '90°', ANGLE_GOLD);
+  });
+}
+function askChoices(run, lesson){
+  return new Promise(resolve=>{
+    if(angleRun!==run){resolve(false); return;}
+    anglePhase='ask'; locked=false;
+    document.getElementById('question').innerHTML='<span class="shapeName">'+lesson.emoji+' '+lesson.title+'</span><br>'+lesson.prompt;
+    document.getElementById('status').textContent='Choose one answer.';
+    setHint(lesson.prompt);
+    const opts=document.getElementById('options'); opts.innerHTML='';
+    shuffleArray(lesson.choices).forEach(choice=>{
+      const b=document.createElement('button');
+      b.className='optionBtn'; b.type='button'; b.textContent=choice;
+      b.onclick=()=>{
+        if(angleRun!==run || anglePhase!=='ask') return;
+        if(choice!==lesson.answer){
+          b.classList.add('wrong');
+          document.getElementById('status').textContent='Try again.';
+          speak('Try again.');
+          return;
+        }
+        anglePhase='done';
+        b.classList.add('correct');
+        opts.querySelectorAll('button').forEach(btn=>{if(btn!==b) btn.disabled=true;});
+        resolve(true);
+      };
+      opts.appendChild(b);
+    });
+    speak(lesson.prompt);
+  });
+}
+function finishAngle(lesson){
+  const extra=lesson.equation?'<br>'+lesson.equation:'';
+  document.getElementById('question').innerHTML='<span class="shapeName">'+lesson.emoji+' '+lesson.title+'</span><br>'+lesson.feedback+extra;
+  document.getElementById('status').textContent=lesson.note;
+  document.getElementById('notationBox').innerHTML='<div class="shapeFact">'+lesson.note+'</div>';
+  setHint(lesson.note);
+  celebrateSmall();
+  speak(lesson.say);
+  running=false;
+  anglePhase='done';
+}
+const ANGLES=[
+  {id:'A1', emoji:'♖', title:"The Rook's Square Corner", watch:'Watch the rooks.',
+    prompt:'What about this angle?', choices:['90°','45°','135°'], answer:'90°',
+    feedback:'Excellent! Every corner is a right angle.', say:'Excellent. Every corner is a right angle.', note:'Right angle = 90°',
+    moves:[{piece:'rook',from:'b5',to:'g5',color:ANGLE_GREEN},{piece:'rook',from:'d7',to:'d2',color:ANGLE_AMBER}],
+    meets:['d5'],
+    checks:[{v:'d5',a:'g5',b:'d7',deg:90},{v:'d5',a:'g5',b:'d2',deg:90},{v:'d5',a:'b5',b:'d2',deg:90},{v:'d5',a:'b5',b:'d7',deg:90}],
+    async teach(run){
+      rightAngleMarker('d5','g5','d7');
+      paintWedge('g5','d5','d7','90°',ANGLE_GOLD);
+      document.getElementById('status').textContent='Look. This is a right angle.';
+      speak('Look. This is a right angle.');
+      if(!await waitAngle(1900, run)) return;
+      paintWedge('b5','d5','d2','',ANGLE_GOLD,'pending');
+      if(!await askChoices(run, this)) return;
+      clearAngleMarks();
+      markRightSet('d5',[['g5','d7'],['g5','d2'],['b5','d2'],['b5','d7']]);
+      finishAngle(this);
+    }},
+  {id:'A2', emoji:'♗', title:"The Bishop's Secret Corner", watch:'Watch the bishops.',
+    prompt:'How big is this angle?', choices:['90°','45°','135°'], answer:'90°',
+    feedback:'Excellent! These diagonals make right angles.', say:'Excellent. These diagonals make right angles.', note:'Right angle = 90°',
+    moves:[{piece:'bishop',from:'c2',to:'g6',color:ANGLE_GREEN},{piece:'bishop',from:'c6',to:'g2',color:ANGLE_AMBER}],
+    meets:['e4'],
+    checks:[{v:'e4',a:'g6',b:'c6',deg:90},{v:'e4',a:'g6',b:'g2',deg:90},{v:'e4',a:'g2',b:'c2',deg:90},{v:'e4',a:'c2',b:'c6',deg:90}],
+    async teach(run){
+      paintWedge('g6','e4','c6','',ANGLE_GOLD);
+      if(!await askChoices(run, this)) return;
+      clearAngleMarks();
+      markRightSet('e4',[['g6','c6'],['g6','g2'],['g2','c2'],['c2','c6']]);
+      finishAngle(this);
+    }},
+  {id:'A3', emoji:'♕', title:'The Angle Across', watch:'Watch the queen and the bishop.',
+    prompt:'What about the angle across from it?', choices:['90°','45°','135°'], answer:'45°',
+    feedback:'Excellent! Opposite angles are equal.', say:'Excellent. Opposite angles are equal.', note:'Opposite angles are equal',
+    relation:'opposite', bishopPath:true,
+    moves:[{piece:'queen',from:'b5',to:'g5',color:ANGLE_GREEN},{piece:'bishop',from:'b2',to:'f6',color:ANGLE_AMBER}],
+    meets:['e5'],
+    checks:[{v:'e5',a:'g5',b:'f6',deg:45},{v:'e5',a:'b5',b:'d4',deg:45},{v:'e5',a:'f6',b:'b5',deg:135}],
+    async teach(run){
+      paintWedge('g5','e5','f6','45°',ANGLE_GOLD);
+      document.getElementById('status').textContent='This angle is 45 degrees.';
+      speak('This angle is 45 degrees.');
+      if(!await waitAngle(1700, run)) return;
+      paintWedge('b5','e5','d4','',ANGLE_GOLD,'pending');
+      if(!await askChoices(run, this)) return;
+      clearAngleMarks();
+      paintWedge('g5','e5','f6','45°',ANGLE_GOLD);
+      paintWedge('b5','e5','d4','45°',ANGLE_GOLD);
+      pulseAngleArcs();
+      finishAngle(this);
+    }},
+  {id:'A4', emoji:'♕', title:'The Queen Copies the Rook', watch:'Watch the rook and the queen.',
+    prompt:'Will these lines meet?', choices:['Yes','No'], answer:'No',
+    feedback:'Parallel lines never meet.', say:'Parallel lines never meet.', note:'Parallel lines never meet',
+    parallel:true,
+    moves:[{piece:'rook',from:'g4',to:'b4',color:ANGLE_GREEN},{piece:'queen',from:'b5',to:'g5',color:ANGLE_GREEN}],
+    async teach(run){
+      document.getElementById('status').textContent='Both lines go the same way.';
+      if(!await askChoices(run, this)) return;
+      svg.querySelectorAll('.shapePath').forEach(p=>p.animate([{opacity:1},{opacity:.35},{opacity:1}],{duration:700}));
+      finishAngle(this);
+    }},
+  {id:'A5', emoji:'♕', title:'The Same Corner', watch:'Watch the three lines.',
+    prompt:'What is the matching angle?', choices:['45°','90°','135°'], answer:'45°',
+    feedback:'Excellent! Corresponding angles are equal.', say:'Excellent. Corresponding angles are equal.', note:'Corresponding angles are equal',
+    relation:'corresponding', bishopPath:true, link:['e5','d4'],
+    moves:[{piece:'rook',from:'g4',to:'b4',color:ANGLE_GREEN},{piece:'queen',from:'b5',to:'g5',color:ANGLE_GREEN},{piece:'bishop',from:'b2',to:'f6',color:ANGLE_AMBER}],
+    meets:['e5','d4'],
+    checks:[{v:'e5',a:'g5',b:'f6',deg:45},{v:'d4',a:'e4',b:'e5',deg:45}],
+    async teach(run){
+      paintWedge('g5','e5','f6','45°',ANGLE_GOLD);
+      slideWedge(run,'g5','e5','f6','d4');
+      document.getElementById('status').textContent='This angle is 45 degrees.';
+      speak('This angle is 45 degrees.');
+      if(!await waitAngle(900, run)) return;
+      svg.querySelectorAll('.angleArc.ghost').forEach(n=>n.remove());
+      paintWedge('e4','d4','e5','',ANGLE_GOLD,'pending');
+      if(!await askChoices(run, this)) return;
+      clearAngleMarks();
+      paintWedge('g5','e5','f6','45°',ANGLE_GOLD);
+      paintWedge('e4','d4','e5','45°',ANGLE_GOLD);
+      pulseAngleArcs();
+      finishAngle(this);
+    }},
+  {id:'A6', emoji:'♕', title:'The Z Angles', watch:'Watch the three lines.',
+    prompt:'What is this angle?', choices:['45°','90°','135°'], answer:'45°',
+    feedback:'Excellent! Alternate interior angles are equal.', say:'Excellent. Alternate interior angles are equal.', note:'Alternate interior angles are equal',
+    relation:'alternateInterior', bishopPath:true, z:['c5','e5','d4','f4'],
+    moves:[{piece:'rook',from:'g4',to:'b4',color:ANGLE_GREEN},{piece:'queen',from:'b5',to:'g5',color:ANGLE_GREEN},{piece:'bishop',from:'b2',to:'f6',color:ANGLE_AMBER}],
+    meets:['e5','d4'],
+    checks:[{v:'e5',a:'b5',b:'d4',deg:45},{v:'d4',a:'e4',b:'e5',deg:45}],
+    async teach(run){
+      paintWedge('b5','e5','d4','45°',ANGLE_GOLD);
+      paintWedge('e4','d4','e5','',ANGLE_GOLD,'pending');
+      document.getElementById('status').textContent='The glowing Z joins the two angles.';
+      if(!await askChoices(run, this)) return;
+      clearAngleMarks();
+      paintWedge('b5','e5','d4','45°',ANGLE_GOLD);
+      paintWedge('e4','d4','e5','45°',ANGLE_GOLD);
+      pulseAngleArcs();
+      finishAngle(this);
+    }},
+  {id:'A7', emoji:'♕', title:'Same Side Inside', watch:'Watch the three lines.',
+    prompt:'45 degrees plus 135 degrees equals?', choices:['90°','180°','135°'], answer:'180°',
+    feedback:'Excellent! These angles add up to 180 degrees.', say:'Excellent. These angles add up to 180 degrees.', note:'45° + 135° = 180°',
+    equation:'45° + 135° = 180°', relation:'coInterior', bishopPath:true,
+    moves:[{piece:'rook',from:'g4',to:'b4',color:ANGLE_GREEN},{piece:'queen',from:'b5',to:'g5',color:ANGLE_GREEN},{piece:'bishop',from:'b2',to:'f6',color:ANGLE_AMBER}],
+    meets:['e5','d4'],
+    checks:[{v:'e5',a:'b5',b:'d4',deg:45},{v:'d4',a:'c4',b:'e5',deg:135}],
+    async teach(run){
+      paintWedge('b5','e5','d4','45°',ANGLE_GOLD);
+      paintWedge('c4','d4','e5','135°',ANGLE_BLUE);
+      if(!await askChoices(run, this)) return;
+      addBoardLabel(320, 58, '45° + 135° = 180°');
+      finishAngle(this);
+    }},
+  {id:'A8', emoji:'♕', title:'Neighbours on a Straight Line', watch:'Watch the queen and the bishop.',
+    prompt:'What do these angles make together?', choices:['90°','180°','135°'], answer:'180°',
+    feedback:'Excellent! Together they make a straight angle.', say:'Excellent. Together they make a straight angle.', note:'Straight angle = 180°',
+    equation:'45° + 135° = 180°', relation:'straight', bishopPath:true,
+    moves:[{piece:'queen',from:'b5',to:'g5',color:ANGLE_GREEN},{piece:'bishop',from:'b2',to:'f6',color:ANGLE_AMBER}],
+    meets:['e5'],
+    checks:[{v:'e5',a:'g5',b:'f6',deg:45},{v:'e5',a:'f6',b:'b5',deg:135}],
+    async teach(run){
+      paintWedge('g5','e5','f6','45°',ANGLE_GOLD);
+      paintWedge('f6','e5','b5','135°',ANGLE_BLUE);
+      if(!await askChoices(run, this)) return;
+      addPath(['b5','g5'],'#fffef8','shapePath linkPulse');
+      addBoardLabel(320, 78, 'Straight angle = 180°');
+      finishAngle(this);
+    }},
+  {id:'A9', emoji:'♕', title:'Alternate Exterior Angles', watch:'Watch the three lines.',
+    prompt:'What is the matching angle?', choices:['45°','90°','135°'], answer:'45°',
+    feedback:'Excellent! Alternate exterior angles are equal.', say:'Excellent. Alternate exterior angles are equal.', note:'Alternate exterior angles are equal',
+    relation:'alternateExterior', bishopPath:true, link:['e5','d4'],
+    moves:[{piece:'rook',from:'g4',to:'b4',color:ANGLE_GREEN},{piece:'queen',from:'b5',to:'g5',color:ANGLE_GREEN},{piece:'bishop',from:'b2',to:'f6',color:ANGLE_AMBER}],
+    meets:['e5','d4'],
+    checks:[{v:'e5',a:'g5',b:'f6',deg:45},{v:'d4',a:'c4',b:'c3',deg:45}],
+    async teach(run){
+      paintWedge('g5','e5','f6','45°',ANGLE_GOLD);
+      paintWedge('c4','d4','c3','',ANGLE_GOLD,'pending');
+      document.getElementById('status').textContent='This angle is 45 degrees.';
+      speak('This angle is 45 degrees.');
+      if(!await waitAngle(1500, run)) return;
+      if(!await askChoices(run, this)) return;
+      clearAngleMarks();
+      paintWedge('g5','e5','f6','45°',ANGLE_GOLD);
+      paintWedge('c4','d4','c3','45°',ANGLE_GOLD);
+      pulseAngleArcs();
+      finishAngle(this);
+    }}
+];
+function validateAllAngles(){return ANGLES.flatMap(lesson=>validateAngleLesson(lesson).map(e=>lesson.id+': '+e));}
+async function startAngle(id){
+  const run=++angleRun;
+  const lesson=ANGLES.find(a=>a.id===id);
+  if(!lesson) return;
+  if(timer){clearInterval(timer); timer=null;}
+  angleMode=true; triangleMode=false; tri=null; running=true; locked=true; anglePhase='watch';
+  score=0; q=1; currentLevel='A'; totalQuestions=1;
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('score').textContent='0';
+  document.getElementById('qnum').textContent='1';
+  document.getElementById('qtotal').textContent='1';
+  document.getElementById('gallery').innerHTML='';
+  document.getElementById('options').innerHTML='';
+  document.getElementById('time').textContent='Lesson';
+  document.getElementById('mode').textContent=lesson.title;
+  beginActivity(); updateStars(); clearShape();
+  const errs=validateAngleLesson(lesson);
+  if(errs.length){
+    running=false; angleMode=false;
+    document.getElementById('question').textContent='This example failed the geometry check.';
+    document.getElementById('status').textContent=errs.join(' ');
+    return;
+  }
+  document.getElementById('question').innerHTML='<span class="shapeName">'+lesson.emoji+' '+lesson.title+'</span><br>Watch the pieces.';
+  document.getElementById('status').textContent=lesson.watch;
+  setHint(lesson.watch);
+  speak(lesson.watch);
+  const pieces=lesson.moves.map(m=>Object.assign({el:placeBoardPiece(m.from, m.piece)}, m));
+  if(!await waitAngle(560, run)) return;
+  for(const m of pieces){ if(!await playAngleMove(run, m)) return; }
+  if(angleRun!==run) return;
+  (lesson.meets||[]).forEach(glowMeet);
+  if(lesson.z){
+    if(!await waitAngle(260, run)) return;
+    addPath(lesson.z,'#fffef8','shapePath zGuide');
+  }
+  if(lesson.link){
+    if(!await waitAngle(260, run)) return;
+    addPath(lesson.link,'#fffef8','shapePath linkPulse');
+  }
+  if(!await waitAngle(lesson.z?860:380, run)) return;
+  if(angleRun!==run) return;
+  try{ await lesson.teach(run); }
+  catch(err){ if(angleRun===run) document.getElementById('status').textContent='This lesson stopped. Please press Start again.'; }
+}
+function startGame(){
+  if(timer)clearInterval(timer); triangleMode=false; angleMode=false; angleRun++; anglePhase=''; tri=null; running=true; locked=false; score=0; q=1; currentLevel=document.getElementById('level').value; beginActivity();
+  if(currentLevel==='3'){gameQuestions=shuffleArray(level3Questions);totalQuestions=gameQuestions.length;}
+  else if(currentLevel==='2'){gameQuestions=shuffleArray(level2Questions);totalQuestions=gameQuestions.length;}
+  else{gameQuestions=shuffleArray(questions).slice(0,10);totalQuestions=10;}
+  const scoreLine=document.getElementById('finalScore');
+  if(scoreLine) scoreLine.parentElement.innerHTML='Final Score: <span id="finalScore">0</span>/'+totalQuestions;
+  document.getElementById('qtotal').textContent=totalQuestions;document.getElementById('overlay').style.display='none';document.getElementById('score').textContent='0';document.getElementById('gallery').innerHTML='';
+  remaining=parseInt(document.getElementById('duration').value,10);document.getElementById('time').textContent=formatTime(remaining);updateStars();
+  if(currentLevel==='3')showLevel3Question();else if(currentLevel==='2')showLevel2Question();else showLevel1Question();
+  timer=setInterval(()=>{remaining--;document.getElementById('time').textContent=formatTime(remaining);if(remaining<=0)finish(false)},1000);
+}
+function finish(success){
+  running=false; triangleMode=false; angleMode=false; angleRun++; anglePhase=''; if(timer)clearInterval(timer); timer=null;
+  const scoreEl=document.getElementById('finalScore'); if(scoreEl) scoreEl.textContent=score;
+  const d=document.getElementById('duration'); document.getElementById('finalTime').textContent=d.options[d.selectedIndex].text;
+  const title=document.getElementById('finalTitle'), msg=document.getElementById('finalMessage');
+  if(success){
+    title.textContent='Chess Shape Builder Champion';
+    msg.textContent='Congratulations! You completed the shape challenge.';
+    launchConfetti(); speak('Great job. You are a Chess Shape Builder Champion.');
+  }else{
+    title.textContent='Time is up';
+    msg.textContent='The clock finished. This is a practice score, not a champion certificate. Your score is '+score+' out of '+totalQuestions+'.';
+    speak('Time is up. Your score is '+score+' out of '+totalQuestions+'.');
+  }
+  document.getElementById('overlay').style.display='flex';
+  showFullHelp();
+}
+function closeFinal(){document.getElementById('overlay').style.display='none'}
+/* Chess Shape Builders uses namespaced geometry routes on the production API.
+   This page does not contain the competition answer key. */
+const SHAPE_API = 'https://smartchessmath-api.campo1234567.workers.dev';
+let shapeLive=false, shapeRole='', shapeMode='class', shapeCode='', shapeStudentId=0, shapeToken='', shapeTeacherToken='', shapeChampId=0, shapeClock=null, shapeRosterSig='', shapeButtonSig='', shapeQuiz=null, shapeOffset=0, shapeBusy=false, shapeServerClock=null, shapeAccessToken=sessionStorage.getItem('shape_teacher_access')||'';
+function shapeShow(id,on){ const n=document.getElementById(id); if(n) n.hidden=!on; }
+function shapeStopActivity(){ running=false; triangleMode=false; angleMode=false; angleRun++; if(typeof timer!=='undefined'&&timer){ clearInterval(timer); timer=null; } }
+async function shapeApi(path, options){
+  const res=await fetch(SHAPE_API+path, Object.assign({headers:{'Content-Type':'application/json'}}, options||{}));
+  const text=await res.text();
+  try{ return JSON.parse(text); }catch(e){ return {ok:false, error:text||'The server did not answer.'}; }
+}
+function shapeSessionSave(){ sessionStorage.setItem('shape_api_session', JSON.stringify({role:shapeRole, mode:shapeMode, code:shapeCode, studentId:shapeStudentId, token:shapeToken, teacherToken:shapeTeacherToken, champId:shapeChampId})); }
+function shapeTeacherBody(extra){ return Object.assign({room_code:shapeCode, teacher_token:shapeTeacherToken, access_token:shapeAccessToken}, extra||{}); }
+function shapeAccessSave(token){ shapeAccessToken=token||''; if(shapeAccessToken) sessionStorage.setItem('shape_teacher_access', shapeAccessToken); else sessionStorage.removeItem('shape_teacher_access'); }
+function shapeReadAuth(studentId){ const base='room_code='+encodeURIComponent(shapeCode)+(studentId?'&student_id='+encodeURIComponent(studentId):''); if(shapeRole==='teacher') return base+'&access_token='+encodeURIComponent(shapeAccessToken)+'&teacher_token='+encodeURIComponent(shapeTeacherToken); return base+'&answer_token='+encodeURIComponent(shapeToken); }
+function shapeFillSets(){ const sel=document.getElementById('shapeSet'); if(!sel||sel.options.length) return; [['shapes','Shapes and moves'],['triangles','Triangles'],['angles','Angle relationships'],['mixed','Mixed geometry']].forEach(pair=>{ const o=document.createElement('option'); o.value=pair[0]; o.textContent=pair[1]+' · 8 questions · 3 min'; sel.appendChild(o); }); }
+let shapeRolePick='';
+function showOnlineWelcome(){
+  shapeLive=false; document.body.classList.remove('shape-live','shape-play'); if(shapeQuiz) shapeQuiz.running=false; shapeStopActivity();
+  document.getElementById('shapeOnline').hidden=false; shapeShow('shapeWelcome',true); shapeShow('shapeModes',false); shapeShow('shapeGate',false); shapeShow('shapeRoom',false);
+  const saved=sessionStorage.getItem('shape_api_session'); const note=document.getElementById('shapeReturnNote');
+  if(saved){ note.hidden=false; note.textContent='A room is still open on this device.'; document.getElementById('shapeReturnWrap').hidden=false; }
+  else { note.hidden=true; document.getElementById('shapeReturnWrap').hidden=true; }
+}
+function enterPractice(){ shapeLive=false; document.body.classList.remove('shape-live','shape-play'); document.getElementById('shapeOnline').hidden=true; document.querySelector('.subtitle').textContent='Learn chess moves by building glowing shapes'; showReady(); }
+function openTeacherLogin(){
+  if(shapeAccessToken){ openShapeModes('teacher'); return; }
+  const box=document.getElementById('shapeLogin');
+  document.getElementById('shapeLoginPin').value='';
+  const err=document.getElementById('shapeLoginError'); err.hidden=true; err.textContent='';
+  box.hidden=false;
+  document.getElementById('shapeLoginPin').focus();
+}
+function closeTeacherLogin(){ document.getElementById('shapeLogin').hidden=true; }
+async function submitTeacherLogin(ev){
+  if(ev) ev.preventDefault();
+  const pin=document.getElementById('shapeLoginPin').value;
+  const data=await shapeApi('/api/shape/teacher-login',{method:'POST', body:JSON.stringify({pin})});
+  const err=document.getElementById('shapeLoginError');
+  if(!data.ok || !data.access_token){
+    err.hidden=false;
+    err.textContent=data.error==='Too many attempts. Please wait and try again.'?data.error:'Incorrect password. Please try again.';
+    document.getElementById('shapeLoginPin').value='';
+    document.getElementById('shapeLoginPin').focus();
+    return;
+  }
+  shapeAccessSave(data.access_token);
+  closeTeacherLogin();
+  openShapeModes('teacher');
+}
+function openShapeModes(role){
+  shapeRolePick=role;
+  shapeShow('shapeWelcome',false); shapeShow('shapeModes',true); shapeShow('shapeGate',false); shapeShow('shapeRoom',false);
+  const teacher=role==='teacher';
+  document.getElementById('shapeModeHeading').textContent=teacher?'Teacher / Admin':'Student';
+  document.getElementById('shapeModeLead').textContent=teacher?'Choose the classroom you want to open.':'Choose the room your teacher opened.';
+  document.getElementById('shapeClass').textContent=teacher?'Class Challenge':'Join Class Challenge';
+  document.getElementById('shapeChamp').textContent=teacher?'Championship Mode':'Join Championship';
+}
+function openShapeGate(mode){
+  shapeMode=mode; shapeShow('shapeWelcome',false); shapeShow('shapeModes',false); shapeShow('shapeGate',true); shapeShow('shapeRoom',false);
+  const teacher=shapeRolePick==='teacher';
+  document.getElementById('shapeGateTitle').textContent=mode==='championship'?(teacher?'Championship Mode':'Join Championship'):(teacher?'Class Challenge':'Join Class Challenge');
+  document.getElementById('shapeGateLead').textContent=mode==='championship'?'Three rounds: 4 minutes, then 3 minutes, then 2 minutes. Every student receives the same questions and the same clock.':'One room code for the whole class. Choose the question set and the time before each round. Students stay registered.';
+  shapeFillSets(); document.getElementById('shapeSet').hidden=true;
+  document.getElementById('shapeTeacherForm').hidden=!teacher; document.getElementById('shapeStudentForm').hidden=teacher;
+}
+async function createShapeRoom(){
+  const title=document.getElementById('shapeChampTitle').value.trim()||'Chess Shape Builders';
+  const data=await shapeApi('/api/shape/create-championship',{method:'POST', body:JSON.stringify({championship_name:title, program_name:'Chess Shape Builders', rounds:shapeMode==='championship'?3:1, ranking_rule:'STARS_SOLVED_TIME', organizer_name:document.getElementById('shapeTeacherSchool').value.trim(), status:'Active', question_set:document.getElementById('shapeSet').value||'mixed', access_token:shapeAccessToken})});
+  if(!data.ok){ alert(data.error||'The room was not created.'); return; }
+  shapeRole='teacher'; shapeCode=data.room_code; shapeChampId=data.championship_id; shapeStudentId=0; shapeToken=''; shapeTeacherToken=data.teacher_token||'';
+  shapeEnterRoom();
+}
+async function joinShapeRoom(){
+  const name=document.getElementById('shapeStudentName').value.trim();
+  const code=document.getElementById('shapeStudentCode').value.trim().toUpperCase();
+  if(!name){ alert('Please enter your name.'); return; }
+  const saved=JSON.parse(sessionStorage.getItem('shape_api_session')||'null');
+  const data=await shapeApi('/api/shape/join-room',{method:'POST', body:JSON.stringify({student_name:name, age:document.getElementById('shapeStudentAge').value.trim(), grade:document.getElementById('shapeStudentGrade').value.trim(), school_name:document.getElementById('shapeStudentSchool').value.trim(), room_code:code, resume_student_id:saved&&saved.code===code?saved.studentId:0})});
+  if(!data.ok){ alert(data.error||'That room was not found.'); return; }
+  shapeRole='student'; shapeCode=code; shapeStudentId=data.student_id; shapeToken=data.answer_token; shapeTeacherToken=''; shapeChampId=data.championship_id;
+  shapeEnterRoom();
+}
+function returnShapeRoom(){ const saved=JSON.parse(sessionStorage.getItem('shape_api_session')||'null'); if(!saved){ showOnlineWelcome(); return; } shapeRole=saved.role; shapeMode=saved.mode; shapeCode=saved.code; shapeStudentId=saved.studentId; shapeToken=saved.token; shapeTeacherToken=saved.teacherToken||''; shapeChampId=saved.champId; shapeEnterRoom(); }
+function shapeEnterRoom(){ shapeLive=true; document.body.classList.add('shape-live'); shapeRosterSig=''; shapeButtonSig=''; shapeSeenMessage=''; const note=document.getElementById('shapeMsgNote'); if(note){ note.hidden=true; note.textContent=''; } const banner=document.getElementById('shapeMsgBanner'); if(banner) banner.hidden=true; shapeStopActivity(); shapeSessionSave(); shapeShow('shapeWelcome',false); shapeShow('shapeModes',false); shapeShow('shapeGate',false); shapeShow('shapeRoom',true); document.getElementById('shapeOnline').hidden=false; if(!shapeClock) shapeClock=setInterval(shapeTick,800); shapeRefresh(); }
+let shapeLastStatus=null;
+async function startShapeRound(n){
+  const body=shapeTeacherBody({round_number:n});
+  if(!shapeLastStatus || Number(shapeLastStatus.rounds)!==3){
+    body.question_set=document.getElementById('shapeNextSet').value;
+    body.duration_seconds=Number(document.getElementById('shapeNextTime').value);
+  }
+  const data=await shapeApi('/api/shape/start-challenge',{method:'POST', body:JSON.stringify(body)});
+  if(!data.ok) alert(data.error||'The round did not start.');
+  shapeRefresh();
+}
+async function endShapeRound(n){ const data=await shapeApi('/api/shape/end',{method:'POST', body:JSON.stringify(shapeTeacherBody({round_number:n}))}); if(!data.ok) alert(data.error||'The round was not closed.'); shapeRefresh(); }
+async function saveShapeRound(n){ const data=await shapeApi('/api/shape/save-round',{method:'POST', body:JSON.stringify(shapeTeacherBody({round_number:n}))}); if(!data.ok) alert(data.error||'The round was not saved.'); shapeRefresh(); }
+async function finishShapeCompetition(){ const data=await shapeApi('/api/shape/finish-challenge',{method:'POST', body:JSON.stringify(shapeTeacherBody())}); if(!data.ok) alert(data.error||'The competition was not finished.'); shapeRefresh(); }
+function shapeButtons(status){
+  const box=document.getElementById('shapeRoomButtons');
+  const sig=[shapeRole, status&&status.current_round, status&&status.challenge_finished, status&&status.challenge_started, status&&status.paper_closed, status&&status.round_saved, status&&status.rounds, status&&status.all_finished].join('|');
+  if(sig===shapeButtonSig) return; shapeButtonSig=sig; box.innerHTML='';
+  const add=(label,fn,cls)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=label; if(cls) b.className=cls; b.onclick=fn; box.appendChild(b); };
+  if(shapeRole!=='teacher' || !status) return;
+  const champ=Number(status.rounds)===3;
+  const round=Number(status.current_round||0);
+  const next=!status.challenge_started?1:round+1;
+  const canStart=!status.challenge_finished && (!status.challenge_started || (status.paper_closed && status.round_saved));
+  if(canStart && !(champ && next>3)) add(next===1?'Start round':'Start round '+next, ()=>startShapeRound(next), 'shapeBtnStart');
+  if(!status.challenge_finished && status.challenge_started && !status.paper_closed) add('End round', ()=>endShapeRound(round), 'shapeBtnEnd');
+  if(!status.challenge_finished && status.paper_closed && !status.round_saved) add('Save round results', ()=>saveShapeRound(round), 'shapeBtnSave');
+  if(status.challenge_started) add('Current round report', showRoundReport, 'shapeBtnReport');
+  if(status.round_saved || status.challenge_finished) add('Calculate final ranking', showFinalRanking, 'shapeBtnRank');
+  add('Send message', openShapeMessage, 'shapeBtnMsg');
+  if(status.round_saved || status.challenge_finished) add('Print results', printShapeResults, 'shapeBtnPrint');
+  if(!status.challenge_finished && status.round_saved) add(champ?'Finish competition':'Finish class session', finishShapeCompetition, 'shapeBackBtn');
+}
+function paintRoster(standing){
+  const host=document.getElementById('shapeRoster');
+  const rows=standing&&standing.students||[];
+  shapeRosterRows=rows;
+  const certReady=!!(shapeLastStatus && shapeLastStatus.round_saved);
+  const sig=JSON.stringify(rows.map(r=>[r.student_id,r.stars,r.solved,r.time,r.status,r.answered,r.rank]))+'|'+certReady+'|'+(shapeLastStatus&&shapeLastStatus.challenge_finished);
+  if(sig===shapeRosterSig) return; shapeRosterSig=sig; host.innerHTML='';
+  const table=document.createElement('table'); table.className='shapeTable shapeRosterTable';
+  const head=document.createElement('tr'); ['#','Student','Player ID','School','Status','Progress','Stars','Solved','Time Used'].forEach(t=>{ const th=document.createElement('th'); th.textContent=t; head.appendChild(th); });
+  if(certReady){ const th=document.createElement('th'); th.textContent='Certificate'; head.appendChild(th); }
+  const thead=document.createElement('thead'); thead.appendChild(head); table.appendChild(thead);
+  const body=document.createElement('tbody');
+  const cards=document.createElement('div'); cards.className='shapeRosterCards';
+  if(!rows.length){
+    const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=10; td.textContent='Waiting for students...'; tr.appendChild(td); body.appendChild(tr);
+    const empty=document.createElement('p'); empty.className='shapeStudentCard shapeStudentEmpty'; empty.textContent='Waiting for students...'; cards.appendChild(empty);
+  }
+  rows.forEach(r=>{
+    const player='SCM-'+String(r.student_id).padStart(4,'0');
+    const progress=r.total?(r.answered+'/'+r.total):'…';
+    const time=r.time==null?'…':formatTime(r.time);
+    const status=shapeStatusLabel(r.status);
+    const tr=document.createElement('tr');
+    [r.rank, r.student_name, player, r.school_name||'', r.status, progress, r.stars, r.solved, time].forEach(val=>{ const td=document.createElement('td'); td.textContent=val; tr.appendChild(td); });
+    if(certReady){ const td=document.createElement('td'); const b=document.createElement('button'); b.type='button'; b.className='shapeSmall'; b.textContent='Certificate'; b.onclick=()=>openShapeCert(r.student_id); td.appendChild(b); tr.appendChild(td); }
+    body.appendChild(tr);
+    const card=document.createElement('article'); card.className='shapeStudentCard';
+    const title=document.createElement('h3');
+    const rank=document.createElement('span'); rank.className='shapeCardRank'; rank.textContent=shapeRankTitle(r.rank);
+    const name=document.createElement('span'); name.className='shapeCardName'; name.textContent=r.student_name||'';
+    title.append(rank, name); card.appendChild(title);
+    const stats=document.createElement('p'); stats.className='shapeCardStats';
+    [ '⭐ '+r.stars+' Stars', 'Solved '+r.solved, 'Progress: '+progress ].forEach(text=>{ const span=document.createElement('span'); span.textContent=text; stats.appendChild(span); });
+    card.appendChild(stats);
+    const idLine=document.createElement('p'); idLine.className='shapeCardLine';
+    const idLabel=document.createElement('span'); idLabel.textContent='Player ID: ';
+    const idValue=document.createElement('span'); idValue.className='shapeCardId'; idValue.textContent=player;
+    idLine.append(idLabel, idValue);
+    const school=document.createElement('p'); school.className='shapeCardLine'; school.textContent='School: '+(r.school_name||'');
+    const state=document.createElement('p'); state.className='shapeCardLine'; state.textContent='Status: '+status+' · Time: '+time;
+    card.append(idLine, school, state);
+    if(certReady){ const b=document.createElement('button'); b.type='button'; b.className='shapeSmall'; b.textContent='Certificate'; b.onclick=()=>openShapeCert(r.student_id); card.appendChild(b); }
+    cards.appendChild(card);
+  });
+  table.appendChild(body); host.appendChild(table); host.appendChild(cards);
+}
+function shapeRankTitle(rank){ const n=Number(rank); const medal=n===1?'🥇 ':n===2?'🥈 ':n===3?'🥉 ':''; return medal+'Rank '+rank+' —'; }
+function shapeStatusLabel(status){ const text=String(status||''); return text?text.charAt(0).toUpperCase()+text.slice(1):'Waiting'; }
+async function shapeRefresh(){
+  if(shapeBusy || !shapeCode) return;
+  shapeBusy=true;
+  try{ await shapeRefreshBody(); } finally { shapeBusy=false; }
+}
+async function shapeRefreshBody(){
+  const statusData=await shapeApi('/api/shape/room-status?room_code='+encodeURIComponent(shapeCode));
+  const standingData=await shapeApi('/api/shape/standing?room_code='+encodeURIComponent(shapeCode));
+  if(!statusData.ok){ document.getElementById('shapeRoomLead').textContent=statusData.error||'The server is not answering.'; return; }
+  const ch=statusData.championship;
+  shapeLastStatus=ch;
+  document.getElementById('shapeRoomHeading').textContent=Number(ch.rounds)===3?'Championship Mode':'Class Challenge';
+  document.getElementById('shapeCodeLine').textContent=ch.room_code;
+  shapeServerClock=(ch.challenge_started && ch.started_at && ch.round_seconds)?{duration:Number(ch.round_seconds), started:Number(ch.started_at), offset:Number(ch.server_now)-Date.now(), label:ch.round_label||'This round', closed:!!ch.paper_closed, live:!!ch.challenge_started}:null;
+  document.getElementById('shapeRoomLead').textContent=shapeRole==='teacher'?shapeTeacherLead(ch):shapeStudentLead(ch);
+  paintDash(ch);
+  paintRoster(standingData.ok?standingData:{students:[]});
+  shapeButtons(ch);
+  shapePollMessage();
+  if(shapeRole==='student') shapeSyncStudent(ch);
+}
+async function shapeSyncStudent(ch){
+  if(shapeQuiz && shapeQuiz.expired && shapeQuiz.round===Number(ch.current_round)) return;
+  if(ch.challenge_started && !ch.paper_closed && !ch.challenge_finished){
+    if(!shapeQuiz || shapeQuiz.round!==Number(ch.current_round)) await beginShapeQuiz(ch);
+  } else if(shapeQuiz && shapeQuiz.running){
+    shapeQuiz.running=false; document.body.classList.remove('shape-play'); document.getElementById('shapeOnline').hidden=false;
+    document.getElementById('question').textContent='This round is closed.';
+    document.getElementById('options').innerHTML='';
+  }
+}
+async function beginShapeQuiz(ch){
+  const data=await shapeApi('/api/shape/questions?room_code='+encodeURIComponent(shapeCode)+'&student_id='+shapeStudentId+'&answer_token='+encodeURIComponent(shapeToken));
+  if(!data.ok || data.closed){ return; }
+  shapeOffset=data.server_now-Date.now();
+  const index=data.questions.findIndex(q=>!q.answered);
+  shapeQuiz={running:index>=0, round:data.round_number, duration:data.duration, started:data.started_at, index:Math.max(0,index), questions:data.questions, locked:false};
+  if(index<0){ shapeQuiz.running=false; return; }
+  document.body.classList.add('shape-live','shape-play'); document.getElementById('shapeOnline').hidden=true; document.getElementById('overlay').style.display='none';
+  clearShape(); score=data.stars||0; updateStars(); document.getElementById('score').textContent=String(score);
+  document.getElementById('time').textContent=formatTime(Math.max(0, data.duration-Math.floor((Date.now()+shapeOffset-data.started_at)/1000)));
+  document.getElementById('mode').textContent=data.label; document.getElementById('qtotal').textContent=String(data.questions.length);
+  document.querySelector('.subtitle').textContent=Number(ch.rounds)===3?'Championship':'Class Challenge';
+  setHint('Choose one answer. A wrong answer does not earn a star, and the same question cannot be answered again.');
+  showShapeQuestion();
+}
+function shapeMove(piece, from, to, color){ placeBoardPiece(from, piece); addPath([from, to], color); }
+function shapeRing(color){ drawTrueKnightCircle(color, ['c2','b3','b5','c6','e6','f5','f3','e2']); }
+function showShapeFigure(id){
+  clearShape();
+  if(id==='s1'){ addPath(['a4','h4'], ANGLE_GREEN); addPath(['d2','d7'], ANGLE_AMBER); glowMeet('d4'); return; }
+  if(id==='s2'){ shapeMove('rook','b5','g5',ANGLE_GREEN); shapeMove('rook','d7','d2',ANGLE_AMBER); glowMeet('d5'); return; }
+  if(id==='s3'){ shapeMove('bishop','c2','g6',ANGLE_GREEN); shapeMove('bishop','c6','g2',ANGLE_AMBER); glowMeet('e4'); return; }
+  if(id==='s4'){ addPath(['c3','c6','f6','f3','c3'], ANGLE_GREEN); placeBoardPiece('c3','rook'); return; }
+  if(id==='s5'){ addPath(['c2','c5','g5','g2','c2'], ANGLE_GREEN); placeBoardPiece('c2','rook'); return; }
+  if(id==='s6'){ shapeRing('#c084fc'); addPath(['c2','e6'], '#ffffff', 'shapePath geoDiameter'); return; }
+  if(id==='s7'){ shapeRing('#c084fc'); addPath(['d4','e2'], ANGLE_GOLD, 'shapePath geoRadius'); placeBoardPiece('d4','knight'); return; }
+  if(id==='s8'){ addPath(['d2','d6','h6','h2','d2'], ANGLE_GOLD); placeBoardPiece('d2','queen'); return; }
+  if(id==='t1'){ addPath(['b4','e7','e4','b4'], ANGLE_GREEN); rightAngleMarker('e4','e7','b4'); placeBoardPiece('e4','rook'); return; }
+  if(id==='t2'){ addPath(['c4','e7','g4','c4'], ANGLE_GREEN); placeBoardPiece('e7','bishop'); return; }
+  if(id==='t3'){ addPath(['b2','d3','f2','b2'], '#ff9f1c'); paintWedge('b2','d3','f2','',ANGLE_GOLD); placeBoardPiece('d3','queen'); return; }
+  if(id==='t4'){ addPath(['b4','e7'], ANGLE_GOLD, 'shapePath equalSide'); addPath(['e7','h4'], ANGLE_GOLD, 'shapePath equalSide'); addPath(['h4','b4'], ANGLE_GREEN); placeBoardPiece('e7','queen'); return; }
+  if(id==='t5'){ addPath(['b4','d7','f4','b4'], ANGLE_GREEN); addPath(['d7','d4'], ANGLE_BLUE, 'shapePath geoHeight'); placeBoardPiece('d7','queen'); return; }
+  if(id==='t6'){ addPath(['b4','e7'], ANGLE_GOLD, 'shapePath equalSide'); addPath(['e7','h4'], ANGLE_GOLD, 'shapePath equalSide'); addPath(['h4','b4'], ANGLE_GREEN); addPath(['e7','e4'], ANGLE_BLUE, 'shapePath geoHeight'); placeBoardPiece('e7','queen'); return; }
+  if(id==='t7'){ addPath(['b3','e7'], ANGLE_GOLD, 'shapePath equalSide'); addPath(['e7','h3'], ANGLE_GOLD, 'shapePath equalSide'); addPath(['h3','b3'], ANGLE_GREEN); placeBoardPiece('e7','queen'); return; }
+  if(id==='t8'){ addPath(['d4','f4'], ANGLE_GREEN); addPath(['d4','f6'], ANGLE_AMBER); paintWedge('f4','d4','f6','',ANGLE_GOLD); return; }
+  if(id==='a1'){ shapeMove('queen','b5','g5',ANGLE_GREEN); shapeMove('bishop','b2','f6',ANGLE_AMBER); glowMeet('e5'); paintWedge('g5','e5','f6','45°',ANGLE_GOLD); paintWedge('b5','e5','d4','',ANGLE_GOLD); return; }
+  if(id==='a2'){ shapeMove('rook','g4','b4',ANGLE_GREEN); shapeMove('queen','b5','g5',ANGLE_GREEN); return; }
+  if(id==='a3'){ shapeMove('rook','g4','b4',ANGLE_GREEN); shapeMove('queen','b5','g5',ANGLE_GREEN); shapeMove('bishop','b2','f6',ANGLE_AMBER); glowMeet('e5'); glowMeet('d4'); paintWedge('g5','e5','f6','',ANGLE_GOLD); paintWedge('e4','d4','e5','',ANGLE_GOLD); return; }
+  if(id==='a4'){ shapeMove('rook','g4','b4',ANGLE_GREEN); shapeMove('queen','b5','g5',ANGLE_GREEN); shapeMove('bishop','b2','f6',ANGLE_AMBER); addPath(['c5','e5','d4','f4'], '#fffef8', 'shapePath zGuide'); paintWedge('b5','e5','d4','',ANGLE_GOLD); paintWedge('e4','d4','e5','',ANGLE_GOLD); return; }
+  if(id==='a5'){ shapeMove('rook','g4','b4',ANGLE_GREEN); shapeMove('queen','b5','g5',ANGLE_GREEN); shapeMove('bishop','b2','f6',ANGLE_AMBER); glowMeet('e5'); glowMeet('d4'); paintWedge('g5','e5','f6','',ANGLE_GOLD); paintWedge('c4','d4','c3','',ANGLE_GOLD); return; }
+  if(id==='a6'){ shapeMove('rook','g4','b4',ANGLE_GREEN); shapeMove('queen','b5','g5',ANGLE_GREEN); shapeMove('bishop','b2','f6',ANGLE_AMBER); paintWedge('b5','e5','d4','45°',ANGLE_GOLD); paintWedge('c4','d4','e5','135°',ANGLE_BLUE); return; }
+  if(id==='a7'){ shapeMove('queen','b5','g5',ANGLE_GREEN); shapeMove('bishop','b2','f6',ANGLE_AMBER); glowMeet('e5'); paintWedge('g5','e5','f6','45°',ANGLE_GOLD); paintWedge('f6','e5','b5','135°',ANGLE_BLUE); return; }
+  if(id==='b1'){ addPath(['b2','c3','d4','e5','f6'], ANGLE_AMBER); placeBoardPiece('b2','bishop'); return; }
+}
+function showShapeQuestion(){
+  const q=shapeQuiz.questions[shapeQuiz.index];
+  showShapeFigure(q.id);
+  document.getElementById('qnum').textContent=String(shapeQuiz.index+1);
+  document.getElementById('question').textContent=q.prompt;
+  document.getElementById('status').textContent='Look at the figure, then choose one answer.';
+  const box=document.getElementById('options'); box.innerHTML='';
+  q.choices.forEach(choice=>{ const b=document.createElement('button'); b.type='button'; b.className='optionBtn'; b.textContent=choice; b.onclick=()=>pickShapeAnswer(q, choice, b); box.appendChild(b); });
+  speak(q.prompt);
+}
+async function pickShapeAnswer(q, choice, btn){
+  if(!shapeQuiz||!shapeQuiz.running||shapeQuiz.locked) return;
+  shapeQuiz.locked=true;
+  const data=await shapeApi('/api/shape/answer',{method:'POST', body:JSON.stringify({room_code:shapeCode, student_id:shapeStudentId, answer_token:shapeToken, round_number:shapeQuiz.round, question_id:q.id, choice})});
+  if(!data.ok){ document.getElementById('status').textContent=data.error||'The server did not accept that answer.'; shapeQuiz.locked=false; return; }
+  btn.classList.add(data.correct?'correct':'wrong');
+  score=data.stars; document.getElementById('score').textContent=String(score); updateStars();
+  if(data.correct && !data.already){ celebrateSmall(); document.getElementById('status').textContent='Correct.'; speak('Correct.'); }
+  else if(!data.correct){ document.getElementById('status').textContent='Not this time.'; speak('Not this time.'); }
+  setTimeout(()=>{ if(!shapeQuiz||!shapeQuiz.running) return; shapeQuiz.index++; shapeQuiz.locked=false; if(data.done || shapeQuiz.index>=shapeQuiz.questions.length){ shapeQuiz.running=false; document.body.classList.remove('shape-play'); document.getElementById('question').textContent='Waiting for the server result.'; document.getElementById('options').innerHTML=''; document.getElementById('shapeOnline').hidden=false; shapeRefresh(); } else showShapeQuestion(); }, 700);
+}
+function shapeMinutes(seconds){ const n=Math.round(Number(seconds||0)/60); return n? (n===1?'1 Minute':n+' Minutes') : '3 Minutes'; }
+function shapeClockLeft(){
+  const clock=shapeServerClock;
+  if(!clock || clock.closed) return '';
+  return formatTime(Math.max(0, clock.duration-Math.floor((Date.now()+clock.offset-clock.started)/1000)))+' left';
+}
+function shapeStudentLead(ch){
+  if(!ch || !ch.challenge_started) return 'Waiting for the teacher to start.';
+  if(ch.challenge_finished) return 'The class session is finished.';
+  if(ch.paper_closed) return 'Round '+ch.current_round+' completed! Please wait for your teacher.';
+  const left=shapeClockLeft();
+  return (ch.round_label||'This round')+' is running.'+(left?' '+left:'');
+}
+function shapeTeacherLead(ch){
+  if(!ch || !ch.challenge_started) return 'Choose the question set and the time, then start the round. Students keep this room code.';
+  if(ch.challenge_finished) return 'This session is finished. The saved rounds stay in this room.';
+  if(ch.paper_closed && !ch.round_saved) return ch.all_finished ? 'All students have finished. Save this round.' : 'Round '+ch.current_round+' is ready to save.';
+  if(ch.paper_closed && ch.round_saved) return Number(ch.rounds)===3 && Number(ch.current_round)>=3 ? 'All championship rounds are saved.' : 'Round '+ch.current_round+' is saved. The same students can begin the next round.';
+  const left=shapeClockLeft();
+  return (ch.round_label||'This round')+' is running.'+(left?' '+left:'');
+}
+function paintDash(ch){
+  const dash=document.getElementById('shapeDash');
+  if(!dash) return;
+  dash.hidden=shapeRole!=='teacher';
+  if(shapeRole!=='teacher' || !ch) return;
+  const champ=Number(ch.rounds)===3;
+  const choosing=!ch.challenge_finished && (!ch.challenge_started || (ch.paper_closed && ch.round_saved)) && !(champ && Number(ch.current_round)>=3);
+  document.getElementById('shapeNextRow').hidden=champ || !choosing;
+  document.getElementById('shapeDashRound').textContent=ch.current_round?('Round '+ch.current_round):'Round not started';
+  document.getElementById('shapeDashSet').textContent=ch.round_label||'Question set not started';
+  const left=shapeClockLeft();
+  document.getElementById('shapeDashTime').textContent=(ch.round_seconds?shapeMinutes(ch.round_seconds):'3 Minutes')+(left?' · '+left:'');
+  document.getElementById('shapeDashState').textContent=ch.challenge_finished?'Session finished':(!ch.challenge_started?'Round not started':(ch.paper_closed?(ch.round_saved?'Saved':'Ready to save'):(ch.all_finished?'All students finished':'In progress')));
+  document.getElementById('shapeDashNote').textContent=champ?'Championship rounds stay fixed: 4 minutes, then 3 minutes, then 2 minutes.':'Students stay in this room. Choose the next set and time after the current round is saved.';
+}
+function shapeTable(host, headers, records){
+  const table=document.createElement('table'); table.className='shapeTable';
+  const head=document.createElement('tr');
+  headers.forEach(name=>{ const th=document.createElement('th'); th.textContent=name; head.appendChild(th); });
+  const thead=document.createElement('thead'); thead.appendChild(head); table.appendChild(thead);
+  const body=document.createElement('tbody');
+  records.forEach(cols=>{ const tr=document.createElement('tr'); cols.forEach(val=>{ const td=document.createElement('td'); td.textContent=val; tr.appendChild(td); }); body.appendChild(tr); });
+  table.appendChild(body); host.appendChild(table);
+}
+async function showRoundReport(){
+  if(!shapeLastStatus) return;
+  const round=Number(shapeLastStatus.current_round||1);
+  const data=await shapeApi('/api/shape/leaderboard?'+shapeReadAuth()+'&round_number='+round);
+  const box=document.getElementById('shapeReport'); box.hidden=false; box.innerHTML='';
+  const title=document.createElement('h3'); title.textContent='Round '+round+' report · '+(shapeLastStatus.round_label||''); box.appendChild(title);
+  if(!data.ok || !(data.leaderboard||[]).length){ const p=document.createElement('p'); p.textContent=data.error||'Save the round before reading its report.'; box.appendChild(p); return; }
+  shapeTable(box, ['Rank','Student','Stars','Solved','Time'], data.leaderboard.map(row=>[row.rank+(row.tie?' (tie)':''), row.student_name, row.stars, row.solved_questions, formatTime(row.total_time||0)]));
+}
+let shapeRosterRows=[];
+async function showFinalRanking(){
+  const dataStudents=shapeRosterRows||[];
+  const studentId=dataStudents.length?dataStudents[0].student_id:0;
+  const box=document.getElementById('shapeReport'); box.hidden=false; box.innerHTML='';
+  const finished=!!(shapeLastStatus && shapeLastStatus.challenge_finished);
+  const title=document.createElement('h3'); title.textContent=finished?'FINAL CLASS RANKING':'CURRENT OVERALL STANDINGS'; box.appendChild(title);
+  if(!studentId){ const p=document.createElement('p'); p.textContent='Students have not joined yet.'; box.appendChild(p); return; }
+  const data=await shapeApi('/api/shape/final-certificate-data?'+shapeReadAuth(studentId));
+  if(!data.ok){ const p=document.createElement('p'); p.textContent=data.error||'The ranking is not ready.'; box.appendChild(p); return; }
+  shapeTable(box, ['Rank','Student','Stars','Solved','Time','Award'], (data.final_results||[]).map(row=>[row.rank+(row.tie?' (tie)':''), row.student_name, row.total_stars, row.total_solved, formatTime(row.total_time||0), row.recognition||row.medal||'']));
+}
+function printShapeResults(){ showFinalRanking().then(()=>{ document.body.classList.add('shape-printing'); window.print(); document.body.classList.remove('shape-printing'); }); }
+let shapeBannerTimer=null, shapeSeenMessage='';
+function shapeApplyMessage(msg){
+  const note=document.getElementById('shapeMsgNote');
+  if(!note) return;
+  if(!msg){ note.hidden=true; note.textContent=''; note.classList.remove('shapeMsgQuiet'); return; }
+  note.hidden=false;
+  note.textContent='Teacher: '+msg;
+  const welcome=msg==='Welcome students! Get ready. We will start shortly.';
+  note.classList.toggle('shapeMsgQuiet', welcome && !!(shapeLastStatus && shapeLastStatus.challenge_started));
+}
+function shapeShowBanner(msg){
+  let banner=document.getElementById('shapeMsgBanner');
+  if(!banner){ banner=document.createElement('div'); banner.id='shapeMsgBanner'; document.body.appendChild(banner); }
+  banner.textContent='📢 '+msg; banner.hidden=false;
+  shapeApplyMessage(msg);
+  clearTimeout(shapeBannerTimer);
+  shapeBannerTimer=setTimeout(()=>{ banner.hidden=true; }, 20000);
+}
+function openShapeMessage(){
+  let modal=document.getElementById('shapeMsgModal');
+  if(!modal){
+    modal=document.createElement('div'); modal.id='shapeMsgModal'; modal.hidden=true;
+    const presets=['Welcome students! Get ready. We will start shortly.','The challenge will begin now. Good luck!','The challenge will start in 1 minute.','Please wait for the teacher.','Results are being prepared.','Congratulations to all participants.'];
+    modal.innerHTML='<div id="shapeMsgCard"><h3>📢 Send message</h3><textarea id="shapeMsgText" maxlength="240"></textarea><div class="shapeMsgPresets"></div><div class="shapeMsgActions"><button type="button" id="shapeMsgCancel">Cancel</button><button type="button" id="shapeMsgSend">Send</button></div></div>';
+    document.body.appendChild(modal);
+    const box=modal.querySelector('.shapeMsgPresets');
+    presets.forEach(text=>{ const b=document.createElement('button'); b.type='button'; b.textContent=text; b.onclick=()=>{ document.getElementById('shapeMsgText').value=text; }; box.appendChild(b); });
+    modal.addEventListener('click', ev=>{ if(ev.target===modal) modal.hidden=true; });
+    document.getElementById('shapeMsgCancel').onclick=()=>{ modal.hidden=true; };
+    document.getElementById('shapeMsgSend').onclick=sendShapeMessage;
+  }
+  document.getElementById('shapeMsgText').value='Welcome students! Get ready. We will start shortly.';
+  modal.hidden=false;
+}
+async function sendShapeMessage(){
+  const message=document.getElementById('shapeMsgText').value.trim();
+  if(!message){ alert('Please write a message.'); return; }
+  const data=await shapeApi('/api/shape/send-message',{method:'POST', body:JSON.stringify(shapeTeacherBody({message}))});
+  if(!data.ok){ alert(data.error||'The message was not sent.'); return; }
+  shapeSeenMessage=String(data.sent_at||'')+'|'+message;
+  document.getElementById('shapeMsgModal').hidden=true;
+  shapeShowBanner(message);
+}
+async function shapePollMessage(){
+  if(!shapeCode) return;
+  const data=await shapeApi('/api/shape/class-message?room_code='+encodeURIComponent(shapeCode));
+  if(!data.ok) return;
+  if(!data.message){ shapeApplyMessage(''); return; }
+  shapeApplyMessage(data.message);
+  const key=String(data.sent_at||'')+'|'+data.message;
+  if(key===shapeSeenMessage) return;
+  shapeSeenMessage=key;
+  shapeShowBanner(data.message);
+}
+function shapeTick(){ if(!shapeLive) return; if(shapeQuiz&&shapeQuiz.running){ const left=Math.max(0, shapeQuiz.duration-Math.floor((Date.now()+shapeOffset-shapeQuiz.started)/1000)); document.getElementById('time').textContent=formatTime(left); if(left<=0){ shapeQuiz.running=false; shapeQuiz.expired=true; document.body.classList.remove('shape-play'); document.getElementById('shapeOnline').hidden=false; } } if(shapeLastStatus && document.getElementById('shapeRoom') && !document.getElementById('shapeRoom').hidden){ document.getElementById('shapeRoomLead').textContent=shapeRole==='teacher'?shapeTeacherLead(shapeLastStatus):shapeStudentLead(shapeLastStatus); if(shapeRole==='teacher') paintDash(shapeLastStatus); } shapeRefresh(); }
+function shapeCertHeading(type, recognition){
+  if(type==='final' && recognition==='Gold') return 'FINAL CERTIFICATE OF EXCELLENCE';
+  if(recognition==='Gold' || recognition==='Silver' || recognition==='Bronze') return 'CERTIFICATE OF ACHIEVEMENT';
+  return 'CERTIFICATE OF PARTICIPATION';
+}
+function printShapeCert(){
+  document.body.classList.add('shape-cert-print');
+  const cleanup=()=>{ document.body.classList.remove('shape-cert-print'); window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
+}
+function shapeCertControls(studentId, activeRound){
+  const box=document.getElementById('shapeCertActions');
+  box.innerHTML='';
+  const saved=(shapeLastStatus && shapeLastStatus.saved_rounds)||[];
+  const finished=!!(shapeLastStatus && shapeLastStatus.challenge_finished);
+  if(saved.length>1 || finished){
+    saved.forEach(n=>{ const b=document.createElement('button'); b.type='button'; b.textContent='Round '+n; if(Number(activeRound)===Number(n)) b.className='shapeCertOn'; b.onclick=()=>openShapeCert(studentId, n); box.appendChild(b); });
+    if(finished){ const b=document.createElement('button'); b.type='button'; b.textContent='Final certificate'; if(!activeRound) b.className='shapeCertOn'; b.onclick=()=>openShapeCert(studentId, 0); box.appendChild(b); }
+  }
+  const print=document.createElement('button'); print.type='button'; print.id='shapeCertPrint'; print.textContent='Print certificate'; print.onclick=printShapeCert; box.appendChild(print);
+  const close=document.createElement('button'); close.type='button'; close.id='shapeCertClose'; close.textContent='Close'; close.onclick=()=>{ document.getElementById('shapeCert').style.display='none'; document.body.classList.remove('shape-cert-print'); }; box.appendChild(close);
+}
+async function openShapeCert(studentId, roundNumber){
+  const saved=(shapeLastStatus && shapeLastStatus.saved_rounds)||[];
+  const finished=!!(shapeLastStatus && shapeLastStatus.challenge_finished);
+  let round=roundNumber;
+  if(round==null) round=finished?0:(shapeLastStatus && shapeLastStatus.round_saved ? Number(shapeLastStatus.current_round) : (saved[saved.length-1]||0));
+  const data=await shapeApi('/api/shape/final-certificate-data?'+shapeReadAuth(studentId)+(round?'&round_number='+encodeURIComponent(round):''));
+  if(!data.ok){ alert(data.error||'Save the round before opening a certificate.'); return; }
+  const p=data.player;
+  const type=round? 'round' : (data.certificate_type==='final'?'final':'standings');
+  if(type==='standings'){ alert('Finish the class session before opening the final certificate.'); return; }
+  const recognition=p.recognition||'Participation';
+  const card=document.getElementById('shapeCertCard');
+  const awardClass=recognition==='Gold'?'certGold':recognition==='Silver'?'certSilver':recognition==='Bronze'?'certBronze':'certParticipation';
+  card.className=(type==='final'?'certFinal ':'')+awardClass;
+  document.getElementById('shapeCertTitle').textContent=shapeCertHeading(type, recognition);
+  document.getElementById('shapeCertName').textContent=p.student_name||'';
+  document.getElementById('shapeCertSchool').textContent=p.school_name||'';
+  const setLabel=String(data.question_set||'').replace(/^Round\s+\d+\s+[—–-]\s*/,'');
+  if(type==='round'){
+    document.getElementById('shapeCertRound').textContent='Round '+data.round_number+(setLabel?' · '+setLabel:'');
+    document.getElementById('shapeCertStarsLabel').textContent='Stars';
+    document.getElementById('shapeCertSolvedLabel').textContent='Correct answers';
+    document.getElementById('shapeCertStars').textContent=String(p.stars);
+    document.getElementById('shapeCertSolved').textContent=String(p.solved);
+  } else {
+    document.getElementById('shapeCertRound').textContent='Final competition · '+(data.championship.championship_name||'Chess Shape Builders');
+    document.getElementById('shapeCertStarsLabel').textContent='Stars';
+    document.getElementById('shapeCertSolvedLabel').textContent='Correct answers';
+    document.getElementById('shapeCertStars').textContent=String(p.total_stars);
+    document.getElementById('shapeCertSolved').textContent=String(p.total_solved);
+  }
+  document.getElementById('shapeCertRank').textContent=String(p.rank)+(p.tie?' shared':'');
+  document.getElementById('shapeCertAward').textContent=recognition;
+  const issued=String(data.issued_on||'').slice(0,10);
+  let issuedText=issued;
+  const issuedDate=new Date(issued+'T12:00:00');
+  if(!Number.isNaN(issuedDate.getTime())) issuedText=issuedDate.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('shapeCertMeta').textContent='Room '+(data.championship.room_code||shapeCode)+'  ·  '+issuedText;
+  document.getElementById('shapeCertNote').textContent='SmartChessMath official result. The server marked every answer.';
+  shapeCertControls(studentId, type==='round'?data.round_number:0);
+  document.getElementById('shapeCert').style.display='flex';
+}
+function shapeWire(){
+  document.getElementById('shapePractice').onclick=enterPractice;
+  document.getElementById('shapePickTeacher').onclick=openTeacherLogin;
+  document.getElementById('shapeLoginCancel').onclick=closeTeacherLogin;
+  document.getElementById('shapeLoginCard').onsubmit=submitTeacherLogin;
+  document.getElementById('shapePickStudent').onclick=()=>openShapeModes('student');
+  document.getElementById('shapeClass').onclick=()=>openShapeGate('class');
+  document.getElementById('shapeChamp').onclick=()=>openShapeGate('championship');
+  document.getElementById('shapeModeBack').onclick=showOnlineWelcome;
+  document.getElementById('shapeCreate').onclick=createShapeRoom;
+  document.getElementById('shapeJoin').onclick=joinShapeRoom;
+  document.getElementById('shapeGateBack').onclick=()=>openShapeModes(shapeRolePick||'teacher');
+  document.getElementById('shapeLeave').onclick=showOnlineWelcome;
+  document.getElementById('shapeReturn').onclick=returnShapeRoom;
+  document.getElementById('shapeCertClose').onclick=()=>{ document.getElementById('shapeCert').style.display='none'; };
+  document.getElementById('shapeCertPrint').onclick=()=>window.print();
+  const home=document.createElement('button'); home.id='shapeHome'; home.type='button'; home.textContent='Home'; home.onclick=showOnlineWelcome;
+  const slot=document.querySelector('.startStars'); if(slot && !document.getElementById('shapeHome')) slot.insertBefore(home, slot.firstChild);
+}
+shapeWire();
+
+
+buildBoard();buildStars();
+const shapeBeginSession=beginSession;
+const shapeStartGame=startGame;
+beginSession=function(){if(shapeLive)return;shapeBeginSession();};
+startGame=function(){if(shapeLive)return;shapeStartGame();};
+if(sessionStorage.getItem('shape_api_session')) returnShapeRoom(); else showOnlineWelcome();
+</script>
+</body>
+</html>
