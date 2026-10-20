@@ -262,6 +262,46 @@ h1 .gold{
 }
 @media(max-width:600px){.liveProgramCard .livePlatformArt{height:150px}}
 
+/* Presentation banners, program artwork, and video player.
+   Scoped so the navigation, carousel, championship, and contact controls keep their existing styles. */
+.featureBand{padding-top:28px;padding-bottom:8px}
+@media(min-width:601px){
+ .featureBand{padding-left:0;padding-right:0}
+}
+.featureFrame{display:block;border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 16px 36px rgba(7,21,47,.14)}
+.featureFrame img{width:100%;height:auto;display:block}
+.featureActions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:14px}
+.cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.program{border-radius:16px;padding:16px;min-height:0}
+.programArt{width:100%;height:auto;aspect-ratio:1536/1024;object-fit:contain;background:#fffdf8;border-radius:12px;display:block}
+.programBody{display:flex;flex-direction:column;flex:1}
+.programActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+.programActions .btn:only-child{grid-column:1}
+.programActions .btn,.featureActions .btn{width:100%;min-height:48px;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
+.featureActions .btn{width:auto;min-width:220px}
+.btn.watch{background:linear-gradient(180deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 6px 0 #1e3a8a,0 12px 26px rgba(0,0,0,.16)}
+.btn.gold{background:linear-gradient(180deg,#ffe16a,#e6b325);color:#3f2d04;box-shadow:0 6px 0 #a97812,0 12px 26px rgba(0,0,0,.16)}
+.btn.studio{background:linear-gradient(180deg,#22c55e,#15803d);color:#fff;box-shadow:0 6px 0 #166534,0 12px 26px rgba(0,0,0,.16)}
+.btn.soon{background:linear-gradient(180deg,#fff,#eff9ed);color:#07451c;border:1px solid #d8ead7;box-shadow:0 5px 0 #c2d6c3;cursor:default}
+@media(hover:hover){
+  .programActions .btn:hover,.featureActions .btn:hover{transform:translateY(-2px);filter:brightness(1.04)}
+  .programActions .btn:active,.featureActions .btn:active{transform:translateY(1px)}
+}
+@media(max-width:950px){
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:680px){
+  .cards{grid-template-columns:1fr}
+  .featureActions .btn{width:100%}
+  .program h3{font-size:22px}
+}
+.videoModal{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(8,16,28,.78)}
+.videoModal.open{display:flex}
+.videoDialog{position:relative;width:min(440px,100%);background:#fffdf8;border-radius:18px;padding:42px 16px 16px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.videoDialog h2{margin:0 0 10px;font-size:20px;color:#0a2858;text-align:center}
+.videoDialog video{width:100%;height:auto;max-height:78vh;aspect-ratio:9/16;background:#111;border-radius:12px;object-fit:contain}
+.videoClose{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;border-radius:50%;background:#0a2858;color:#fff;font-size:28px;line-height:1;cursor:pointer}
+
 </style>
 
 </head>
@@ -306,6 +346,16 @@ h1 .gold{
     </div>
   </section>
 
+  <section class="container featureBand" aria-label="Grand Challenge">
+    <a class="featureFrame" href="grand-challenge.html">
+      <img src="assets/banners/grand-challenge.webp" width="1983" height="793" alt="SmartChessMath Grand Challenge. Learn, think, compete, and win.">
+    </a>
+    <div class="featureActions">
+      <a class="btn gold" href="grand-challenge.html">Explore Grand Challenge</a>
+      <button type="button" class="btn watch" data-video="assets/videos/grand-challenge.mp4" data-title="Grand Challenge">Watch Video</button>
+    </div>
+  </section>
+
   <section id="programs" class="container section">
     <h2 class="sectionTitle">Educational Programs</h2>
     <p class="sectionSub">Interactive chess-and-math programs designed for young learners, school pilots, competitions, and classroom practice.</p>
@@ -322,106 +372,119 @@ h1 .gold{
     </div>
     <div class="cards">
       <article class="program">
-        <div>
-          <div class="icon">♘</div>
+        <img class="programArt" src="assets/program-cards/knight.webp" width="1536" height="1024" alt="Knight Number Quest" loading="lazy">
+        <div class="programBody">
           <h3>Knight Number Quest</h3>
           <p>Knight movement, number targets, smart routes, time challenges, live class mode, and championship rankings.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Tournament Ready</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="knight.html">Open Program</a>
+            <button type="button" class="btn watch" data-video="assets/videos/knight.mp4" data-title="Knight Number Quest">Watch Video</button>
+          </div>
         </div>
-        <a class="btn orange" href="knight.html">Open Program →</a>
       </article>
       <article class="program">
-        <div>
-          <div class="icon">♛</div>
+        <img class="programArt" src="assets/program-cards/queen.webp" width="1536" height="1024" alt="Queen Number Quest" loading="lazy">
+        <div class="programBody">
           <h3>Queen Number Quest</h3>
           <p>Master queen lines, collect exact target numbers, discover smart routes, improve speed, and compete in live school championships.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="queen.html">Open Program</a>
+            <button type="button" class="btn watch" data-video="assets/videos/queen.mp4" data-title="Queen Number Quest">Watch Video</button>
+          </div>
         </div>
-        <a class="btn orange" href="queen.html">Open Program →</a>
       </article>
       <article class="program">
-        <div>
-          <div class="icon">♜</div>
+        <img class="programArt" src="assets/program-cards/rook.webp" width="1536" height="1024" alt="Rook Number Quest" loading="lazy">
+        <div class="programBody">
           <h3>Rook Number Quest</h3>
           <p>Master straight-line thinking with the rook. Move across ranks and files, collect exact target numbers, improve planning speed, and compete in live school championships.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="rook.html">Open Program</a>
+            <button type="button" class="btn watch" data-video="assets/videos/rook.mp4" data-title="Rook Number Quest">Watch Video</button>
+          </div>
         </div>
-        <a class="btn orange" href="rook.html">Open Program →</a>
       </article>
       <article class="program">
-        <div>
-          <div class="icon">♝</div>
+        <img class="programArt" src="assets/program-cards/bishop.webp" width="1536" height="1024" alt="Bishop Number Quest" loading="lazy">
+        <div class="programBody">
           <h3>Bishop Number Quest</h3>
           <p>Master diagonal thinking with the bishop. Follow legal diagonals, collect exact target numbers, recognize patterns, and compete in live school championships.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Practice + Tournament</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="bishop.html">Open Program</a>
+            <button type="button" class="btn watch" data-video="assets/videos/bishop.mp4" data-title="Bishop Number Quest">Watch Video</button>
+          </div>
         </div>
-        <a class="btn orange" href="bishop.html">Open Program →</a>
       </article>
       <article class="program">
-        <div>
-          <div class="balanceIcon" aria-hidden="true" style="font-size:64px;display:flex;align-items:center;justify-content:center;">⚖️<!--
-            <svg viewBox="0 0 120 90" role="img" aria-label="Smart Balance icon" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <linearGradient id="sbGold" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stop-color="#fff18a"/>
-                  <stop offset=".42" stop-color="#ffc531"/>
-                  <stop offset="1" stop-color="#c87400"/>
-                </linearGradient>
-                <linearGradient id="sbGreen" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0" stop-color="#44d85b"/>
-                  <stop offset="1" stop-color="#0b8f2a"/>
-                </linearGradient>
-              </defs>
-              <line x1="22" y1="34" x2="98" y2="34" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
-              <line x1="60" y1="24" x2="60" y2="68" stroke="url(#sbGold)" stroke-width="7" stroke-linecap="round"/>
-              <circle cx="60" cy="34" r="9" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
-              <path d="M45 72h30" stroke="url(#sbGold)" stroke-width="8" stroke-linecap="round"/>
-              <path d="M37 72h46" stroke="#9b5d00" stroke-width="3" stroke-linecap="round" opacity=".45"/>
-              <line x1="27" y1="34" x2="16" y2="59" stroke="#b87300" stroke-width="2"/>
-              <line x1="27" y1="34" x2="39" y2="59" stroke="#b87300" stroke-width="2"/>
-              <path d="M9 59 Q27 74 45 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
-              <text x="19" y="58" font-size="21" fill="#0a2858">♛</text>
-              <text x="31" y="58" font-size="19" fill="#0a2858">♜</text>
-              <line x1="93" y1="34" x2="82" y2="59" stroke="#b87300" stroke-width="2"/>
-              <line x1="93" y1="34" x2="105" y2="59" stroke="#b87300" stroke-width="2"/>
-              <path d="M75 59 Q93 74 111 59 Z" fill="url(#sbGold)" stroke="#9b5d00" stroke-width="2"/>
-              <text x="78" y="62" font-size="32" fill="url(#sbGreen)" stroke="#fff5a6" stroke-width="1">14</text>
-            </svg>--></div>
+        <img class="programArt" src="assets/program-cards/chess-shape-builders.webp" width="1536" height="1024" alt="Chess Shape Builders" loading="lazy">
+        <div class="programBody">
+          <h3>Chess Shape Builders</h3>
+          <p>Learn geometry through chess. Build shapes, lines, and angles, then practice, join a class challenge, or play a championship round.</p>
+          <div class="pills"><span class="pill">Shapes</span><span class="pill">Class Challenge</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="https://shapes.smartchessmath.com/">Open Program</a>
+          </div>
+        </div>
+      </article>
+      <article class="program">
+        <img class="programArt" src="assets/program-cards/smart-balance.webp" width="1536" height="1024" alt="Smart Balance" loading="lazy">
+        <div class="programBody">
           <h3>Smart Balance</h3>
           <p>Build target numbers using chess piece values. Discover multiple solutions, strengthen combinatorial thinking, optimization, mathematical reasoning, and strategic planning.</p>
           <div class="pills"><span class="pill">Age 7+</span><span class="pill">Practice + Tournament</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="balance.html">Open Program</a>
+            <button type="button" class="btn watch" data-video="assets/videos/smart-balance.mp4" data-title="Smart Balance">Watch Video</button>
+          </div>
         </div>
-        <a class="btn orange" href="balance.html">Open Program →</a>
       </article>
       <article class="program">
-        <div>
-          <div class="icon">⭐</div>
+        <img class="programArt" src="assets/program-cards/smart-moves-junior.webp" width="1536" height="1024" alt="Smart Moves Junior" loading="lazy">
+        <div class="programBody">
           <h3>Smart Moves Junior</h3>
           <p>Chess piece values, number recognition, logical thinking, quick challenges, and certificates for young learners.</p>
           <div class="pills"><span class="pill">Age 6+</span><span class="pill">Game Mode</span></div>
+          <div class="programActions">
+            <span class="btn soon" aria-disabled="true">Coming Soon</span>
+          </div>
         </div>
-        <a class="btn" href="#">Coming Soon ⏳</a>
       </article>
       <article class="program">
-        <div>
-          <div class="icon">🏰</div>
+        <img class="programArt" src="assets/program-cards/rescue-princess.webp" width="1536" height="1024" alt="Rescue the Princess" loading="lazy">
+        <div class="programBody">
           <h3>Rescue the Princess</h3>
           <p>A fun chess adventure that develops planning, logical thinking, and problem-solving skills.</p>
           <div class="pills"><span class="pill">Age 5+</span><span class="pill">Adventure Mode</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="rescue-princess-online.html">Open Program</a>
+            <button type="button" class="btn watch" data-video="assets/videos/rescue-princess.mp4" data-title="Rescue the Princess">Watch Video</button>
+          </div>
         </div>
-        <a class="btn orange" href="rescue-princess-online.html">🏰 Rescue the Princess</a>
       </article>
-      <article class="program liveProgramCard">
-        <div>
-          <a class="livePlatformArt" href="smartchessmath-live.html" aria-label="Open SmartChessMath Live platform page">
-            <img src="assets/scm-live-card.png" alt="SmartChessMath Live V1.0 classroom platform preview">
-          </a>
+      <article class="program">
+        <img class="programArt" src="assets/program-cards/smartchessmath-live.webp" width="1536" height="1024" alt="SmartChessMath Live V1.0" loading="lazy">
+        <div class="programBody">
           <h3>SmartChessMath Live V1.0</h3>
           <p class="liveTagline">The 21st Century Learning Leap</p>
           <div class="pills"><span class="pill">Schools</span><span class="pill">Live Platform</span></div>
+          <div class="programActions">
+            <a class="btn orange" href="smartchessmath-live.html">Open Program</a>
+          </div>
         </div>
-        <a class="btn orange" href="smartchessmath-live.html">🚀 SmartChessMath Live</a>
       </article>
+    </div>
+  </section>
+
+  <section class="container featureBand" aria-label="Teacher Studio">
+    <a class="featureFrame" href="teacher-studio.html">
+      <img src="assets/banners/teacher-studio.webp" width="2200" height="715" alt="SmartChessMath Teacher Studio. Create, explain, engage, and assess." loading="lazy">
+    </a>
+    <div class="featureActions">
+      <a class="btn studio" href="teacher-studio.html">Explore Teacher Studio</a>
     </div>
   </section>
 
@@ -546,6 +609,54 @@ h1 .gold{
   slider&&slider.addEventListener('mouseenter', stop);
   slider&&slider.addEventListener('mouseleave', play);
   play();
+})();
+</script>
+<div id="videoModal" class="videoModal" hidden>
+  <div class="videoDialog" role="dialog" aria-modal="true" aria-labelledby="videoTitle">
+    <button type="button" class="videoClose" id="videoClose" aria-label="Close video">×</button>
+    <h2 id="videoTitle">Video</h2>
+    <video id="videoPlayer" controls playsinline preload="none"></video>
+  </div>
+</div>
+<script>
+(function(){
+  const modal=document.getElementById('videoModal');
+  const player=document.getElementById('videoPlayer');
+  const title=document.getElementById('videoTitle');
+  const closeBtn=document.getElementById('videoClose');
+  let lastFocus=null;
+  function closeVideo(){
+    player.pause();
+    player.removeAttribute('src');
+    player.load();
+    modal.classList.remove('open');
+    modal.hidden=true;
+    document.body.style.overflow='';
+    if(lastFocus) lastFocus.focus();
+  }
+  function openVideo(src, name, opener){
+    lastFocus=opener||document.activeElement;
+    title.textContent=name||'Video';
+    player.preload='metadata';
+    player.src=src;
+    modal.hidden=false;
+    modal.classList.add('open');
+    document.body.style.overflow='hidden';
+    closeBtn.focus();
+  }
+  document.addEventListener('click', function(event){
+    const button=event.target.closest('[data-video]');
+    if(button){
+      event.preventDefault();
+      openVideo(button.getAttribute('data-video'), button.getAttribute('data-title'), button);
+      return;
+    }
+    if(event.target===modal) closeVideo();
+  });
+  closeBtn.addEventListener('click', closeVideo);
+  document.addEventListener('keydown', function(event){
+    if(event.key==='Escape' && modal.classList.contains('open')) closeVideo();
+  });
 })();
 </script>
 

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartChessMath Teacher Studio</title>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<style>
+:root{--ink:#0a2342}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f8fff5,#fff 40%,#f6fff3)}
+a{color:inherit}
+.container{width:min(1240px,calc(100% - 32px));margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:900;color:#06451d}
+.brand img{width:56px;height:56px;border-radius:50%}
+.hero{width:100%;height:auto;border-radius:16px;box-shadow:0 16px 36px rgba(7,21,47,.14);display:block}
+.intro{text-align:center;padding:28px 0 8px}
+.intro h1{margin:0;font-size:clamp(32px,5vw,52px);letter-spacing:-.04em;color:#06451d}
+.slogan{margin:8px 0 0;font-weight:900;letter-spacing:.08em;color:#15803d}
+.intro p{max-width:780px;margin:16px auto 0;font-weight:800;line-height:1.55;font-size:18px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:22px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 18px;border-radius:14px;text-decoration:none;font-weight:900;transition:transform .2s ease,filter .2s ease}
+.btn.studio{background:linear-gradient(180deg,#22c55e,#15803d);color:#fff;box-shadow:0 6px 0 #166534}
+.btn.back{background:#fff;color:#06451d;border:1px solid #d8ead7;box-shadow:0 5px 0 #c2d6c3}
+@media(hover:hover){.btn:hover{transform:translateY(-2px);filter:brightness(1.04)}.btn:active{transform:translateY(1px)}}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:10px 0 28px}
+.card{background:#fff;border:1px solid #e2eddc;border-radius:16px;padding:18px;box-shadow:0 12px 28px rgba(0,0,0,.08)}
+.card h2{margin:0 0 8px;font-size:22px;color:#0a2858}
+.card p{margin:0;font-weight:750;line-height:1.5;color:#173050}
+footer{text-align:center;padding:28px 16px 40px;font-weight:800;color:#06451d}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="container">
+  <div class="top">
+    <a class="brand" href="index.html"><img src="logo-smart-chess-math.png" alt="">SmartChessMath</a>
+    <a class="btn back" href="index.html">Back to Homepage</a>
+  </div>
+  <img class="hero" src="assets/banners/teacher-studio.webp" width="2200" height="715" alt="SmartChessMath Teacher Studio">
+  <section class="intro">
+    <h1>Teacher Studio</h1>
+    <p class="slogan">Create • Explain • Engage • Assess</p>
+    <p><strong>Bring Chess and Mathematics Together in Your Classroom.</strong><br>SmartChessMath Teacher Studio helps teachers prepare interactive lessons, explain mathematical concepts using chessboards and chess pieces, organize classroom activities, and review student learning progress. It is designed for teachers, schools, and educational institutions.</p>
+    <div class="actions">
+      <a class="btn studio" href="https://teacher.smartchessmath.com/">Open Teacher Studio →</a>
+      <a class="btn back" href="index.html">Back to Homepage</a>
+    </div>
+  </section>
+  <section class="grid">
+    <article class="card">
+      <h2>Interactive Lesson Builder</h2>
+      <p>A signed-in teacher prepares a lesson on a chessboard, including piece moves, number values, and geometry paths such as squares, diamonds, and other shapes.</p>
+    </article>
+    <article class="card">
+      <h2>Interactive Chessboard</h2>
+      <p>Lessons can show legal moves, hints, and piece movement so a teacher can explain an idea visually. Students do not need their own account to take part.</p>
+    </article>
+    <article class="card">
+      <h2>Classroom Activities</h2>
+      <p>Students join an activity with the short class code, a join link, or the class QR card from the teacher. There is no student password.</p>
+    </article>
+    <article class="card">
+      <h2>Assignments</h2>
+      <p>A teacher can create an assignment from a lesson. Students receive that saved assignment, so later edits to the lesson do not change it.</p>
+    </article>
+    <article class="card">
+      <h2>Student Results</h2>
+      <p>Assignment activity is kept for the teacher to review. This page does not show any student names or results.</p>
+    </article>
+    <article class="card">
+      <h2>For Schools</h2>
+      <p>Teacher Studio is for organized classroom use. Teachers sign in. Open public registration is not offered. This platform is separate from SmartChessMath Live.</p>
+    </article>
+  </section>
+</main>
+<footer>Chess in the service of education. <a href="index.html">Return home</a></footer>
+</body>
+</html>

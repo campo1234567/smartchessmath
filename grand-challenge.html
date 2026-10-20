@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartChessMath – Grand Challenge</title>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<style>
+:root{--ink:#0a2342;--green:#0b8f2a}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f8fff5,#fff 40%,#f6fff3)}
+a{color:inherit}
+.container{width:min(1240px,calc(100% - 32px));margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:900;color:#06451d}
+.brand img{width:56px;height:56px;border-radius:50%}
+.hero{width:100%;height:auto;border-radius:16px;box-shadow:0 16px 36px rgba(7,21,47,.14);display:block}
+.intro{text-align:center;padding:28px 0 8px}
+.intro h1{margin:0;font-size:clamp(32px,5vw,52px);letter-spacing:-.04em;color:#06451d}
+.slogan{margin:8px 0 0;font-weight:900;letter-spacing:.08em;color:#c2410c}
+.intro p{max-width:760px;margin:16px auto 0;font-weight:800;line-height:1.55;font-size:18px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:22px 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 18px;border-radius:14px;text-decoration:none;font-weight:900;transition:transform .2s ease,filter .2s ease}
+.btn.gold{background:linear-gradient(180deg,#ffe16a,#e6b325);color:#3f2d04;box-shadow:0 6px 0 #a97812}
+.btn.blue{background:linear-gradient(180deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 6px 0 #1e3a8a}
+.btn.back{background:#fff;color:#06451d;border:1px solid #d8ead7;box-shadow:0 5px 0 #c2d6c3}
+@media(hover:hover){.btn:hover{transform:translateY(-2px);filter:brightness(1.04)}.btn:active{transform:translateY(1px)}}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:10px 0 28px}
+.card{background:#fff;border:1px solid #e2eddc;border-radius:16px;padding:18px;box-shadow:0 12px 28px rgba(0,0,0,.08)}
+.card h2{margin:0 0 8px;font-size:22px;color:#0a2858}
+.card p,.card li{font-weight:750;line-height:1.5;color:#173050}
+.card ul{margin:8px 0 0;padding-left:18px}
+.videoWrap{background:#fff;border-radius:16px;padding:16px;box-shadow:0 12px 28px rgba(0,0,0,.08);margin:8px auto 28px;max-width:440px}
+.videoWrap h2{text-align:center;margin:0 0 10px;color:#0a2858}
+.videoWrap video{width:100%;height:auto;max-height:78vh;aspect-ratio:9/16;background:#111;border-radius:12px;object-fit:contain}
+footer{text-align:center;padding:28px 16px 40px;font-weight:800;color:#06451d}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="container">
+  <div class="top">
+    <a class="brand" href="index.html"><img src="logo-smart-chess-math.png" alt="">SmartChessMath</a>
+    <a class="btn back" href="index.html">Back to Homepage</a>
+  </div>
+  <img class="hero" src="assets/banners/grand-challenge.webp" width="1983" height="793" alt="SmartChessMath Grand Challenge">
+  <section class="intro">
+    <h1>Grand Challenge</h1>
+    <p class="slogan">Learn • Think • Compete • Win</p>
+    <p><strong>Where Chess Meets Mathematics!</strong><br>SmartChessMath Grand Challenge combines chess-inspired mathematics with exciting live competition. Students challenge friends, solve engaging mathematical questions, develop logical thinking, and improve their performance through friendly educational competition.</p>
+    <div class="actions">
+      <a class="btn gold" href="https://play.smartchessmath.com/">Play Grand Challenge →</a>
+      <a class="btn back" href="index.html">Back to Homepage</a>
+    </div>
+  </section>
+  <section class="grid">
+    <article class="card">
+      <h2>Live 1v1 Challenge</h2>
+      <p>A player can find an opponent near their rating and begin a live match. Both players compete at the same time.</p>
+    </article>
+    <article class="card">
+      <h2>Ten Shared Questions</h2>
+      <p>Both players receive the same 10 questions. Correct answers and faster responses earn points.</p>
+    </article>
+    <article class="card">
+      <h2>Challenge Friends</h2>
+      <p>A player can create a friend challenge or join one. A friendly match can be played without changing the rating.</p>
+    </article>
+    <article class="card">
+      <h2>Track Your Progress</h2>
+      <p>The challenge shows a player rating and scores each match from accuracy and speed. Friendly matches can leave that rating unchanged.</p>
+    </article>
+    <article class="card">
+      <h2>Educational Benefits</h2>
+      <ul>
+        <li>Mathematical reasoning and mental calculation</li>
+        <li>Logical thinking and concentration</li>
+        <li>Problem-solving, accuracy, and decision-making</li>
+        <li>Healthy competition</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>School Competitions</h2>
+      <p>Schools can use live matches for friendly classroom competition. An organized school championship can be requested from the homepage. Tournament awards and certificates are not advertised here as a currently available Grand Challenge service.</p>
+    </article>
+  </section>
+  <section class="videoWrap">
+    <h2>Watch the introduction</h2>
+    <video controls playsinline preload="none" src="assets/videos/grand-challenge.mp4"></video>
+  </section>
+</main>
+<footer>Chess in the service of education. <a href="index.html">Return home</a></footer>
+</body>
+</html>
