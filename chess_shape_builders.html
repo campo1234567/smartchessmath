@@ -2670,5 +2670,78 @@ beginSession=function(){if(shapeLive)return;shapeBeginSession();};
 startGame=function(){if(shapeLive)return;shapeStartGame();};
 if(sessionStorage.getItem('shape_api_session')) returnShapeRoom(); else showOnlineWelcome();
 </script>
+<script>
+(function(){
+  if(document.getElementById('scmHomeLink')) return;
+  var style=document.createElement('style');
+  style.textContent='#scmHomeLink{position:fixed;top:10px;left:10px;z-index:30000;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 14px;border-radius:999px;background:#fff;color:#07351b;border:2px solid #cfe3c8;box-shadow:0 6px 16px rgba(7,21,47,.22);font:900 15px/1.2 Arial,Helvetica,sans-serif;text-decoration:none}#scmHomeLink:hover{background:#eaf8e6}#scmHomeLink:focus-visible{outline:3px solid #0b8f2a;outline-offset:2px}#scmLeaveDialog{position:fixed;inset:0;z-index:31000;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(8,16,28,.55)}#scmLeaveDialog.open{display:flex}#scmLeaveCard{width:min(420px,100%);background:#fff;color:#142033;border-radius:18px;padding:22px 20px 18px;text-align:center;box-shadow:0 16px 40px rgba(0,0,0,.28);font-family:Arial,Helvetica,sans-serif}#scmLeaveCard h2{margin:0 0 8px;font-size:22px;color:#0f5b2e}#scmLeaveCard p{margin:0 0 16px;font-weight:800;line-height:1.45}#scmLeaveActions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}#scmLeaveActions button{min-height:44px;min-width:120px;border-radius:12px;font-weight:900;font-size:16px;cursor:pointer}#scmLeaveCancel{background:#eef2f6;color:#17324d;border:2px solid #d5dee8}#scmLeaveGo{background:#0f5b2e;color:#fff;border:2px solid #0f5b2e}@media(max-width:760px){#scmHomeLink{top:8px;left:8px;max-width:calc(100vw - 16px);font-size:14px;padding:8px 12px}.shapeOnline{padding-top:58px!important;align-items:flex-start!important}.container{padding-top:52px}#shapeCert{padding-top:58px}}';
+  document.head.appendChild(style);
+  function homeHref(){
+    var host=location.hostname;
+    if(host==='smartchessmath.com'||host==='www.smartchessmath.com'||host==='127.0.0.1'||host==='localhost') return '/';
+    return 'https://smartchessmath.com/';
+  }
+  var link=document.createElement('a');
+  link.id='scmHomeLink';
+  link.href=homeHref();
+  link.textContent='🏠 Back to SmartChessMath';
+  document.body.appendChild(link);
+  var dialog=document.createElement('div');
+  dialog.id='scmLeaveDialog';
+  dialog.setAttribute('role','dialog');
+  dialog.setAttribute('aria-modal','true');
+  dialog.setAttribute('aria-labelledby','scmLeaveTitle');
+  dialog.innerHTML='<div id="scmLeaveCard"><h2 id="scmLeaveTitle">Leave this activity?</h2><p>Your current progress may be affected.</p><div id="scmLeaveActions"><button type="button" id="scmLeaveCancel">Cancel</button><button type="button" id="scmLeaveGo">Leave</button></div></div>';
+  document.body.appendChild(dialog);
+  var realStart=window.startGame;
+  if(typeof realStart==='function' && !realStart.__scmWrapped){
+    window.startGame=function(){
+      window.__scmActivity=true;
+      return realStart.apply(this, arguments);
+    };
+    window.startGame.__scmWrapped=true;
+  }
+  document.addEventListener('click', function(event){
+    var button=event.target && event.target.closest && event.target.closest('button');
+    if(!button || button.id==='shapeHome') return;
+    if(/\bStart\b/.test(button.textContent||'')) window.__scmActivity=true;
+  }, true);
+  function shown(id){
+    var el=document.getElementById(id);
+    if(!el) return false;
+    return getComputedStyle(el).display!=='none' && !el.hidden;
+  }
+  function inRoom(){
+    return shown('shapeOnline') && shown('shapeRoom');
+  }
+  function onEntrance(){
+    if(inRoom()) return false;
+    return shown('shapeOnline') && shown('shapeWelcome');
+  }
+  function busy(){
+    if(inRoom()) return true;
+    if(window.__scmActivity && !onEntrance()) return true;
+    return false;
+  }
+  function closeDialog(){
+    dialog.classList.remove('open');
+    link.focus();
+  }
+  link.addEventListener('click', function(event){
+    if(!busy()) return;
+    event.preventDefault();
+    dialog.classList.add('open');
+    document.getElementById('scmLeaveCancel').focus();
+  });
+  document.getElementById('scmLeaveCancel').addEventListener('click', closeDialog);
+  document.getElementById('scmLeaveGo').addEventListener('click', function(){
+    window.location.href=link.href;
+  });
+  dialog.addEventListener('click', function(event){ if(event.target===dialog) closeDialog(); });
+  document.addEventListener('keydown', function(event){
+    if(event.key==='Escape' && dialog.classList.contains('open')) closeDialog();
+  });
+})();
+</script>
 </body>
 </html>
