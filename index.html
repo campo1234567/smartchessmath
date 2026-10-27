@@ -277,15 +277,15 @@ h1 .gold{
 .programBody{display:flex;flex-direction:column;flex:1}
 .programActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
 .programActions .btn:only-child{grid-column:1}
-.programActions .btn,.featureActions .btn{width:100%;min-height:48px;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
-.featureActions .btn{width:auto;min-width:220px}
+.programActions .btn,.featureActions .btn,.filmHeadingRow .btn{width:100%;min-height:48px;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}
+.featureActions .btn,.filmHeadingRow .btn{width:auto;min-width:220px}
 .btn.watch{background:linear-gradient(180deg,#3b82f6,#1d4ed8);color:#fff;box-shadow:0 6px 0 #1e3a8a,0 12px 26px rgba(0,0,0,.16)}
 .btn.gold{background:linear-gradient(180deg,#ffe16a,#e6b325);color:#3f2d04;box-shadow:0 6px 0 #a97812,0 12px 26px rgba(0,0,0,.16)}
 .btn.studio{background:linear-gradient(180deg,#22c55e,#15803d);color:#fff;box-shadow:0 6px 0 #166534,0 12px 26px rgba(0,0,0,.16)}
 .btn.soon{background:linear-gradient(180deg,#fff,#eff9ed);color:#07451c;border:1px solid #d8ead7;box-shadow:0 5px 0 #c2d6c3;cursor:default}
 @media(hover:hover){
-  .programActions .btn:hover,.featureActions .btn:hover{transform:translateY(-2px);filter:brightness(1.04)}
-  .programActions .btn:active,.featureActions .btn:active{transform:translateY(1px)}
+  .programActions .btn:hover,.featureActions .btn:hover,.filmHeadingRow .btn:hover{transform:translateY(-2px);filter:brightness(1.04)}
+  .programActions .btn:active,.featureActions .btn:active,.filmHeadingRow .btn:active{transform:translateY(1px)}
 }
 @media(max-width:950px){
   .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -300,7 +300,14 @@ h1 .gold{
 .videoDialog{position:relative;width:min(440px,100%);background:#fffdf8;border-radius:18px;padding:42px 16px 16px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
 .videoDialog h2{margin:0 0 10px;font-size:20px;color:#0a2858;text-align:center}
 .videoDialog video{width:100%;height:auto;max-height:78vh;aspect-ratio:9/16;background:#111;border-radius:12px;object-fit:contain}
+.videoDialog.wide{width:min(1100px,100%)}
+.videoDialog.wide video{aspect-ratio:16/9;max-height:78vh}
 .videoClose{position:absolute;top:8px;right:8px;width:44px;height:44px;border:0;border-radius:50%;background:#0a2858;color:#fff;font-size:28px;line-height:1;cursor:pointer}
+.videoFullscreen{display:none}
+.videoDialog.wide .videoFullscreen{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;margin:0 0 12px;border:0;border-radius:14px;background:linear-gradient(180deg,#3b82f6,#1d4ed8);color:#fff;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 6px 0 #1e3a8a,0 12px 26px rgba(0,0,0,.16)}
+.filmIntro{padding-top:28px;padding-bottom:18px}
+.filmHeadingRow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:14px 18px}
+.filmHeadingRow .sectionTitle{margin:0;width:auto}
 
 </style>
 
@@ -343,6 +350,13 @@ h1 .gold{
       <button class="slideDot active" type="button" aria-label="Slide 1"></button>
       <button class="slideDot" type="button" aria-label="Slide 2"></button>
       <button class="slideDot" type="button" aria-label="Slide 3"></button>
+    </div>
+  </section>
+
+  <section class="container section filmIntro" aria-labelledby="discoverFilmTitle">
+    <div class="filmHeadingRow">
+      <h2 id="discoverFilmTitle" class="sectionTitle">Discover SmartChessMath</h2>
+      <button type="button" class="btn watch" data-video="assets/videos/smartchessmath-v5-official-film.mp4" data-title="Discover SmartChessMath" data-layout="wide">▶ Watch the Official Film</button>
     </div>
   </section>
 
@@ -616,6 +630,7 @@ h1 .gold{
   <div class="videoDialog" role="dialog" aria-modal="true" aria-labelledby="videoTitle">
     <button type="button" class="videoClose" id="videoClose" aria-label="Close video">×</button>
     <h2 id="videoTitle">Video</h2>
+    <button type="button" class="videoFullscreen" id="videoFullscreen">⛶ Fullscreen</button>
     <video id="videoPlayer" controls playsinline preload="none"></video>
   </div>
 </div>
@@ -625,36 +640,57 @@ h1 .gold{
   const player=document.getElementById('videoPlayer');
   const title=document.getElementById('videoTitle');
   const closeBtn=document.getElementById('videoClose');
+  const fullscreenBtn=document.getElementById('videoFullscreen');
+  const dialog=modal.querySelector('.videoDialog');
   let lastFocus=null;
   function closeVideo(){
     player.pause();
     player.removeAttribute('src');
     player.load();
+    dialog.classList.remove('wide');
     modal.classList.remove('open');
     modal.hidden=true;
     document.body.style.overflow='';
     if(lastFocus) lastFocus.focus();
   }
-  function openVideo(src, name, opener){
+  function openVideo(src, name, opener, wide){
     lastFocus=opener||document.activeElement;
     title.textContent=name||'Video';
-    player.preload='metadata';
+    dialog.classList.toggle('wide', !!wide);
+    player.preload=wide?'none':'metadata';
     player.src=src;
     modal.hidden=false;
     modal.classList.add('open');
     document.body.style.overflow='hidden';
+    if(wide){
+      const started=player.play();
+      if(started&&typeof started.catch==='function') started.catch(function(){});
+    }
     closeBtn.focus();
   }
   document.addEventListener('click', function(event){
     const button=event.target.closest('[data-video]');
     if(button){
       event.preventDefault();
-      openVideo(button.getAttribute('data-video'), button.getAttribute('data-title'), button);
+      openVideo(button.getAttribute('data-video'), button.getAttribute('data-title'), button, button.getAttribute('data-layout')==='wide');
       return;
     }
     if(event.target===modal) closeVideo();
   });
   closeBtn.addEventListener('click', closeVideo);
+  fullscreenBtn.addEventListener('click', function(){
+    if(document.fullscreenElement===player){
+      if(document.exitFullscreen) document.exitFullscreen();
+      return;
+    }
+    if(player.requestFullscreen){
+      const pending=player.requestFullscreen();
+      if(pending&&typeof pending.catch==='function') pending.catch(function(){});
+      return;
+    }
+    if(typeof player.webkitEnterFullscreen==='function') player.webkitEnterFullscreen();
+    else if(player.webkitRequestFullscreen) player.webkitRequestFullscreen();
+  });
   document.addEventListener('keydown', function(event){
     if(event.key==='Escape' && modal.classList.contains('open')) closeVideo();
   });
